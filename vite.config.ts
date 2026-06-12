@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+﻿import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { imagetools } from "vite-imagetools";
@@ -88,7 +88,7 @@ export default defineConfig(({ mode }) => ({
     }),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'og-image.jpg', 'robots.txt'],
+      includeAssets: ['logo-phoenix.jpg', 'og-image.jpg', 'robots.txt'],
       manifest: {
         name: 'Cercle des Titans',
         short_name: 'Titans',
@@ -101,9 +101,9 @@ export default defineConfig(({ mode }) => ({
         start_url: '/',
         icons: [
           {
-            src: '/favicon.ico',
-            sizes: '64x64 32x32 24x24 16x16',
-            type: 'image/x-icon'
+            src: '/logo-phoenix.jpg',
+            sizes: '1080x1080',
+            type: 'image/jpeg'
           },
           {
             src: '/og-image.jpg',
@@ -165,3 +165,4 @@ export default defineConfig(({ mode }) => ({
     },
   },
 }));
+
