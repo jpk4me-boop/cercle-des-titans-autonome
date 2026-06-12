@@ -1,0 +1,10 @@
+project_id = "wbmnkxzrvnzppenslzmk"
+
+[functions.chat]
+verify_jwt = true
+
+[functions.generate-receipt]
+verify_jwt = false
+
+[functions.send-contribution-reminders]
+verify_jwt = false

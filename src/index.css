@@ -1,0 +1,198 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  :root {
+    /* Earth tones inspired by African landscapes */
+    --background: 30 15% 7%;
+    --foreground: 35 20% 92%;
+
+    --card: 30 12% 12%;
+    --card-foreground: 35 20% 92%;
+
+    --popover: 30 12% 12%;
+    --popover-foreground: 35 20% 92%;
+
+    /* Rich gold inspired by Kente cloth */
+    --primary: 38 85% 55%;
+    --primary-foreground: 30 15% 7%;
+
+    --secondary: 30 10% 18%;
+    --secondary-foreground: 35 20% 92%;
+
+    --muted: 30 8% 22%;
+    --muted-foreground: 35 15% 72%;
+
+    --accent: 38 85% 55%;
+    --accent-foreground: 30 15% 7%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 30 10% 22%;
+    --input: 30 10% 22%;
+    --ring: 38 85% 55%;
+
+    --radius: 0.75rem;
+
+    /* Custom African-inspired tokens */
+    --gold: 38 85% 55%;
+    --gold-light: 40 90% 65%;
+    --gold-dark: 35 80% 42%;
+    --terracotta: 18 65% 45%;
+    --terracotta-light: 20 70% 55%;
+    --forest: 140 25% 18%;
+    --forest-light: 140 20% 28%;
+    --earth: 25 35% 25%;
+    --earth-light: 28 30% 35%;
+    --sand: 35 25% 85%;
+    --ochre: 30 70% 50%;
+
+    /* Typography */
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body: 'Outfit', sans-serif;
+
+    /* Gradients */
+    --gradient-gold: linear-gradient(135deg, hsl(38 85% 55%), hsl(40 90% 65%));
+    --gradient-earth: linear-gradient(180deg, hsl(30 15% 7%), hsl(30 12% 12%));
+    --gradient-warm: linear-gradient(135deg, hsl(30 15% 7%) 0%, hsl(25 20% 12%) 100%);
+
+    /* Shadows */
+    --shadow-gold: 0 10px 40px -10px hsl(38 85% 55% / 0.3);
+    --shadow-warm: 0 20px 60px -15px hsl(30 30% 10% / 0.5);
+  }
+
+  .dark {
+    --background: 30 15% 7%;
+    --foreground: 35 20% 92%;
+    --card: 30 12% 12%;
+    --card-foreground: 35 20% 92%;
+    --popover: 30 12% 12%;
+    --popover-foreground: 35 20% 92%;
+    --primary: 38 85% 55%;
+    --primary-foreground: 30 15% 7%;
+    --secondary: 30 10% 18%;
+    --secondary-foreground: 35 20% 92%;
+    --muted: 30 8% 22%;
+    --muted-foreground: 35 15% 72%;
+    --accent: 38 85% 55%;
+    --accent-foreground: 30 15% 7%;
+    --destructive: 0 62% 35%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 10% 22%;
+    --input: 30 10% 22%;
+    --ring: 38 85% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+  
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  .text-gold {
+    color: hsl(var(--gold));
+  }
+
+  .bg-gold {
+    background-color: hsl(var(--gold));
+  }
+
+  .border-gold {
+    border-color: hsl(var(--gold));
+  }
+
+  .text-terracotta {
+    color: hsl(var(--terracotta));
+  }
+
+  .bg-terracotta {
+    background-color: hsl(var(--terracotta));
+  }
+
+  .bg-earth {
+    background-color: hsl(var(--earth));
+  }
+
+  .text-sand {
+    color: hsl(var(--sand));
+  }
+
+  /* African-inspired pattern overlay */
+  .pattern-kente {
+    background-image: 
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 10px,
+        hsl(var(--gold) / 0.03) 10px,
+        hsl(var(--gold) / 0.03) 20px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 10px,
+        hsl(var(--terracotta) / 0.02) 10px,
+        hsl(var(--terracotta) / 0.02) 20px
+      );
+  }
+
+  .pattern-adinkra {
+    background-image: radial-gradient(
+      circle at 50% 50%,
+      hsl(var(--gold) / 0.05) 1px,
+      transparent 1px
+    );
+    background-size: 24px 24px;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--gold-light)));
+  }
+
+  /* Glow effects */
+  .glow-gold {
+    box-shadow: 0 0 40px hsl(var(--gold) / 0.3);
+  }
+
+  /* Animation Performance Hints */
+  .will-change-opacity {
+    will-change: opacity;
+  }
+
+  .will-change-transform-opacity {
+    will-change: transform, opacity;
+  }
+
+  .animation-complete {
+    will-change: auto;
+  }
+}

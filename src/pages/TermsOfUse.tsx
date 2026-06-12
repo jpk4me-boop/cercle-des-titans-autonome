@@ -1,0 +1,132 @@
+import { useLanguage } from "@/contexts/LanguageContext";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Scale, FileCheck, AlertTriangle, Gavel, HandshakeIcon, Ban } from "lucide-react";
+
+export default function TermsOfUse() {
+  const { t } = useLanguage();
+
+  const sections = [
+    {
+      icon: FileCheck,
+      title: t('terms.section1.title'),
+      content: t('terms.section1.content'),
+    },
+    {
+      icon: HandshakeIcon,
+      title: t('terms.section2.title'),
+      content: t('terms.section2.content'),
+    },
+    {
+      icon: Scale,
+      title: t('terms.section3.title'),
+      content: t('terms.section3.content'),
+    },
+    {
+      icon: Ban,
+      title: t('terms.section4.title'),
+      content: t('terms.section4.content'),
+    },
+    {
+      icon: AlertTriangle,
+      title: t('terms.section5.title'),
+      content: t('terms.section5.content'),
+    },
+    {
+      icon: Gavel,
+      title: t('terms.section6.title'),
+      content: t('terms.section6.content'),
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-16 overflow-hidden">
+        {/* African Pattern Background */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30L30 0z' fill='%23D4AF37' fill-opacity='0.4'/%3E%3C/svg%3E")`,
+            backgroundSize: '60px 60px'
+          }} />
+        </div>
+        
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/30 mb-6">
+              <Scale className="w-10 h-10 text-gold" />
+            </div>
+            <h1 className="font-display text-4xl md:text-5xl font-bold mb-6">
+              <span className="bg-gradient-to-r from-gold via-gold-light to-gold bg-clip-text text-transparent">
+                {t('terms.title')}
+              </span>
+            </h1>
+            <p className="text-muted-foreground text-lg">
+              {t('terms.subtitle')}
+            </p>
+            <p className="text-muted-foreground/60 text-sm mt-4">
+              {t('terms.lastUpdated')}: {new Date().toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Content Sections */}
+      <section className="py-16">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto space-y-8">
+            {sections.map((section, index) => (
+              <div 
+                key={index}
+                className="group relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-8 hover:border-gold/30 transition-all duration-300"
+              >
+                {/* Decorative Corner */}
+                <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
+                  <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2 border-gold/20 group-hover:border-gold/40 transition-colors" />
+                </div>
+                
+                <div className="flex items-start gap-6">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <section.icon className="w-7 h-7 text-gold" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="font-display text-xl font-bold text-foreground mb-4 group-hover:text-gold transition-colors">
+                      {index + 1}. {section.title}
+                    </h2>
+                    <div className="text-muted-foreground leading-relaxed whitespace-pre-line">
+                      {section.content}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Agreement Section */}
+      <section className="py-16 bg-card/30">
+        <div className="container mx-auto px-6">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="font-display text-2xl font-bold text-gold mb-4">
+              {t('terms.agreement.title')}
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              {t('terms.agreement.content')}
+            </p>
+            <a 
+              href="mailto:legal@cercledstitans.com" 
+              className="inline-flex items-center gap-2 text-gold hover:text-gold-light transition-colors"
+            >
+              legal@cercledstitans.com
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+}
