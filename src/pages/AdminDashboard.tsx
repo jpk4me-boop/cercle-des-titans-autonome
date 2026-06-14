@@ -97,13 +97,13 @@ export default function AdminDashboard() {
 
       if (error) {
         console.error("Error checking role:", error);
-        toast.error("Erreur de vÃ©rification des droits");
+        toast.error("Erreur de vÃƒÂ©rification des droits");
         navigate("/");
         return;
       }
 
       if (!roles || roles.length === 0) {
-        toast.error("AccÃ¨s non autorisÃ©");
+        toast.error("AccÃƒÂ¨s non autorisÃƒÂ©");
         navigate("/");
         return;
       }
@@ -186,11 +186,11 @@ export default function AdminDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">ConfirmÃ©</Badge>;
+        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">ConfirmÃƒÂ©</Badge>;
       case "pending":
         return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">En attente</Badge>;
       case "failed":
-        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">Ã‰chouÃ©</Badge>;
+        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">Ãƒâ€°chouÃƒÂ©</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -272,7 +272,7 @@ export default function AdminDashboard() {
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">{stats.total}</div>
                   {hasActiveFilters && (
-                    <p className="text-xs text-muted-foreground">({filteredTransactions.length} filtrÃ©es)</p>
+                    <p className="text-xs text-muted-foreground">({filteredTransactions.length} filtrÃƒÂ©es)</p>
                   )}
                 </CardContent>
               </Card>
@@ -280,7 +280,7 @@ export default function AdminDashboard() {
               <Card className="bg-card border-border">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    ConfirmÃ©es
+                    ConfirmÃƒÂ©es
                   </CardTitle>
                   <TrendingUp className="h-4 w-4 text-green-500" />
                 </CardHeader>
@@ -326,7 +326,7 @@ export default function AdminDashboard() {
                     {hasActiveFilters && (
                       <Button variant="ghost" size="sm" onClick={clearFilters}>
                         <X className="h-4 w-4 mr-1" />
-                        RÃ©initialiser
+                        RÃƒÂ©initialiser
                       </Button>
                     )}
                     <Button onClick={fetchTransactions} disabled={loading} size="sm">
@@ -349,24 +349,24 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Tous les statuts</SelectItem>
-                        <SelectItem value="completed">ConfirmÃ©</SelectItem>
+                        <SelectItem value="completed">ConfirmÃƒÂ©</SelectItem>
                         <SelectItem value="pending">En attente</SelectItem>
-                        <SelectItem value="failed">Ã‰chouÃ©</SelectItem>
+                        <SelectItem value="failed">Ãƒâ€°chouÃƒÂ©</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">CatÃ©gorie</label>
+                    <label className="text-sm font-medium text-muted-foreground">CatÃƒÂ©gorie</label>
                     <Select
                       value={filters.category}
                       onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}
                     >
                       <SelectTrigger className="bg-background border-border">
-                        <SelectValue placeholder="Toutes les catÃ©gories" />
+                        <SelectValue placeholder="Toutes les catÃƒÂ©gories" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Toutes les catÃ©gories</SelectItem>
+                        <SelectItem value="all">Toutes les catÃƒÂ©gories</SelectItem>
                         {TONTINE_CATEGORIES.map((cat) => (
                           <SelectItem key={cat.name} value={cat.name.toLowerCase()}>
                             {cat.name} ({formatAmount(cat.amount)})
@@ -377,7 +377,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Date dÃ©but</label>
+                    <label className="text-sm font-medium text-muted-foreground">Date dÃƒÂ©but</label>
                     <Input
                       type="date"
                       value={filters.dateFrom}
@@ -402,8 +402,8 @@ export default function AdminDashboard() {
             {/* Transactions Table */}
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle>Transactions {hasActiveFilters ? `(${filteredTransactions.length} rÃ©sultats)` : ""}</CardTitle>
-                <CardDescription>Liste complÃ¨te des paiements effectuÃ©s</CardDescription>
+                <CardTitle>Transactions {hasActiveFilters ? `(${filteredTransactions.length} rÃƒÂ©sultats)` : ""}</CardTitle>
+                <CardDescription>Liste complÃƒÂ¨te des paiements effectuÃƒÂ©s</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -412,22 +412,22 @@ export default function AdminDashboard() {
                   </div>
                 ) : filteredTransactions.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
-                    {hasActiveFilters ? "Aucune transaction ne correspond aux filtres" : "Aucune transaction trouvÃ©e"}
+                    {hasActiveFilters ? "Aucune transaction ne correspond aux filtres" : "Aucune transaction trouvÃƒÂ©e"}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="border-border">
-                          <TableHead className="text-muted-foreground">RÃ©fÃ©rence</TableHead>
+                          <TableHead className="text-muted-foreground">RÃƒÂ©fÃƒÂ©rence</TableHead>
                           <TableHead className="text-muted-foreground">Membre</TableHead>
-                          <TableHead className="text-muted-foreground">TÃ©lÃ©phone</TableHead>
-                          <TableHead className="text-muted-foreground">CatÃ©gorie</TableHead>
+                          <TableHead className="text-muted-foreground">TÃƒÂ©lÃƒÂ©phone</TableHead>
+                          <TableHead className="text-muted-foreground">CatÃƒÂ©gorie</TableHead>
                           <TableHead className="text-muted-foreground">Montant</TableHead>
-                          <TableHead className="text-muted-foreground">MÃ©thode</TableHead>
+                          <TableHead className="text-muted-foreground">MÃƒÂ©thode</TableHead>
                           <TableHead className="text-muted-foreground">Statut</TableHead>
                           <TableHead className="text-muted-foreground">Date</TableHead>
-                          <TableHead className="text-muted-foreground">ReÃ§u</TableHead>
+                          <TableHead className="text-muted-foreground">ReÃƒÂ§u</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -468,7 +468,7 @@ export default function AdminDashboard() {
                                   <Download className="h-4 w-4" />
                                 </Button>
                               ) : (
-                                <span className="text-muted-foreground text-xs">â€”</span>
+                                <span className="text-muted-foreground text-xs">Ã¢â‚¬â€</span>
                               )}
                             </TableCell>
                           </TableRow>
