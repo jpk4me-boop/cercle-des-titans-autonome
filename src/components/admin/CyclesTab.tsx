@@ -1,20 +1,20 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CalendarDays, RefreshCw, Plus } from "lucide-react";
+import { CalendarDays, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
-interface Cycle {
+interface TontineCycle {
   id: string;
-  group_id: string | null;
   name: string;
   start_date: string;
   end_date: string | null;
   status: string;
-  created_by: string | null;
+  contribution_amount: number;
+  description: string | null;
   created_at: string;
 }
 
@@ -23,7 +23,7 @@ interface CyclesTabProps {
 }
 
 export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
-  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [cycles, setCycles] = useState<TontineCycle[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
@@ -31,6 +31,8 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
     name: "",
     start_date: "",
     end_date: "",
+    contribution_amount: "",
+    description: "",
     status: "planned",
   });
 
@@ -43,11 +45,12 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
 
     try {
       const { data, error } = await (supabase as any)
-        .from("cycles")
+        .from("tontine_cycles")
         .select("*")
         .order("start_date", { ascending: false });
 
       if (error) throw error;
+
       setCycles(data || []);
     } catch (error) {
       console.error("Erreur chargement cycles:", error);
@@ -58,35 +61,55 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
   };
 
   const createCycle = async () => {
+    if (readOnly) {
+      toast.error("Action non autorisée en lecture seule");
+      return;
+    }
+
     if (!newCycle.name || !newCycle.start_date) {
       toast.error("Nom du cycle et date de début obligatoires");
+      return;
+    }
+
+    if (newCycle.end_date && newCycle.end_date < newCycle.start_date) {
+      toast.error("La date de fin ne peut pas être antérieure à la date de début");
+      return;
+    }
+
+    const contributionAmount = Number(newCycle.contribution_amount || 0);
+
+    if (!Number.isFinite(contributionAmount) || contributionAmount < 0) {
+      toast.error("Le montant de contribution est invalide");
       return;
     }
 
     setCreating(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const { error } = await (supabase as any).from("cycles").insert({
-        name: newCycle.name,
-        start_date: newCycle.start_date,
-        end_date: newCycle.end_date || null,
-        status: newCycle.status,
-        created_by: user?.id || null,
-      });
+      const { error } = await (supabase as any)
+        .from("tontine_cycles")
+        .insert({
+          name: newCycle.name,
+          start_date: newCycle.start_date,
+          end_date: newCycle.end_date || null,
+          status: newCycle.status,
+          contribution_amount: contributionAmount,
+          description: newCycle.description || null,
+        });
 
       if (error) throw error;
 
       toast.success("Cycle créé avec succès");
+
       setNewCycle({
         name: "",
         start_date: "",
         end_date: "",
+        contribution_amount: "",
+        description: "",
         status: "planned",
       });
+
       fetchCycles();
     } catch (error) {
       console.error("Erreur création cycle:", error);
@@ -97,9 +120,14 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
   };
 
   const updateStatus = async (id: string, status: string) => {
+    if (readOnly) {
+      toast.error("Action non autorisée en lecture seule");
+      return;
+    }
+
     try {
       const { error } = await (supabase as any)
-        .from("cycles")
+        .from("tontine_cycles")
         .update({ status })
         .eq("id", id);
 
@@ -118,6 +146,10 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
     if (status === "closed") return <Badge variant="secondary">Clôturé</Badge>;
     if (status === "planned") return <Badge variant="outline">Planifié</Badge>;
     return <Badge variant="outline">{status}</Badge>;
+  };
+
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat("fr-FR").format(amount || 0);
   };
 
   return (
@@ -164,7 +196,7 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
             </CardDescription>
           </CardHeader>
 
-          <CardContent className="grid gap-4 md:grid-cols-4">
+          <CardContent className="grid gap-4 md:grid-cols-5">
             <Input
               placeholder="Nom du cycle"
               value={newCycle.name}
@@ -172,20 +204,43 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
             />
 
             <Input
+              type="number"
+              min="0"
+              placeholder="Montant contribution"
+              value={newCycle.contribution_amount}
+              onChange={(e) =>
+                setNewCycle((prev) => ({ ...prev, contribution_amount: e.target.value }))
+              }
+            />
+
+            <Input
               type="date"
               value={newCycle.start_date}
-              onChange={(e) => setNewCycle((prev) => ({ ...prev, start_date: e.target.value }))}
+              onChange={(e) =>
+                setNewCycle((prev) => ({ ...prev, start_date: e.target.value }))
+              }
             />
 
             <Input
               type="date"
               value={newCycle.end_date}
-              onChange={(e) => setNewCycle((prev) => ({ ...prev, end_date: e.target.value }))}
+              onChange={(e) =>
+                setNewCycle((prev) => ({ ...prev, end_date: e.target.value }))
+              }
             />
 
             <Button onClick={createCycle} disabled={creating}>
               {creating ? "Création..." : "Créer le cycle"}
             </Button>
+
+            <Input
+              className="md:col-span-5"
+              placeholder="Description facultative"
+              value={newCycle.description}
+              onChange={(e) =>
+                setNewCycle((prev) => ({ ...prev, description: e.target.value }))
+              }
+            />
           </CardContent>
         </Card>
       )}
@@ -229,6 +284,16 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
                     <p className="text-sm text-muted-foreground">
                       Du {cycle.start_date} au {cycle.end_date || ""}
                     </p>
+
+                    <p className="text-sm text-muted-foreground">
+                      Contribution : {formatAmount(cycle.contribution_amount)} FCFA
+                    </p>
+
+                    {cycle.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {cycle.description}
+                      </p>
+                    )}
                   </div>
 
                   {!readOnly && (
