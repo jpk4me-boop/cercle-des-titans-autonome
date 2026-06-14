@@ -64,20 +64,17 @@ interface UserRole {
   role: 'super_admin' | 'admin' | 'moderator' | 'user' | 'investor';
 }
 
-type AssignableRole = UserRole['role'];
-
 const MemberDirectory = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
-
+  
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-
+  
   // Edit dialog state
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [editForm, setEditForm] = useState({
@@ -89,12 +86,12 @@ const MemberDirectory = () => {
     profession: '',
   });
   const [isSaving, setIsSaving] = useState(false);
-
+  
   // Role dialog state
   const [assigningRole, setAssigningRole] = useState<Member | null>(null);
-  const [selectedRole, setSelectedRole] = useState<AssignableRole>('user');
+  const [selectedRole, setSelectedRole] = useState<string>('user');
   const [isAssigningRole, setIsAssigningRole] = useState(false);
-
+  
   // Delete dialog state
   const [deletingMember, setDeletingMember] = useState<Member | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -110,60 +107,48 @@ const MemberDirectory = () => {
       if (!user) return;
 
       try {
-        setLoadingData(true);
-
-        // Check if user is admin or super admin
-        const { data: adminData, error: adminError } = await supabase
+        // Check if user is admin
+        const { data: adminData } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', user.id)
           .in('role', ['admin', 'super_admin'])
           .maybeSingle();
 
-        if (adminError) throw adminError;
-
         const userIsAdmin = !!adminData;
-        const userIsSuperAdmin = adminData?.role === 'super_admin';
-
         setIsAdmin(userIsAdmin);
-        setIsSuperAdmin(userIsSuperAdmin);
 
-        // Fetch members based on role - admins can see full profiles, others use the view
-        let membersData: Member[] = [];
-
+        // If admin, fetch all roles first (needed for filtering)
+        let rolesData: UserRole[] | null = null;
         if (userIsAdmin) {
-          // Admins can see full profiles including email and phone
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('id, user_id, first_name, last_name, email, phone, avatar_url, city, profession')
-            .order('first_name', { ascending: true });
-
-          if (error) throw error;
-          membersData = data || [];
-        } else {
-          // Non-admins use the secure member_directory view (no email/phone)
-          const { data, error } = await supabase
-            .from('member_directory')
-            .select('id, user_id, first_name, last_name, avatar_url, city, profession')
-            .order('first_name', { ascending: true });
-
-          if (error) throw error;
-          // Map view data to Member interface (email/phone will be null for non-admins)
-          membersData = (data || []).map(m => ({ ...m, email: null, phone: null }));
-        }
-        setMembers(membersData);
-
-        // If admin, fetch all roles
-        if (userIsAdmin) {
-          const { data: rolesData, error: rolesError } = await supabase
+          const { data: fetchedRoles } = await supabase
             .from('user_roles')
             .select('user_id, role');
-
-          if (rolesError) throw rolesError;
-          setRoles(rolesData || []);
-        } else {
-          setRoles([]);
+          
+          rolesData = fetchedRoles || [];
+          setRoles(rolesData);
         }
+
+        // Fetch members from the public member directory view (excludes super_admin)
+        const { data, error } = await supabase
+          .from('member_directory_public')
+          .select('id, user_id, first_name, last_name, avatar_url, city, profession')
+          .order('first_name', { ascending: true });
+        
+        if (error) throw error;
+        
+        // Map view data to Member interface (email/phone will be null for all users)
+        let membersData: Member[] = (data || []).map(m => ({ ...m, email: null, phone: null }));
+        
+        // Frontend protection: exclude super_admin users from the member directory
+        if (userIsAdmin && rolesData) {
+          const superAdminUserIds = rolesData
+            .filter(r => r.role === 'super_admin')
+            .map(r => r.user_id);
+          membersData = membersData.filter(m => !superAdminUserIds.includes(m.user_id));
+        }
+        
+        setMembers(membersData);
       } catch (error) {
         console.error('Error fetching members:', error);
         toast.error('Erreur lors du chargement des membres');
@@ -184,9 +169,8 @@ const MemberDirectory = () => {
 
   const getRoleBadge = (role: string | null) => {
     if (!role) return null;
-
+    
     const roleStyles: Record<string, string> = {
-      super_admin: 'bg-amber-500/10 text-amber-700',
       admin: 'bg-red-500/10 text-red-600',
       moderator: 'bg-blue-500/10 text-blue-600',
       investor: 'bg-purple-500/10 text-purple-600',
@@ -194,7 +178,6 @@ const MemberDirectory = () => {
     };
 
     const roleLabels: Record<string, string> = {
-      super_admin: 'Super Admin',
       admin: 'Admin',
       moderator: 'Modérateur',
       investor: 'Investisseur',
@@ -213,7 +196,7 @@ const MemberDirectory = () => {
     const city = (member.city || '').toLowerCase();
     const profession = (member.profession || '').toLowerCase();
     const query = searchQuery.toLowerCase();
-
+    
     return fullName.includes(query) || city.includes(query) || profession.includes(query);
   });
 
@@ -239,11 +222,6 @@ const MemberDirectory = () => {
   const handleSaveEdit = async () => {
     if (!editingMember) return;
 
-    if (!isAdmin) {
-      toast.error('Action réservée aux administrateurs.');
-      return;
-    }
-
     setIsSaving(true);
     try {
       const { error } = await supabase
@@ -260,12 +238,12 @@ const MemberDirectory = () => {
 
       if (error) throw error;
 
-      setMembers(prev => prev.map(m =>
-        m.id === editingMember.id
+      setMembers(prev => prev.map(m => 
+        m.id === editingMember.id 
           ? { ...m, ...editForm }
           : m
       ));
-
+      
       setEditingMember(null);
       toast.success('Profil mis à jour');
     } catch (error) {
@@ -278,63 +256,41 @@ const MemberDirectory = () => {
 
   // Role assignment handlers
   const openRoleDialog = (member: Member) => {
-    if (!isSuperAdmin) {
-      toast.error('Seul le Super Administrateur peut attribuer les rôles.');
-      return;
-    }
-
-    if (member.user_id === user?.id) {
-      toast.error('Vous ne pouvez pas modifier votre propre rôle depuis cette page.');
-      return;
-    }
-
     setAssigningRole(member);
-    setSelectedRole((getMemberRole(member.user_id) as AssignableRole) || 'user');
+    setSelectedRole(getMemberRole(member.user_id) || 'user');
   };
 
   const handleAssignRole = async () => {
     if (!assigningRole) return;
 
-    if (!isSuperAdmin) {
-      toast.error('Action réservée au Super Administrateur.');
-      return;
-    }
-
-    if (assigningRole.user_id === user?.id) {
-      toast.error('Vous ne pouvez pas modifier votre propre rôle depuis cette page.');
-      return;
-    }
-
     setIsAssigningRole(true);
     try {
       // First, delete existing role
-      const { error: deleteError } = await supabase
+      await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', assigningRole.user_id);
-
-      if (deleteError) throw deleteError;
 
       // Then insert new role
       const { error } = await supabase
         .from('user_roles')
         .insert({
           user_id: assigningRole.user_id,
-          role: selectedRole,
+          role: selectedRole as 'super_admin' | 'admin' | 'moderator' | 'user' | 'investor',
         });
 
       if (error) throw error;
 
       setRoles(prev => [
         ...prev.filter(r => r.user_id !== assigningRole.user_id),
-        { user_id: assigningRole.user_id, role: selectedRole }
+        { user_id: assigningRole.user_id, role: selectedRole as 'super_admin' | 'admin' | 'moderator' | 'user' | 'investor' }
       ]);
-
+      
       setAssigningRole(null);
       toast.success('Rôle attribué avec succès');
     } catch (error) {
       console.error('Error assigning role:', error);
-      toast.error("Erreur lors de l'attribution du rôle");
+      toast.error('Erreur lors de l\'attribution du rôle');
     } finally {
       setIsAssigningRole(false);
     }
@@ -343,11 +299,6 @@ const MemberDirectory = () => {
   // Delete handlers
   const handleDeleteMember = async () => {
     if (!deletingMember) return;
-
-    if (!isAdmin) {
-      toast.error('Action réservée aux administrateurs.');
-      return;
-    }
 
     setIsDeleting(true);
     try {
@@ -449,7 +400,7 @@ const MemberDirectory = () => {
                       {getInitials(member)}
                     </AvatarFallback>
                   </Avatar>
-
+                  
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-foreground truncate">
@@ -457,14 +408,14 @@ const MemberDirectory = () => {
                       </h3>
                       {isAdmin && getRoleBadge(getMemberRole(member.user_id))}
                     </div>
-
+                    
                     {member.profession && (
                       <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
                         <Briefcase className="w-3.5 h-3.5" />
                         <span className="truncate">{member.profession}</span>
                       </div>
                     )}
-
+                    
                     {member.city && (
                       <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
                         <MapPin className="w-3.5 h-3.5" />
@@ -499,38 +450,25 @@ const MemberDirectory = () => {
                       variant="ghost"
                       size="sm"
                       className="flex-1"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEditDialog(member);
-                      }}
+                      onClick={() => openEditDialog(member)}
                     >
                       <Pencil className="w-3.5 h-3.5 mr-1.5" />
                       Modifier
                     </Button>
-
-                    {isSuperAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="flex-1"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openRoleDialog(member);
-                        }}
-                      >
-                        <UserCog className="w-3.5 h-3.5 mr-1.5" />
-                        Rôle
-                      </Button>
-                    )}
-
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => openRoleDialog(member)}
+                    >
+                      <UserCog className="w-3.5 h-3.5 mr-1.5" />
+                      Rôle
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="text-destructive hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletingMember(member);
-                      }}
+                      onClick={() => setDeletingMember(member)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
@@ -543,7 +481,7 @@ const MemberDirectory = () => {
       </main>
 
       {/* Edit Member Dialog */}
-      <Dialog open={!!editingMember} onOpenChange={(open) => !open && setEditingMember(null)}>
+      <Dialog open={!!editingMember} onOpenChange={() => setEditingMember(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifier le profil</DialogTitle>
@@ -612,8 +550,8 @@ const MemberDirectory = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Assign Role Dialog - Super Admin only */}
-      <Dialog open={isSuperAdmin && !!assigningRole} onOpenChange={(open) => !open && setAssigningRole(null)}>
+      {/* Assign Role Dialog */}
+      <Dialog open={!!assigningRole} onOpenChange={() => setAssigningRole(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Attribuer un rôle</DialogTitle>
@@ -622,7 +560,7 @@ const MemberDirectory = () => {
             <p className="text-sm text-muted-foreground mb-4">
               Attribuer un rôle à {assigningRole?.first_name} {assigningRole?.last_name}
             </p>
-            <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as AssignableRole)}>
+            <Select value={selectedRole} onValueChange={setSelectedRole}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un rôle" />
               </SelectTrigger>
@@ -646,7 +584,7 @@ const MemberDirectory = () => {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingMember} onOpenChange={(open) => !open && setDeletingMember(null)}>
+      <AlertDialog open={!!deletingMember} onOpenChange={() => setDeletingMember(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer ce membre ?</AlertDialogTitle>

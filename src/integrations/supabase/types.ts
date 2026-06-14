@@ -353,6 +353,36 @@ export type Database = {
         }
         Relationships: []
       }
+      member_directory_public: {
+        Row: {
+          avatar_url: string | null
+          city: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          profession: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          city?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          profession?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          city?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          profession?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_transaction: {
