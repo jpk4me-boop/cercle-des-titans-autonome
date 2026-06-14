@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+﻿import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { formatAmount, TONTINE_CATEGORIES } from "@/lib/paymentService";
@@ -32,6 +32,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import FinancingRequestsTab from "@/components/admin/FinancingRequestsTab";
+import CyclesTab from "@/components/admin/CyclesTab";
 
 interface Transaction {
   id: string;
@@ -96,13 +97,13 @@ export default function AdminDashboard() {
 
       if (error) {
         console.error("Error checking role:", error);
-        toast.error("Erreur de vérification des droits");
+        toast.error("Erreur de vÃ©rification des droits");
         navigate("/");
         return;
       }
 
       if (!roles || roles.length === 0) {
-        toast.error("Accès non autorisé");
+        toast.error("AccÃ¨s non autorisÃ©");
         navigate("/");
         return;
       }
@@ -185,11 +186,11 @@ export default function AdminDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Confirmé</Badge>;
+        return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">ConfirmÃ©</Badge>;
       case "pending":
         return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">En attente</Badge>;
       case "failed":
-        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">Échoué</Badge>;
+        return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">Ã‰chouÃ©</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -251,6 +252,10 @@ export default function AdminDashboard() {
               <FileText className="h-4 w-4" />
               Demandes de financement
             </TabsTrigger>
+            <TabsTrigger value="cycles" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Cycles des tontines
+            </TabsTrigger>
           </TabsList>
 
           {/* Transactions Tab */}
@@ -267,7 +272,7 @@ export default function AdminDashboard() {
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">{stats.total}</div>
                   {hasActiveFilters && (
-                    <p className="text-xs text-muted-foreground">({filteredTransactions.length} filtrées)</p>
+                    <p className="text-xs text-muted-foreground">({filteredTransactions.length} filtrÃ©es)</p>
                   )}
                 </CardContent>
               </Card>
@@ -275,7 +280,7 @@ export default function AdminDashboard() {
               <Card className="bg-card border-border">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Confirmées
+                    ConfirmÃ©es
                   </CardTitle>
                   <TrendingUp className="h-4 w-4 text-green-500" />
                 </CardHeader>
@@ -321,7 +326,7 @@ export default function AdminDashboard() {
                     {hasActiveFilters && (
                       <Button variant="ghost" size="sm" onClick={clearFilters}>
                         <X className="h-4 w-4 mr-1" />
-                        Réinitialiser
+                        RÃ©initialiser
                       </Button>
                     )}
                     <Button onClick={fetchTransactions} disabled={loading} size="sm">
@@ -344,24 +349,24 @@ export default function AdminDashboard() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Tous les statuts</SelectItem>
-                        <SelectItem value="completed">Confirmé</SelectItem>
+                        <SelectItem value="completed">ConfirmÃ©</SelectItem>
                         <SelectItem value="pending">En attente</SelectItem>
-                        <SelectItem value="failed">Échoué</SelectItem>
+                        <SelectItem value="failed">Ã‰chouÃ©</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Catégorie</label>
+                    <label className="text-sm font-medium text-muted-foreground">CatÃ©gorie</label>
                     <Select
                       value={filters.category}
                       onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}
                     >
                       <SelectTrigger className="bg-background border-border">
-                        <SelectValue placeholder="Toutes les catégories" />
+                        <SelectValue placeholder="Toutes les catÃ©gories" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Toutes les catégories</SelectItem>
+                        <SelectItem value="all">Toutes les catÃ©gories</SelectItem>
                         {TONTINE_CATEGORIES.map((cat) => (
                           <SelectItem key={cat.name} value={cat.name.toLowerCase()}>
                             {cat.name} ({formatAmount(cat.amount)})
@@ -372,7 +377,7 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Date début</label>
+                    <label className="text-sm font-medium text-muted-foreground">Date dÃ©but</label>
                     <Input
                       type="date"
                       value={filters.dateFrom}
@@ -397,8 +402,8 @@ export default function AdminDashboard() {
             {/* Transactions Table */}
             <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle>Transactions {hasActiveFilters ? `(${filteredTransactions.length} résultats)` : ""}</CardTitle>
-                <CardDescription>Liste complète des paiements effectués</CardDescription>
+                <CardTitle>Transactions {hasActiveFilters ? `(${filteredTransactions.length} rÃ©sultats)` : ""}</CardTitle>
+                <CardDescription>Liste complÃ¨te des paiements effectuÃ©s</CardDescription>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -407,22 +412,22 @@ export default function AdminDashboard() {
                   </div>
                 ) : filteredTransactions.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
-                    {hasActiveFilters ? "Aucune transaction ne correspond aux filtres" : "Aucune transaction trouvée"}
+                    {hasActiveFilters ? "Aucune transaction ne correspond aux filtres" : "Aucune transaction trouvÃ©e"}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="border-border">
-                          <TableHead className="text-muted-foreground">Référence</TableHead>
+                          <TableHead className="text-muted-foreground">RÃ©fÃ©rence</TableHead>
                           <TableHead className="text-muted-foreground">Membre</TableHead>
-                          <TableHead className="text-muted-foreground">Téléphone</TableHead>
-                          <TableHead className="text-muted-foreground">Catégorie</TableHead>
+                          <TableHead className="text-muted-foreground">TÃ©lÃ©phone</TableHead>
+                          <TableHead className="text-muted-foreground">CatÃ©gorie</TableHead>
                           <TableHead className="text-muted-foreground">Montant</TableHead>
-                          <TableHead className="text-muted-foreground">Méthode</TableHead>
+                          <TableHead className="text-muted-foreground">MÃ©thode</TableHead>
                           <TableHead className="text-muted-foreground">Statut</TableHead>
                           <TableHead className="text-muted-foreground">Date</TableHead>
-                          <TableHead className="text-muted-foreground">Reçu</TableHead>
+                          <TableHead className="text-muted-foreground">ReÃ§u</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -463,7 +468,7 @@ export default function AdminDashboard() {
                                   <Download className="h-4 w-4" />
                                 </Button>
                               ) : (
-                                <span className="text-muted-foreground text-xs">—</span>
+                                <span className="text-muted-foreground text-xs">â€”</span>
                               )}
                             </TableCell>
                           </TableRow>
@@ -479,6 +484,11 @@ export default function AdminDashboard() {
           {/* Financing Requests Tab */}
           <TabsContent value="financing">
             <FinancingRequestsTab readOnly={isReadOnly} />
+          </TabsContent>
+
+          {/* Cycles Tab */}
+          <TabsContent value="cycles">
+            <CyclesTab readOnly={isReadOnly} />
           </TabsContent>
         </Tabs>
       </div>
