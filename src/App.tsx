@@ -10,6 +10,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { Loader2 } from "lucide-react";
 import ChatAgent from "@/components/ChatAgent";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import RoleGuard from "./components/RoleGuard";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -67,17 +68,53 @@ const App = () => (
                     <Route path="/auth/callback/google" element={<AuthCallback />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
+
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/messages" element={<Messages />} />
                     <Route path="/profile/edit" element={<ProfileEdit />} />
+
                     <Route path="/categorie/:categoryName" element={<CategoryDetail />} />
                     <Route path="/categories/comparatif" element={<CategoriesComparison />} />
                     <Route path="/financement/fonds-de-financement" element={<FondsFinancement />} />
                     <Route path="/verify-receipt" element={<VerifyReceipt />} />
-                    <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/historique-cotisations" element={<ContributionHistory />} />
-                    <Route path="/members" element={<MemberDirectory />} />
-                    <Route path="/members/:id" element={<MemberProfile />} />
+
+                    <Route
+                      path="/admin"
+                      element={
+                        <RoleGuard allowedRoles={["admin", "super_admin"]}>
+                          <AdminDashboard />
+                        </RoleGuard>
+                      }
+                    />
+
+                    <Route
+                      path="/super-admin"
+                      element={
+                        <RoleGuard allowedRoles={["super_admin"]}>
+                          <AdminDashboard />
+                        </RoleGuard>
+                      }
+                    />
+
+                    <Route
+                      path="/members"
+                      element={
+                        <RoleGuard allowedRoles={["admin", "super_admin"]}>
+                          <MemberDirectory />
+                        </RoleGuard>
+                      }
+                    />
+
+                    <Route
+                      path="/members/:id"
+                      element={
+                        <RoleGuard allowedRoles={["admin", "super_admin"]}>
+                          <MemberProfile />
+                        </RoleGuard>
+                      }
+                    />
+
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>
