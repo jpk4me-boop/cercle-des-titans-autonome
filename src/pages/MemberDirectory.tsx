@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -162,6 +163,37 @@ const MemberDirectory = () => {
     }
   }, [user]);
 
+  // Function to reload member data after admin actions
+  const reloadMembers = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch members from the public member directory view
+      const { data, error } = await supabase
+        .from('member_directory_public')
+        .select('id, user_id, first_name, last_name, avatar_url, city, profession')
+        .order('first_name', { ascending: true });
+      
+      if (error) throw error;
+      
+      // Map view data to Member interface
+      let membersData: Member[] = (data || []).map(m => ({ ...m, email: null, phone: null }));
+      
+      // Frontend protection: exclude super_admin users
+      if (isAdmin && roles.length > 0) {
+        const superAdminUserIds = roles
+          .filter(r => r.role === 'super_admin')
+          .map(r => r.user_id);
+        membersData = membersData.filter(m => !superAdminUserIds.includes(m.user_id));
+      }
+      
+      setMembers(membersData);
+    } catch (error) {
+      console.error('Error reloading members:', error);
+      toast.error('Erreur lors du rechargement des membres');
+    }
+  };
+
   const getMemberRole = (userId: string): string | null => {
     const role = roles.find(r => r.user_id === userId);
     return role?.role || null;
@@ -222,45 +254,29 @@ const MemberDirectory = () => {
   const handleSaveEdit = async () => {
     if (!editingMember || !editingMember.user_id) {
       console.error('Member action failed: missing user_id', { member: editingMember });
-      toast.error('Membre introuvable');
+      toast.error('Identifiant utilisateur manquant');
       return;
     }
 
     setIsSaving(true);
     try {
-      // First, check if profile exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', editingMember.user_id)
-        .limit(1);
-
-      if (!existingProfile || existingProfile.length === 0) {
-        console.error('Member action failed: profile not found', { member: editingMember });
-        toast.error('Profil introuvable dans la base de données');
-        return;
-      }
-
-      // Update profile using user_id
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          first_name: editForm.first_name || null,
-          last_name: editForm.last_name || null,
-          email: editForm.email || null,
-          phone: editForm.phone || null,
-          city: editForm.city || null,
-          profession: editForm.profession || null,
-        })
-        .eq('user_id', editingMember.user_id);
+      // Use RPC to update member profile
+      const supabaseRpc = supabase as any;
+      const { error } = await supabaseRpc.rpc('admin_update_member_profile', {
+        target_user_id: editingMember.user_id,
+        p_first_name: editForm.first_name || null,
+        p_last_name: editForm.last_name || null,
+        p_city: editForm.city || null,
+        p_profession: editForm.profession || null,
+        p_phone: editForm.phone || null,
+        p_email: editForm.email || null,
+        p_avatar_url: editingMember.avatar_url || null
+      });
 
       if (error) throw error;
 
-      setMembers(prev => prev.map(m => 
-        m.user_id === editingMember.user_id 
-          ? { ...m, ...editForm }
-          : m
-      ));
+      // Reload members to reflect changes
+      await reloadMembers();
       
       setEditingMember(null);
       toast.success('Profil mis à jour');
@@ -271,9 +287,45 @@ const MemberDirectory = () => {
       setIsSaving(false);
     }
   };
+// Navigation carte membre + protection clics boutons admin
+  const handleMemberCardClick = (
+    e: ReactMouseEvent<HTMLDivElement>,
+    member: Member
+  ) => {
+    const target = e.target as HTMLElement | null;
+
+    if (target?.closest('[data-member-action="true"]')) {
+      return;
+    }
+
+    if (!member.user_id) {
+      toast.error('Identifiant utilisateur manquant');
+      return;
+    }
+
+    navigate(`/members/${member.user_id}`);
+  };
+
+  const stopMemberActionPropagation = (
+    e: ReactMouseEvent<HTMLElement>
+  ) => {
+    e.stopPropagation();
+  };
 
   // Role assignment handlers
   const openRoleDialog = (member: Member) => {
+    if (!member.user_id) {
+      toast.error('Identifiant utilisateur manquant');
+      return;
+    }
+
+    console.log('ROLE CLICK MEMBER', {
+      id: member.id,
+      user_id: member.user_id,
+      first_name: member.first_name,
+      last_name: member.last_name,
+    });
+
     setAssigningRole(member);
     setSelectedRole(getMemberRole(member.user_id) || 'user');
   };
@@ -281,7 +333,7 @@ const MemberDirectory = () => {
   const handleAssignRole = async () => {
     if (!assigningRole || !assigningRole.user_id) {
       console.error('Member action failed: missing user_id', { member: assigningRole });
-      toast.error('Membre introuvable');
+      toast.error('Identifiant utilisateur manquant');
       return;
     }
 
@@ -300,39 +352,24 @@ const MemberDirectory = () => {
 
     setIsAssigningRole(true);
     try {
-      // Check if role already exists
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', assigningRole.user_id)
-        .limit(1);
+      // Use RPC to assign user role
+      const supabaseRpc = supabase as any;
+      const { error } = await supabaseRpc.rpc('admin_assign_user_role', {
+        target_user_id: assigningRole.user_id,
+        p_role: selectedRole,
+        p_email: assigningRole.email ?? null
+      });
 
-      if (existingRole && existingRole.length > 0) {
-        // Update existing role
-        const { error } = await supabase
-          .from('user_roles')
-          .update({
-            role: selectedRole as 'admin' | 'moderator' | 'user' | 'investor',
-          })
-          .eq('user_id', assigningRole.user_id);
+      if (error) throw error;
 
-        if (error) throw error;
-      } else {
-        // Insert new role
-        const { error } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: assigningRole.user_id,
-            role: selectedRole as 'admin' | 'moderator' | 'user' | 'investor',
-          });
-
-        if (error) throw error;
-      }
-
+      // Update local roles state
       setRoles(prev => [
         ...prev.filter(r => r.user_id !== assigningRole.user_id),
         { user_id: assigningRole.user_id, role: selectedRole as 'admin' | 'moderator' | 'user' | 'investor' }
       ]);
+      
+      // Reload members to reflect changes
+      await reloadMembers();
       
       setAssigningRole(null);
       toast.success('Rôle attribué avec succès');
@@ -348,34 +385,23 @@ const MemberDirectory = () => {
   const handleDeleteMember = async () => {
     if (!deletingMember || !deletingMember.user_id) {
       console.error('Member action failed: missing user_id', { member: deletingMember });
-      toast.error('Membre introuvable');
+      toast.error('Identifiant utilisateur manquant');
       return;
     }
 
     setIsDeleting(true);
     try {
-      // First, check if profile exists
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('user_id', deletingMember.user_id)
-        .limit(1);
-
-      if (!existingProfile || existingProfile.length === 0) {
-        console.error('Member action failed: profile not found', { member: deletingMember });
-        toast.error('Profil introuvable dans la base de données');
-        return;
-      }
-
-      // Delete profile using user_id
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('user_id', deletingMember.user_id);
+      // Use RPC to delete member profile
+      const supabaseRpc = supabase as any;
+      const { error } = await supabaseRpc.rpc('admin_delete_member_profile', {
+        target_user_id: deletingMember.user_id
+      });
 
       if (error) throw error;
 
-      setMembers(prev => prev.filter(m => m.user_id !== deletingMember.user_id));
+      // Reload members to reflect changes
+      await reloadMembers();
+      
       setDeletingMember(null);
       toast.success('Membre supprimé');
     } catch (error) {
@@ -456,7 +482,7 @@ const MemberDirectory = () => {
             {filteredMembers.map((member) => (
               <div
                 key={member.id || member.user_id}
-                onClick={() => member.user_id && navigate(`/members/${member.user_id}`)}
+                onClick={(e) => handleMemberCardClick(e, member)}
                 className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors cursor-pointer"
               >
                 <div className="flex items-start gap-4">
@@ -511,7 +537,11 @@ const MemberDirectory = () => {
 
                 {/* Admin Actions */}
                 {isAdmin && member.user_id !== user?.id && member.user_id && (
-                  <div className="mt-4 pt-3 border-t border-border flex gap-2">
+                  <div
+                    data-member-action="true"
+                    onClick={stopMemberActionPropagation}
+                    className="mt-4 pt-3 border-t border-border flex gap-2"
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
@@ -617,7 +647,14 @@ const MemberDirectory = () => {
       </Dialog>
 
       {/* Assign Role Dialog */}
-      <Dialog open={!!assigningRole} onOpenChange={() => setAssigningRole(null)}>
+      <Dialog
+        open={!!assigningRole}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAssigningRole(null);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Attribuer un rôle</DialogTitle>
