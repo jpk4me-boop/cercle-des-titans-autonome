@@ -113,9 +113,9 @@ const MemberDirectory = () => {
           .select('role')
           .eq('user_id', user.id)
           .in('role', ['admin', 'super_admin'])
-          .maybeSingle();
+          .limit(1);
 
-        const userIsAdmin = !!adminData;
+        const userIsAdmin = !!adminData && adminData.length > 0;
         setIsAdmin(userIsAdmin);
 
         // If admin, fetch all roles first (needed for filtering)
@@ -233,9 +233,9 @@ const MemberDirectory = () => {
         .from('profiles')
         .select('id')
         .eq('user_id', editingMember.user_id)
-        .maybeSingle();
+        .limit(1);
 
-      if (!existingProfile) {
+      if (!existingProfile || existingProfile.length === 0) {
         console.error('Member action failed: profile not found', { member: editingMember });
         toast.error('Profil introuvable dans la base de données');
         return;
@@ -305,9 +305,9 @@ const MemberDirectory = () => {
         .from('user_roles')
         .select('id')
         .eq('user_id', assigningRole.user_id)
-        .maybeSingle();
+        .limit(1);
 
-      if (existingRole) {
+      if (existingRole && existingRole.length > 0) {
         // Update existing role
         const { error } = await supabase
           .from('user_roles')
@@ -359,9 +359,9 @@ const MemberDirectory = () => {
         .from('profiles')
         .select('id')
         .eq('user_id', deletingMember.user_id)
-        .maybeSingle();
+        .limit(1);
 
-      if (!existingProfile) {
+      if (!existingProfile || existingProfile.length === 0) {
         console.error('Member action failed: profile not found', { member: deletingMember });
         toast.error('Profil introuvable dans la base de données');
         return;
