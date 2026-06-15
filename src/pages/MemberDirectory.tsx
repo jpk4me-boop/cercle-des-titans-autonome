@@ -48,8 +48,8 @@ import {
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Member {
-  id: string;
-  user_id: string;
+  id: string | null;
+  user_id: string | null;
   first_name: string | null;
   last_name: string | null;
   email: string | null;
@@ -220,7 +220,10 @@ const MemberDirectory = () => {
   };
 
   const handleSaveEdit = async () => {
-    if (!editingMember) return;
+    if (!editingMember || !editingMember.id) {
+      toast.error('Membre introuvable');
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -261,7 +264,23 @@ const MemberDirectory = () => {
   };
 
   const handleAssignRole = async () => {
-    if (!assigningRole) return;
+    if (!assigningRole || !assigningRole.user_id) {
+      toast.error('Membre introuvable');
+      return;
+    }
+
+    // Prevent assigning super_admin role
+    if (selectedRole === 'super_admin') {
+      toast.error('Impossible d\'attribuer le rôle super_admin');
+      return;
+    }
+
+    // Check if user is currently super_admin (shouldn't happen due to filtering, but safety check)
+    const currentRole = getMemberRole(assigningRole.user_id);
+    if (currentRole === 'super_admin') {
+      toast.error('Impossible de modifier le rôle d\'un super_admin');
+      return;
+    }
 
     setIsAssigningRole(true);
     try {
@@ -276,14 +295,14 @@ const MemberDirectory = () => {
         .from('user_roles')
         .insert({
           user_id: assigningRole.user_id,
-          role: selectedRole as 'super_admin' | 'admin' | 'moderator' | 'user' | 'investor',
+          role: selectedRole as 'admin' | 'moderator' | 'user' | 'investor',
         });
 
       if (error) throw error;
 
       setRoles(prev => [
         ...prev.filter(r => r.user_id !== assigningRole.user_id),
-        { user_id: assigningRole.user_id, role: selectedRole as 'super_admin' | 'admin' | 'moderator' | 'user' | 'investor' }
+        { user_id: assigningRole.user_id, role: selectedRole as 'admin' | 'moderator' | 'user' | 'investor' }
       ]);
       
       setAssigningRole(null);
@@ -298,7 +317,10 @@ const MemberDirectory = () => {
 
   // Delete handlers
   const handleDeleteMember = async () => {
-    if (!deletingMember) return;
+    if (!deletingMember || !deletingMember.id) {
+      toast.error('Membre introuvable');
+      return;
+    }
 
     setIsDeleting(true);
     try {
@@ -389,8 +411,8 @@ const MemberDirectory = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredMembers.map((member) => (
               <div
-                key={member.id}
-                onClick={() => navigate(`/members/${member.id}`)}
+                key={member.id || member.user_id}
+                onClick={() => member.user_id && navigate(`/members/${member.user_id}`)}
                 className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors cursor-pointer"
               >
                 <div className="flex items-start gap-4">
@@ -444,7 +466,7 @@ const MemberDirectory = () => {
                 </div>
 
                 {/* Admin Actions */}
-                {isAdmin && member.user_id !== user?.id && (
+                {isAdmin && member.user_id !== user?.id && member.user_id && (
                   <div className="mt-4 pt-3 border-t border-border flex gap-2">
                     <Button
                       variant="ghost"
