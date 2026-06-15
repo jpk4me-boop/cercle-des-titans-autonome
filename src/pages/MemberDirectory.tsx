@@ -220,13 +220,28 @@ const MemberDirectory = () => {
   };
 
   const handleSaveEdit = async () => {
-    if (!editingMember || !editingMember.id) {
+    if (!editingMember || !editingMember.user_id) {
+      console.error('Member action failed: missing user_id', { member: editingMember });
       toast.error('Membre introuvable');
       return;
     }
 
     setIsSaving(true);
     try {
+      // First, check if profile exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', editingMember.user_id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        console.error('Member action failed: profile not found', { member: editingMember });
+        toast.error('Profil introuvable dans la base de données');
+        return;
+      }
+
+      // Update profile using user_id
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -237,12 +252,12 @@ const MemberDirectory = () => {
           city: editForm.city || null,
           profession: editForm.profession || null,
         })
-        .eq('id', editingMember.id);
+        .eq('user_id', editingMember.user_id);
 
       if (error) throw error;
 
       setMembers(prev => prev.map(m => 
-        m.id === editingMember.id 
+        m.user_id === editingMember.user_id 
           ? { ...m, ...editForm }
           : m
       ));
@@ -250,7 +265,7 @@ const MemberDirectory = () => {
       setEditingMember(null);
       toast.success('Profil mis à jour');
     } catch (error) {
-      console.error('Error updating member:', error);
+      console.error('Member action failed', { member: editingMember, error });
       toast.error('Erreur lors de la mise à jour');
     } finally {
       setIsSaving(false);
@@ -265,6 +280,7 @@ const MemberDirectory = () => {
 
   const handleAssignRole = async () => {
     if (!assigningRole || !assigningRole.user_id) {
+      console.error('Member action failed: missing user_id', { member: assigningRole });
       toast.error('Membre introuvable');
       return;
     }
@@ -284,21 +300,34 @@ const MemberDirectory = () => {
 
     setIsAssigningRole(true);
     try {
-      // First, delete existing role
-      await supabase
+      // Check if role already exists
+      const { data: existingRole } = await supabase
         .from('user_roles')
-        .delete()
-        .eq('user_id', assigningRole.user_id);
+        .select('id')
+        .eq('user_id', assigningRole.user_id)
+        .maybeSingle();
 
-      // Then insert new role
-      const { error } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: assigningRole.user_id,
-          role: selectedRole as 'admin' | 'moderator' | 'user' | 'investor',
-        });
+      if (existingRole) {
+        // Update existing role
+        const { error } = await supabase
+          .from('user_roles')
+          .update({
+            role: selectedRole as 'admin' | 'moderator' | 'user' | 'investor',
+          })
+          .eq('user_id', assigningRole.user_id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Insert new role
+        const { error } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: assigningRole.user_id,
+            role: selectedRole as 'admin' | 'moderator' | 'user' | 'investor',
+          });
+
+        if (error) throw error;
+      }
 
       setRoles(prev => [
         ...prev.filter(r => r.user_id !== assigningRole.user_id),
@@ -308,7 +337,7 @@ const MemberDirectory = () => {
       setAssigningRole(null);
       toast.success('Rôle attribué avec succès');
     } catch (error) {
-      console.error('Error assigning role:', error);
+      console.error('Member action failed', { member: assigningRole, error });
       toast.error('Erreur lors de l\'attribution du rôle');
     } finally {
       setIsAssigningRole(false);
@@ -317,25 +346,40 @@ const MemberDirectory = () => {
 
   // Delete handlers
   const handleDeleteMember = async () => {
-    if (!deletingMember || !deletingMember.id) {
+    if (!deletingMember || !deletingMember.user_id) {
+      console.error('Member action failed: missing user_id', { member: deletingMember });
       toast.error('Membre introuvable');
       return;
     }
 
     setIsDeleting(true);
     try {
+      // First, check if profile exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', deletingMember.user_id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        console.error('Member action failed: profile not found', { member: deletingMember });
+        toast.error('Profil introuvable dans la base de données');
+        return;
+      }
+
+      // Delete profile using user_id
       const { error } = await supabase
         .from('profiles')
         .delete()
-        .eq('id', deletingMember.id);
+        .eq('user_id', deletingMember.user_id);
 
       if (error) throw error;
 
-      setMembers(prev => prev.filter(m => m.id !== deletingMember.id));
+      setMembers(prev => prev.filter(m => m.user_id !== deletingMember.user_id));
       setDeletingMember(null);
       toast.success('Membre supprimé');
     } catch (error) {
-      console.error('Error deleting member:', error);
+      console.error('Member action failed', { member: deletingMember, error });
       toast.error('Erreur lors de la suppression');
     } finally {
       setIsDeleting(false);
