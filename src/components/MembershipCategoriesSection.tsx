@@ -140,7 +140,7 @@ const CategoryCard = ({ category, index }: { category: Category; index: number }
             {t('membership.join')}
           </Button>
           <Link
-            to={`/categorie/${categoryName.toLowerCase()}`}
+            to={`/categorie/${category.nameKey}`}
             className="text-sm text-center text-muted-foreground hover:text-gold transition-colors flex items-center justify-center gap-1"
           >
             {t('membership.learnMore')}

@@ -48,8 +48,8 @@ const categoryInfo: Record<string, { name: string; color: string; amount: string
   bronze: { name: 'Bronze', color: 'text-amber-700', amount: '5 000 FCFA/sem.' },
   silver: { name: 'Silver', color: 'text-slate-400', amount: '10 000 FCFA/sem.' },
   gold: { name: 'Gold', color: 'text-yellow-500', amount: '25 000 FCFA/sem.' },
-  platinum: { name: 'Platinum', color: 'text-cyan-400', amount: '50 000 FCFA/sem.' },
-  diamond: { name: 'Diamond', color: 'text-blue-400', amount: '100 000 FCFA/sem.' },
+  diamond: { name: 'Diamond', color: 'text-blue-400', amount: '50 000 FCFA/sem.' },
+  platinum: { name: 'Platinium', color: 'text-cyan-400', amount: '100 000 FCFA/sem.' },
   prestige: { name: 'Prestige', color: 'text-purple-500', amount: '200 000 FCFA/sem.' },
 };
 

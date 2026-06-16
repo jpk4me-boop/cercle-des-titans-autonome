@@ -24,9 +24,9 @@ const questions: Question[] = [
     options: [
       { value: 'low', label: 'Moins de 10 000 FCFA', score: { bronze: 3, silver: 1, gold: 0, platinum: 0, diamond: 0, prestige: 0 } },
       { value: 'medium-low', label: '10 000 - 25 000 FCFA', score: { bronze: 1, silver: 3, gold: 2, platinum: 0, diamond: 0, prestige: 0 } },
-      { value: 'medium', label: '25 000 - 50 000 FCFA', score: { bronze: 0, silver: 1, gold: 3, platinum: 2, diamond: 0, prestige: 0 } },
-      { value: 'high', label: '50 000 - 100 000 FCFA', score: { bronze: 0, silver: 0, gold: 1, platinum: 3, diamond: 2, prestige: 1 } },
-      { value: 'very-high', label: 'Plus de 100 000 FCFA', score: { bronze: 0, silver: 0, gold: 0, platinum: 1, diamond: 3, prestige: 3 } },
+      { value: 'medium', label: '25 000 - 50 000 FCFA', score: { bronze: 0, silver: 1, gold: 3, platinum: 0, diamond: 2, prestige: 0 } },
+      { value: 'high', label: '50 000 - 100 000 FCFA', score: { bronze: 0, silver: 0, gold: 1, platinum: 2, diamond: 3, prestige: 1 } },
+      { value: 'very-high', label: 'Plus de 100 000 FCFA', score: { bronze: 0, silver: 0, gold: 0, platinum: 3, diamond: 1, prestige: 3 } },
     ],
   },
   {
@@ -35,9 +35,9 @@ const questions: Question[] = [
     icon: <Target className="h-5 w-5" />,
     options: [
       { value: 'small-savings', label: 'Constituer une petite épargne de sécurité', score: { bronze: 3, silver: 2, gold: 1, platinum: 0, diamond: 0, prestige: 0 } },
-      { value: 'project', label: 'Financer un projet personnel (équipement, voyage)', score: { bronze: 1, silver: 3, gold: 3, platinum: 2, diamond: 1, prestige: 0 } },
+      { value: 'project', label: 'Financer un projet personnel (équipement, voyage)', score: { bronze: 1, silver: 3, gold: 3, platinum: 1, diamond: 2, prestige: 0 } },
       { value: 'investment', label: 'Investir dans un projet important (immobilier, véhicule)', score: { bronze: 0, silver: 0, gold: 1, platinum: 3, diamond: 3, prestige: 2 } },
-      { value: 'wealth', label: 'Construire un patrimoine significatif', score: { bronze: 0, silver: 0, gold: 0, platinum: 1, diamond: 2, prestige: 3 } },
+      { value: 'wealth', label: 'Construire un patrimoine significatif', score: { bronze: 0, silver: 0, gold: 0, platinum: 2, diamond: 1, prestige: 3 } },
     ],
   },
   {
@@ -46,8 +46,8 @@ const questions: Question[] = [
     icon: <Clock className="h-5 w-5" />,
     options: [
       { value: 'short', label: 'Court (10 semaines)', score: { bronze: 3, silver: 3, gold: 0, platinum: 0, diamond: 0, prestige: 0 } },
-      { value: 'medium', label: 'Moyen (12-15 semaines)', score: { bronze: 0, silver: 0, gold: 3, platinum: 3, diamond: 0, prestige: 0 } },
-      { value: 'long', label: 'Long (20 semaines)', score: { bronze: 0, silver: 0, gold: 0, platinum: 0, diamond: 3, prestige: 3 } },
+      { value: 'medium', label: 'Moyen (12-15 semaines)', score: { bronze: 0, silver: 0, gold: 3, platinum: 0, diamond: 3, prestige: 0 } },
+      { value: 'long', label: 'Long (20 semaines)', score: { bronze: 0, silver: 0, gold: 0, platinum: 3, diamond: 0, prestige: 3 } },
     ],
   },
   {
@@ -56,20 +56,22 @@ const questions: Question[] = [
     icon: <Trophy className="h-5 w-5" />,
     options: [
       { value: 'never', label: 'Non, c\'est ma première fois', score: { bronze: 3, silver: 2, gold: 1, platinum: 0, diamond: 0, prestige: 0 } },
-      { value: 'few', label: 'Oui, quelques fois', score: { bronze: 1, silver: 2, gold: 3, platinum: 2, diamond: 1, prestige: 0 } },
+      { value: 'few', label: 'Oui, quelques fois', score: { bronze: 1, silver: 2, gold: 3, platinum: 1, diamond: 2, prestige: 0 } },
       { value: 'experienced', label: 'Oui, je suis un habitué', score: { bronze: 0, silver: 1, gold: 2, platinum: 3, diamond: 3, prestige: 2 } },
       { value: 'expert', label: 'Oui, je suis un expert', score: { bronze: 0, silver: 0, gold: 1, platinum: 2, diamond: 2, prestige: 3 } },
     ],
   },
 ];
 
+// Official tiers (weekly amounts) — kept in sync with CategoryDetail / CategoriesComparison.
+// Gain = weekly amount × 12-week cycle. Diamond (50 000) ranks below Platinium (100 000).
 const categories = {
-  bronze: { name: 'Bronze', slug: 'bronze', color: 'text-amber-700', amount: '5 000 FCFA/semaine', gain: '50 000 FCFA' },
-  silver: { name: 'Silver', slug: 'silver', color: 'text-slate-400', amount: '10 000 FCFA/semaine', gain: '100 000 FCFA' },
+  bronze: { name: 'Bronze', slug: 'bronze', color: 'text-amber-700', amount: '5 000 FCFA/semaine', gain: '60 000 FCFA' },
+  silver: { name: 'Silver', slug: 'silver', color: 'text-slate-400', amount: '10 000 FCFA/semaine', gain: '120 000 FCFA' },
   gold: { name: 'Gold', slug: 'gold', color: 'text-yellow-500', amount: '25 000 FCFA/semaine', gain: '300 000 FCFA' },
-  platinum: { name: 'Platinum', slug: 'platinum', color: 'text-cyan-400', amount: '50 000 FCFA/semaine', gain: '600 000 FCFA' },
-  diamond: { name: 'Diamond', slug: 'diamond', color: 'text-blue-400', amount: '100 000 FCFA/semaine', gain: '2 000 000 FCFA' },
-  prestige: { name: 'Prestige', slug: 'prestige', color: 'text-purple-500', amount: '200 000 FCFA/semaine', gain: '4 000 000 FCFA' },
+  diamond: { name: 'Diamond', slug: 'diamond', color: 'text-blue-400', amount: '50 000 FCFA/semaine', gain: '600 000 FCFA' },
+  platinum: { name: 'Platinium', slug: 'platinum', color: 'text-cyan-400', amount: '100 000 FCFA/semaine', gain: '1 200 000 FCFA' },
+  prestige: { name: 'Prestige', slug: 'prestige', color: 'text-purple-500', amount: '200 000 FCFA/semaine', gain: '2 400 000 FCFA' },
 };
 
 export default function CategoryRecommender() {
