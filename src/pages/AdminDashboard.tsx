@@ -31,6 +31,7 @@ import { ArrowLeft, RefreshCw, Download, Users, CreditCard, TrendingUp, Clock, F
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
+import SuperAdminBadge from "@/components/SuperAdminBadge";
 import FinancingRequestsTab from "@/components/admin/FinancingRequestsTab";
 import CyclesTab from "@/components/admin/CyclesTab";
 import ContributionsTab from "@/components/admin/ContributionsTab";
@@ -64,6 +65,7 @@ export default function AdminDashboard() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState("transactions");
   const [filters, setFilters] = useState<Filters>({
@@ -112,7 +114,9 @@ export default function AdminDashboard() {
       // Prioritize admin role if user has both
       const hasAdmin = roles.some(r => r.role === 'admin' || r.role === 'super_admin');
       const hasInvestor = roles.some(r => r.role === 'investor');
-      
+
+      setIsSuperAdmin(roles.some(r => r.role === 'super_admin'));
+
       if (hasAdmin) {
         setUserRole('admin');
       } else if (hasInvestor) {
@@ -232,9 +236,12 @@ export default function AdminDashboard() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">
-                {isReadOnly ? "Tableau de bord Investisseur" : "Tableau de bord Admin"}
-              </h1>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-3xl font-bold text-foreground">
+                  {isReadOnly ? "Tableau de bord Investisseur" : "Tableau de bord Admin"}
+                </h1>
+                <SuperAdminBadge show={isSuperAdmin} />
+              </div>
               <p className="text-muted-foreground">
                 {isReadOnly ? "Vue en lecture seule des transactions et demandes" : "Gestion des transactions et demandes"}
               </p>

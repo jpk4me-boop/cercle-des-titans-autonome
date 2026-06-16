@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import LanguageToggle from "@/components/LanguageToggle";
+import SuperAdminBadge from "@/components/SuperAdminBadge";
 import phoenixLogo from "@/assets/logo-phoenix.jpg";
 import {
   DropdownMenu,
@@ -27,6 +28,7 @@ const Navbar = () => {
   const [isTontineOpen, setIsTontineOpen] = useState(false);
   const [isFinancementOpen, setIsFinancementOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, loading } = useAuth();
   const { t } = useLanguage();
@@ -43,6 +45,7 @@ const Navbar = () => {
     const checkAdminRole = async () => {
       if (!user) {
         setIsAdmin(false);
+        setIsSuperAdmin(false);
         return;
       }
 
@@ -50,10 +53,11 @@ const Navbar = () => {
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
-        .in("role", ["admin", "super_admin"])
-        .maybeSingle();
+        .in("role", ["admin", "super_admin"]);
 
-      setIsAdmin(!!data);
+      const roles = data ?? [];
+      setIsAdmin(roles.length > 0);
+      setIsSuperAdmin(roles.some((r) => r.role === "super_admin"));
     };
 
     checkAdminRole();
@@ -165,6 +169,7 @@ const Navbar = () => {
 
         <div className="hidden sm:flex items-center gap-3">
           <LanguageToggle />
+          <SuperAdminBadge show={isSuperAdmin} className="hidden md:inline-flex" />
           {isAdmin && (
             <Link to="/admin">
               <Button variant="outline" size="sm" className="border-gold/50 text-gold hover:bg-gold/10">
@@ -347,6 +352,9 @@ const Navbar = () => {
         </ul>
 
         <div className="p-6 pt-0 space-y-3">
+          {isSuperAdmin && (
+            <SuperAdminBadge show={isSuperAdmin} className="w-full justify-center" />
+          )}
           {isAdmin && (
             <Link to="/admin" onClick={closeMenu}>
               <Button variant="outline" className="w-full border-gold/50 text-gold hover:bg-gold/10">
