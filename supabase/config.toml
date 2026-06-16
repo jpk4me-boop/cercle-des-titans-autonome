@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.run-tontine-daily-maintenance]
 verify_jwt = false
+
+[functions.titan-assistant]
+verify_jwt = true
