@@ -173,7 +173,7 @@ export default function CategoryRecommender() {
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button
-              onClick={() => navigate(`/categories/${rec.slug}`)}
+              onClick={() => navigate(`/categorie/${rec.slug}`)}
               className="flex-1 gap-2"
             >
               Découvrir cette catégorie

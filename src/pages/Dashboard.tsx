@@ -392,7 +392,7 @@ const Dashboard = () => {
                       variant="link"
                       size="sm"
                       className="p-0 h-auto mt-2 text-primary"
-                      onClick={() => navigate(`/categories/${profile.recommended_category}`)}
+                      onClick={() => navigate(`/categorie/${profile.recommended_category}`)}
                     >
                       Voir les détails
                       <ArrowRight className="w-3 h-3 ml-1" />

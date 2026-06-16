@@ -240,8 +240,16 @@ const categoriesData: Record<string, CategoryData> = {
 const CategoryDetail = () => {
   const { categoryName } = useParams<{ categoryName: string }>();
   const navigate = useNavigate();
-  
-  const category = categoryName ? categoriesData[categoryName.toLowerCase()] : null;
+
+  // Some slugs in use elsewhere differ from the keys above (e.g. the recommender
+  // emits "platinum" while the data key is "platinium"). Normalize known aliases
+  // so a valid recommended category never resolves to "Catégorie non trouvée".
+  const slugAliases: Record<string, string> = { platinum: "platinium" };
+  const normalizedSlug = categoryName
+    ? slugAliases[categoryName.toLowerCase()] ?? categoryName.toLowerCase()
+    : null;
+
+  const category = normalizedSlug ? categoriesData[normalizedSlug] : null;
 
   if (!category) {
     return (
