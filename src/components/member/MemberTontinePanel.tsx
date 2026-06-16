@@ -479,7 +479,9 @@ export default function MemberTontinePanel() {
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {formatAmount(category.daily_amount)} / jour
+                        {category.weekly_amount != null
+                          ? `${formatAmount(category.weekly_amount)} / semaine`
+                          : `${formatAmount(category.daily_amount)} / jour`}
                       </p>
                       {category.description && (
                         <p className="text-xs text-muted-foreground mt-1">{category.description}</p>

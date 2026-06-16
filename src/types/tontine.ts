@@ -6,6 +6,9 @@ export interface TontineCategory {
   name: string;
   description: string | null;
   daily_amount: number;
+  // Canonical weekly tier amount (added by the harmonize migration). Optional so the
+  // app keeps working before the migration is deployed; falls back to daily_amount.
+  weekly_amount?: number | null;
   currency: string;
   is_active: boolean;
   created_at: string;
