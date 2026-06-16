@@ -45,6 +45,7 @@ import {
   Layers,
   RefreshCw,
   X,
+  XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -135,11 +136,13 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
   const [generating, setGenerating] = useState(false);
   const [closing, setClosing] = useState(false);
 
-  // Validation dialog state
-  const [reviewPayment, setReviewPayment] = useState<ContributionPayment | null>(null);
-  const [reviewStatus, setReviewStatus] = useState<"paid" | "rejected" | "pending">("paid");
-  const [reviewNote, setReviewNote] = useState("");
-  const [reviewing, setReviewing] = useState(false);
+  // Inline validation: id of the payment currently being processed (validate or reject).
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Reject dialog state — a note is mandatory when rejecting.
+  const [rejectPayment, setRejectPayment] = useState<ContributionPayment | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
+  const [rejecting, setRejecting] = useState(false);
 
   const categoryNameById = useMemo(() => {
     const map: Record<string, string> = {};
@@ -218,6 +221,11 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
     [payments]
   );
 
+  const rejectedPayments = useMemo(
+    () => payments.filter((p) => p.status === "rejected"),
+    [payments]
+  );
+
   const handleGenerate = async () => {
     if (readOnly) {
       toast.error("Action non autorisée en lecture seule");
@@ -266,23 +274,16 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
     }
   };
 
-  const openReview = (payment: ContributionPayment) => {
-    setReviewPayment(payment);
-    setReviewStatus("paid");
-    setReviewNote(payment.admin_note ?? "");
-  };
-
-  const submitReview = async () => {
-    if (!reviewPayment) return;
+  // One-click validation: marks the declared payment as paid.
+  const handleValidate = async (payment: ContributionPayment) => {
     if (readOnly) {
       toast.error("Action non autorisée en lecture seule");
       return;
     }
-    setReviewing(true);
+    setProcessingId(payment.id);
     try {
-      await adminValidatePayment(reviewPayment.id, reviewStatus, reviewNote);
-      toast.success("Paiement traité avec succès");
-      setReviewPayment(null);
+      await adminValidatePayment(payment.id, "paid", payment.admin_note ?? "");
+      toast.success("Paiement validé");
       loadAll();
     } catch (error) {
       console.error("Erreur validation paiement:", error);
@@ -290,7 +291,42 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
         error instanceof Error ? error.message : "Erreur lors de la validation du paiement"
       );
     } finally {
-      setReviewing(false);
+      setProcessingId(null);
+    }
+  };
+
+  const openReject = (payment: ContributionPayment) => {
+    setRejectPayment(payment);
+    setRejectNote("");
+  };
+
+  // Rejection requires a mandatory admin note (the reject reason).
+  const submitReject = async () => {
+    if (!rejectPayment) return;
+    if (readOnly) {
+      toast.error("Action non autorisée en lecture seule");
+      return;
+    }
+    const note = rejectNote.trim();
+    if (!note) {
+      toast.error("Un motif de rejet est obligatoire");
+      return;
+    }
+    setRejecting(true);
+    setProcessingId(rejectPayment.id);
+    try {
+      await adminValidatePayment(rejectPayment.id, "rejected", note);
+      toast.success("Paiement rejeté");
+      setRejectPayment(null);
+      loadAll();
+    } catch (error) {
+      console.error("Erreur rejet paiement:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Erreur lors du rejet du paiement"
+      );
+    } finally {
+      setRejecting(false);
+      setProcessingId(null);
     }
   };
 
@@ -485,15 +521,28 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
                       </TableCell>
                       <TableCell>{paymentStatusBadge(p.status)}</TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={readOnly}
-                          onClick={() => openReview(p)}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Traiter
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={readOnly || processingId === p.id}
+                            onClick={() => handleValidate(p)}
+                            className="border-green-500/40 text-green-400 hover:bg-green-500/10 hover:text-green-300"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            {processingId === p.id ? "..." : "Valider"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={readOnly || processingId === p.id}
+                            onClick={() => openReject(p)}
+                            className="border-red-500/40 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Rejeter
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -503,6 +552,53 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
           )}
         </CardContent>
       </Card>
+
+      {/* Rejected payments — show the reject reason clearly */}
+      {rejectedPayments.length > 0 && (
+        <Card className="bg-card border-red-500/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-red-400" />
+              Paiements rejetés ({rejectedPayments.length})
+            </CardTitle>
+            <CardDescription>Paiements refusés avec le motif communiqué au membre.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border">
+                    <TableHead className="text-muted-foreground">Date</TableHead>
+                    <TableHead className="text-muted-foreground">Catégorie</TableHead>
+                    <TableHead className="text-muted-foreground">Montant</TableHead>
+                    <TableHead className="text-muted-foreground">Statut</TableHead>
+                    <TableHead className="text-muted-foreground">Motif du rejet</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rejectedPayments.map((p) => (
+                    <TableRow key={p.id} className="border-border">
+                      <TableCell className="text-muted-foreground text-sm">
+                        {format(new Date(p.payment_date), "dd MMM yyyy HH:mm", { locale: fr })}
+                      </TableCell>
+                      <TableCell className="text-foreground">
+                        {categoryNameById[p.category_id] ?? "—"}
+                      </TableCell>
+                      <TableCell className="font-semibold text-foreground">
+                        {formatAmount(p.amount)}
+                      </TableCell>
+                      <TableCell>{paymentStatusBadge(p.status)}</TableCell>
+                      <TableCell className="text-sm text-red-300">
+                        {p.admin_note || "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Contributions filters + table */}
       <Card className="bg-card border-border">
@@ -600,53 +696,43 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
         </CardContent>
       </Card>
 
-      {/* Review dialog */}
-      <Dialog open={Boolean(reviewPayment)} onOpenChange={(open) => !open && setReviewPayment(null)}>
+      {/* Reject dialog — admin note is mandatory */}
+      <Dialog open={Boolean(rejectPayment)} onOpenChange={(open) => !open && setRejectPayment(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Traiter le paiement</DialogTitle>
+            <DialogTitle>Rejeter le paiement</DialogTitle>
             <DialogDescription>
-              {reviewPayment
-                ? `${formatAmount(reviewPayment.amount)} — ${
-                    categoryNameById[reviewPayment.category_id] ?? "Catégorie"
+              {rejectPayment
+                ? `${formatAmount(rejectPayment.amount)} — ${
+                    categoryNameById[rejectPayment.category_id] ?? "Catégorie"
                   }`
                 : ""}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Décision</label>
-              <Select
-                value={reviewStatus}
-                onValueChange={(value) =>
-                  setReviewStatus(value as "paid" | "rejected" | "pending")
-                }
-              >
-                <SelectTrigger className="bg-background border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="paid">Valider (payé)</SelectItem>
-                  <SelectItem value="rejected">Rejeter</SelectItem>
-                  <SelectItem value="pending">Remettre en attente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Note (facultatif)</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                Motif du rejet <span className="text-red-400">*</span>
+              </label>
               <Textarea
-                value={reviewNote}
-                onChange={(e) => setReviewNote(e.target.value)}
-                placeholder="Commentaire administrateur"
+                value={rejectNote}
+                onChange={(e) => setRejectNote(e.target.value)}
+                placeholder="Expliquez pourquoi ce paiement est rejeté (visible par le membre)"
+                className="border-red-500/30 focus-visible:ring-red-500/40"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setReviewPayment(null)}>
+            <Button variant="outline" onClick={() => setRejectPayment(null)}>
               Annuler
             </Button>
-            <Button onClick={submitReview} disabled={reviewing || readOnly}>
-              {reviewing ? "Traitement..." : "Confirmer"}
+            <Button
+              onClick={submitReject}
+              disabled={rejecting || readOnly || !rejectNote.trim()}
+              className="bg-red-500/90 text-white hover:bg-red-500"
+            >
+              <XCircle className="h-4 w-4 mr-1" />
+              {rejecting ? "Rejet..." : "Confirmer le rejet"}
             </Button>
           </DialogFooter>
         </DialogContent>
