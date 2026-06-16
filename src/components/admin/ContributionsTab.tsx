@@ -35,11 +35,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  AlertTriangle,
   CalendarPlus,
   CalendarX,
   CheckCircle,
   Clock,
+  Coins,
   Filter,
+  Layers,
   RefreshCw,
   X,
 } from "lucide-react";
@@ -49,6 +52,7 @@ import { toast } from "sonner";
 import {
   adminValidatePayment,
   closeDailyContributions,
+  fetchActiveCycle,
   fetchAllCategories,
   fetchAllContributions,
   fetchAllPayments,
@@ -60,6 +64,7 @@ import type {
   PaymentMethod,
   TontineCategory,
   TontineContribution,
+  TontineCycle,
 } from "@/types/tontine";
 
 interface ContributionsTabProps {
@@ -114,6 +119,9 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
   const [payments, setPayments] = useState<ContributionPayment[]>([]);
   const [categories, setCategories] = useState<TontineCategory[]>([]);
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [activeCycle, setActiveCycle] = useState<TontineCycle | null>(null);
+  const [todayContributions, setTodayContributions] = useState<TontineContribution[]>([]);
+  const [overdueContributions, setOverdueContributions] = useState<TontineContribution[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [filters, setFilters] = useState<Filters>({
@@ -151,8 +159,17 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
 
   const loadAll = async () => {
     setLoading(true);
+    const today = todayStr();
     try {
-      const [contribData, payData, catData, methodData] = await Promise.all([
+      const [
+        contribData,
+        payData,
+        catData,
+        methodData,
+        cycleData,
+        todayData,
+        overdueData,
+      ] = await Promise.all([
         fetchAllContributions({
           status: filters.status,
           dateFrom: filters.dateFrom || undefined,
@@ -161,11 +178,18 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
         fetchAllPayments(),
         fetchAllCategories(),
         fetchAllPaymentMethods(),
+        fetchActiveCycle(),
+        // Filter-independent snapshots for the summary cards.
+        fetchAllContributions({ dateFrom: today, dateTo: today }),
+        fetchAllContributions({ status: "overdue" }),
       ]);
       setContributions(contribData);
       setPayments(payData);
       setCategories(catData);
       setMethods(methodData);
+      setActiveCycle(cycleData);
+      setTodayContributions(todayData);
+      setOverdueContributions(overdueData);
     } catch (error) {
       console.error("Erreur chargement cotisations:", error);
       toast.error(
@@ -270,8 +294,86 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
     }
   };
 
+  const todayPaidCount = useMemo(
+    () => todayContributions.filter((c) => c.status === "paid").length,
+    [todayContributions]
+  );
+
   return (
     <div className="space-y-6">
+      {/* Active cycle banner — premium dark/gold accent */}
+      <Card className="overflow-hidden border-amber-400/20 bg-gradient-to-br from-black/60 via-card to-card shadow-[0_0_32px_rgba(245,158,11,0.08)]">
+        <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full border border-amber-400/30 bg-black/40 text-amber-300 shadow-[0_0_18px_rgba(245,158,11,0.18)]">
+              <Layers className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-amber-300/80">Cycle actif</p>
+              {loading ? (
+                <p className="text-sm text-muted-foreground">Chargement...</p>
+              ) : activeCycle ? (
+                <p className="text-lg font-semibold text-foreground">{activeCycle.name}</p>
+              ) : (
+                <p className="text-lg font-semibold text-muted-foreground">Aucun cycle actif</p>
+              )}
+            </div>
+          </div>
+          {activeCycle && (
+            <div className="text-sm text-muted-foreground sm:text-right">
+              <p>
+                Début&nbsp;: <span className="text-foreground">{formatDate(activeCycle.start_date)}</span>
+              </p>
+              {activeCycle.end_date && (
+                <p>
+                  Fin&nbsp;: <span className="text-foreground">{formatDate(activeCycle.end_date)}</span>
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Summary cards: today's contributions / declared payments / overdue */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card className="bg-card border-border">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Cotisations du jour
+            </CardTitle>
+            <Coins className="h-4 w-4 text-amber-300" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{todayContributions.length}</div>
+            <p className="text-xs text-muted-foreground">{todayPaidCount} payée(s)</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Paiements déclarés
+            </CardTitle>
+            <Clock className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-500">{pendingPayments.length}</div>
+            <p className="text-xs text-muted-foreground">en attente de validation</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Retards</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-500">{overdueContributions.length}</div>
+            <p className="text-xs text-muted-foreground">cotisation(s) en retard</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Admin actions: generate / close */}
       {!readOnly && (
         <div className="grid gap-4 md:grid-cols-2">

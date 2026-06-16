@@ -47,6 +47,8 @@ import type {
 
 const DECLARABLE_STATUSES = new Set(["pending", "partial", "overdue"]);
 
+const todayStr = () => format(new Date(), "yyyy-MM-dd");
+
 const formatDate = (value: string) =>
   format(new Date(`${value}T00:00:00`), "dd MMM yyyy", { locale: fr });
 
@@ -92,6 +94,11 @@ export default function MemberTontinePanel() {
     });
     return map;
   }, [categories]);
+
+  const todayContributions = useMemo(() => {
+    const today = todayStr();
+    return contributions.filter((c) => c.due_date === today);
+  }, [contributions]);
 
   const loadAll = async () => {
     if (!user) return;
@@ -193,6 +200,65 @@ export default function MemberTontinePanel() {
 
   return (
     <div className="space-y-6">
+      {/* Today's contribution highlight — premium dark/gold accent */}
+      <Card className="overflow-hidden border-amber-400/20 bg-gradient-to-br from-black/60 via-card to-card shadow-[0_0_32px_rgba(245,158,11,0.08)]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Coins className="h-5 w-5 text-amber-300" />
+            Cotisation du jour
+          </CardTitle>
+          <CardDescription>{formatDate(todayStr())}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-amber-300" />
+            </div>
+          ) : todayContributions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Aucune cotisation due aujourd'hui. Sélectionnez une catégorie pour en générer.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {todayContributions.map((c) => {
+                const canDeclare = DECLARABLE_STATUSES.has(c.status);
+                return (
+                  <div
+                    key={c.id}
+                    className="flex flex-col gap-3 rounded-lg border border-amber-400/15 bg-black/20 p-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-foreground">
+                          {categoryNameById[c.category_id] ?? "Catégorie"}
+                        </span>
+                        {contributionStatusBadge(c.status)}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Attendu&nbsp;: <span className="text-amber-200">{formatAmount(c.expected_amount)}</span>
+                        {c.paid_amount > 0 && (
+                          <> · Payé&nbsp;: <span className="text-foreground">{formatAmount(c.paid_amount)}</span></>
+                        )}
+                      </p>
+                    </div>
+                    {canDeclare ? (
+                      <Button size="sm" onClick={() => openDeclare(c)}>
+                        Déclarer le paiement
+                      </Button>
+                    ) : (
+                      <Badge className="bg-green-500/20 text-green-600 border-green-500/30">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        À jour
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Categories */}
       <Card className="bg-card border-border">
         <CardHeader>
