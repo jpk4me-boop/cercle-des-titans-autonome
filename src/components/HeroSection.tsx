@@ -2,8 +2,7 @@ import { Check, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import heroImageJpg from "@/assets/hero-team.jpg";
-import heroImageWebp from "@/assets/hero-team.jpg?format=webp&quality=85";
+import heroImageWebp from "@/assets/hero-team-titans.webp";
 import { FloatingElement, MagneticButton, ParallaxLayer } from "@/components/AnimatedElements";
 import { useMouseParallax } from "@/hooks/useParallax";
 
@@ -24,11 +23,10 @@ const HeroSection = () => {
       <div className="absolute inset-0 z-0">
         <picture>
           <source srcSet={heroImageWebp} type="image/webp" />
-          <source srcSet={heroImageJpg} type="image/jpeg" />
           <img
-            src={heroImageJpg}
-            alt="Diverse African professionals collaborating together"
-            className="w-full h-full object-cover object-center brightness-110 contrast-105 saturate-110 scale-105 transition-transform duration-1000"
+            src={heroImageWebp}
+            alt="Équipe professionnelle du Cercle des Titans dans un bureau premium"
+            className="w-full h-full object-cover object-center brightness-105 contrast-105 saturate-105 scale-105 transition-transform duration-1000"
             style={{
               transform: `scale(1.05) translate3d(${mousePosition.x * 0.5}px, ${mousePosition.y * 0.5}px, 0)`,
             }}
@@ -37,7 +35,12 @@ const HeroSection = () => {
             decoding="async"
           />
         </picture>
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/60 to-transparent" />
+        {/* Deep black base for legibility */}
+        <div className="absolute inset-0 bg-background/40" />
+        {/* Directional fade keeping text side readable */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-background/30" />
+        {/* Subtle gold accent wash */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-gold/10" />
         <div className="absolute inset-0 pattern-adinkra opacity-20" />
       </div>
 
