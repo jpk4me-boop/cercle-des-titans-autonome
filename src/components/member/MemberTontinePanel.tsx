@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Coins, CreditCard, Loader2 } from "lucide-react";
+import { CheckCircle2, Clock, Coins, CreditCard, Loader2, ReceiptText, RefreshCw, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -35,11 +35,13 @@ import {
   fetchActiveCategories,
   fetchMemberCategories,
   fetchMemberContributions,
+  fetchMemberPayments,
   fetchPaymentMethods,
   memberSelectCategory,
   memberUnselectCategory,
 } from "@/services/tontineService";
 import type {
+  ContributionPayment,
   PaymentMethod,
   TontineCategory,
   TontineContribution,
@@ -69,14 +71,46 @@ const contributionStatusBadge = (status: string) => {
   }
 };
 
+// Status of a payment the member declared, as seen from their side.
+const paymentStatusBadge = (status: string) => {
+  switch (status) {
+    case "paid":
+      return (
+        <Badge className="bg-green-500/20 text-green-600 border-green-500/30">
+          <CheckCircle2 className="h-3 w-3 mr-1" />
+          Validé
+        </Badge>
+      );
+    case "rejected":
+      return (
+        <Badge className="bg-red-500/20 text-red-600 border-red-500/30">
+          <XCircle className="h-3 w-3 mr-1" />
+          Rejeté
+        </Badge>
+      );
+    case "partial":
+      return <Badge className="bg-blue-500/20 text-blue-600 border-blue-500/30">Partiel</Badge>;
+    case "pending":
+    default:
+      return (
+        <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">
+          <Clock className="h-3 w-3 mr-1" />
+          En attente
+        </Badge>
+      );
+  }
+};
+
 export default function MemberTontinePanel() {
   const { user } = useAuth();
 
   const [categories, setCategories] = useState<TontineCategory[]>([]);
   const [memberCategoryIds, setMemberCategoryIds] = useState<Set<string>>(new Set());
   const [contributions, setContributions] = useState<TontineContribution[]>([]);
+  const [payments, setPayments] = useState<ContributionPayment[]>([]);
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshingPayments, setRefreshingPayments] = useState(false);
   const [savingCategoryId, setSavingCategoryId] = useState<string | null>(null);
 
   // Declare-payment dialog state
@@ -95,6 +129,14 @@ export default function MemberTontinePanel() {
     return map;
   }, [categories]);
 
+  const methodNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    methods.forEach((m) => {
+      map[m.id] = m.name;
+    });
+    return map;
+  }, [methods]);
+
   const todayContributions = useMemo(() => {
     const today = todayStr();
     return contributions.filter((c) => c.due_date === today);
@@ -104,16 +146,18 @@ export default function MemberTontinePanel() {
     if (!user) return;
     setLoading(true);
     try {
-      const [catData, memberCats, contribData, methodData] = await Promise.all([
+      const [catData, memberCats, contribData, methodData, paymentData] = await Promise.all([
         fetchActiveCategories(),
         fetchMemberCategories(user.id),
         fetchMemberContributions(user.id),
         fetchPaymentMethods(),
+        fetchMemberPayments(user.id),
       ]);
       setCategories(catData);
       setMemberCategoryIds(new Set(memberCats.map((m) => m.category_id)));
       setContributions(contribData);
       setMethods(methodData);
+      setPayments(paymentData);
     } catch (error) {
       console.error("Erreur chargement tontine:", error);
       toast.error(
@@ -121,6 +165,23 @@ export default function MemberTontinePanel() {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Refresh only the declared payments, without re-triggering the full page loader.
+  const refreshPayments = async () => {
+    if (!user) return;
+    setRefreshingPayments(true);
+    try {
+      const paymentData = await fetchMemberPayments(user.id);
+      setPayments(paymentData);
+    } catch (error) {
+      console.error("Erreur rafraîchissement paiements:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Erreur lors du rafraîchissement de vos paiements"
+      );
+    } finally {
+      setRefreshingPayments(false);
     }
   };
 
@@ -384,6 +445,75 @@ export default function MemberTontinePanel() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Declared payments — member sees validation status (En attente / Validé / Rejeté) */}
+      <Card className="bg-card border-border">
+        <CardHeader className="flex flex-row items-start justify-between gap-3">
+          <div className="space-y-1.5">
+            <CardTitle className="flex items-center gap-2">
+              <ReceiptText className="h-5 w-5 text-primary" />
+              Mes paiements déclarés
+            </CardTitle>
+            <CardDescription>
+              Suivez l'état de validation de chaque paiement déclaré par un administrateur.
+            </CardDescription>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={refreshPayments}
+            disabled={loading || refreshingPayments}
+            className="shrink-0 border-amber-400/30 text-amber-200 hover:bg-amber-400/10 hover:text-amber-100"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshingPayments ? "animate-spin" : ""}`} />
+            {refreshingPayments ? "Actualisation..." : "Actualiser"}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : payments.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <ReceiptText className="w-10 h-10 mx-auto mb-3 opacity-50" />
+              <p>Aucun paiement déclaré pour le moment.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {payments.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex flex-col gap-2 rounded-lg border border-border bg-black/20 p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-amber-200">{formatAmount(p.amount)}</span>
+                      {paymentStatusBadge(p.status)}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {categoryNameById[p.category_id] ?? "Catégorie"}
+                      {p.payment_method_id && (
+                        <> · {methodNameById[p.payment_method_id] ?? "Moyen de paiement"}</>
+                      )}
+                      {" · "}
+                      {format(new Date(p.payment_date), "dd MMM yyyy HH:mm", { locale: fr })}
+                    </p>
+                    {p.status === "rejected" && p.admin_note && (
+                      <p className="text-xs text-red-400">Motif&nbsp;: {p.admin_note}</p>
+                    )}
+                  </div>
+                  {p.payment_reference && (
+                    <span className="font-mono text-xs text-muted-foreground">
+                      Réf&nbsp;: {p.payment_reference}
+                    </span>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
