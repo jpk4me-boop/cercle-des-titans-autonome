@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.send-contribution-reminders]
 verify_jwt = false
+
+[functions.run-tontine-daily-maintenance]
+verify_jwt = false

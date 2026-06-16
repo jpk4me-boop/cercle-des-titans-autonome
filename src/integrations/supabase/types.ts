@@ -905,6 +905,14 @@ export type Database = {
         Args: { p_category_id: string }
         Returns: boolean
       }
+      run_daily_tontine_maintenance: {
+        Args: {
+          p_close_date: string
+          p_dry_run?: boolean
+          p_generate_date: string
+        }
+        Returns: Json
+      }
       submit_financing_request: {
         Args: {
           _amount_requested: number
