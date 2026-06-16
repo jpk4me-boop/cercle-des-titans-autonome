@@ -392,9 +392,11 @@ const Dashboard = () => {
                       variant="link"
                       size="sm"
                       className="p-0 h-auto mt-2 text-primary"
-                      onClick={() => navigate(`/categorie/${profile.recommended_category}`)}
+                      onClick={() =>
+                        document.getElementById('tontine')?.scrollIntoView({ behavior: 'smooth' })
+                      }
                     >
-                      Voir les détails
+                      Accéder à mon cycle
                       <ArrowRight className="w-3 h-3 ml-1" />
                     </Button>
                   </div>
@@ -471,7 +473,7 @@ const Dashboard = () => {
         </div>
 
         {/* Tontine module: categories, contributions and payment declaration */}
-        <div className="mt-8">
+        <div id="tontine" className="mt-8 scroll-mt-24">
           <div className="mb-4">
             <h3 className="text-xl font-display font-bold text-foreground">Tontine</h3>
             <p className="text-sm text-muted-foreground">

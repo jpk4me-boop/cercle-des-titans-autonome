@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { formatAmount } from "@/lib/paymentService";
 import { Badge } from "@/components/ui/badge";
@@ -26,13 +26,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Clock, Coins, CreditCard, Loader2, ReceiptText, RefreshCw, XCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, Coins, CreditCard, Layers, Loader2, ReceiptText, RefreshCw, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import {
   declareContributionPayment,
   fetchActiveCategories,
+  fetchActiveOrPlannedCycle,
   fetchMemberCategories,
   fetchMemberContributions,
   fetchMemberPayments,
@@ -45,6 +46,7 @@ import type {
   PaymentMethod,
   TontineCategory,
   TontineContribution,
+  TontineCycle,
 } from "@/types/tontine";
 
 const DECLARABLE_STATUSES = new Set(["pending", "partial", "overdue"]);
@@ -101,6 +103,30 @@ const paymentStatusBadge = (status: string) => {
   }
 };
 
+// Status of the tontine cycle as shown to the member.
+const cycleStatusBadge = (cycle: TontineCycle | null) => {
+  if (!cycle) {
+    return <Badge variant="secondary">Aucun cycle</Badge>;
+  }
+  if (cycle.status === "active") {
+    return (
+      <Badge className="bg-green-500/20 text-green-600 border-green-500/30">
+        <CheckCircle2 className="h-3 w-3 mr-1" />
+        En cours
+      </Badge>
+    );
+  }
+  if (cycle.status === "planned" || cycle.status === "draft") {
+    return (
+      <Badge className="bg-amber-400/20 text-amber-300 border-amber-400/30">
+        <Clock className="h-3 w-3 mr-1" />
+        Programmé
+      </Badge>
+    );
+  }
+  return <Badge variant="outline">{cycle.status}</Badge>;
+};
+
 export default function MemberTontinePanel() {
   const { user } = useAuth();
 
@@ -109,9 +135,13 @@ export default function MemberTontinePanel() {
   const [contributions, setContributions] = useState<TontineContribution[]>([]);
   const [payments, setPayments] = useState<ContributionPayment[]>([]);
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [cycle, setCycle] = useState<TontineCycle | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshingPayments, setRefreshingPayments] = useState(false);
   const [savingCategoryId, setSavingCategoryId] = useState<string | null>(null);
+
+  const categoriesRef = useRef<HTMLDivElement>(null);
+  const contributionsRef = useRef<HTMLDivElement>(null);
 
   // Declare-payment dialog state
   const [payContribution, setPayContribution] = useState<TontineContribution | null>(null);
@@ -146,18 +176,21 @@ export default function MemberTontinePanel() {
     if (!user) return;
     setLoading(true);
     try {
-      const [catData, memberCats, contribData, methodData, paymentData] = await Promise.all([
-        fetchActiveCategories(),
-        fetchMemberCategories(user.id),
-        fetchMemberContributions(user.id),
-        fetchPaymentMethods(),
-        fetchMemberPayments(user.id),
-      ]);
+      const [catData, memberCats, contribData, methodData, paymentData, cycleData] =
+        await Promise.all([
+          fetchActiveCategories(),
+          fetchMemberCategories(user.id),
+          fetchMemberContributions(user.id),
+          fetchPaymentMethods(),
+          fetchMemberPayments(user.id),
+          fetchActiveOrPlannedCycle(),
+        ]);
       setCategories(catData);
       setMemberCategoryIds(new Set(memberCats.map((m) => m.category_id)));
       setContributions(contribData);
       setMethods(methodData);
       setPayments(paymentData);
+      setCycle(cycleData);
     } catch (error) {
       console.error("Erreur chargement tontine:", error);
       toast.error(
@@ -220,6 +253,23 @@ export default function MemberTontinePanel() {
     setPayProofUrl("");
   };
 
+  // Has the member joined at least one category (i.e. entered the cycle)?
+  const hasJoined = memberCategoryIds.size > 0;
+
+  const scrollToRef = (ref: { current: HTMLDivElement | null }) =>
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // Primary "declare a payment" CTA from the cycle card: open the dialog on a
+  // declarable contribution due today, otherwise guide to the contributions list.
+  const handleDeclareCta = () => {
+    const target = todayContributions.find((c) => DECLARABLE_STATUSES.has(c.status));
+    if (target) {
+      openDeclare(target);
+    } else {
+      scrollToRef(contributionsRef);
+    }
+  };
+
   const submitDeclaration = async () => {
     if (!payContribution) return;
 
@@ -261,6 +311,75 @@ export default function MemberTontinePanel() {
 
   return (
     <div className="space-y-6">
+      {/* Available cycle — entry point to the tontine flow (premium dark/gold) */}
+      <Card className="overflow-hidden border-amber-400/20 bg-gradient-to-br from-black/60 via-card to-card shadow-[0_0_32px_rgba(245,158,11,0.08)]">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Layers className="h-5 w-5 text-amber-300" />
+            Cycle disponible
+          </CardTitle>
+          <CardDescription>Le cycle de tontine en cours ou programmé.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-amber-300" />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-lg font-semibold text-foreground">
+                    {cycle ? cycle.name : "Aucun cycle disponible"}
+                  </span>
+                  {cycleStatusBadge(cycle)}
+                </div>
+                {cycle && (cycle.start_date || cycle.end_date) && (
+                  <p className="text-sm text-muted-foreground">
+                    {cycle.start_date && (
+                      <>Début&nbsp;: <span className="text-foreground">{formatDate(cycle.start_date)}</span></>
+                    )}
+                    {cycle.end_date && (
+                      <> · Fin&nbsp;: <span className="text-foreground">{formatDate(cycle.end_date)}</span></>
+                    )}
+                  </p>
+                )}
+                {!cycle ? (
+                  <p className="text-sm text-muted-foreground">
+                    Aucun cycle n'est actuellement ouvert. Revenez bientôt.
+                  </p>
+                ) : hasJoined ? (
+                  <p className="flex items-center gap-1.5 text-sm text-green-500">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Vous participez à ce cycle.
+                  </p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Rejoignez une catégorie pour participer à ce cycle et générer vos cotisations.
+                  </p>
+                )}
+              </div>
+
+              {cycle && (
+                <div className="flex flex-col gap-2 sm:items-end">
+                  {hasJoined ? (
+                    <Button onClick={handleDeclareCta} className="gap-2">
+                      <CreditCard className="h-4 w-4" />
+                      Déclarer un paiement
+                    </Button>
+                  ) : (
+                    <Button onClick={() => scrollToRef(categoriesRef)} className="gap-2">
+                      Rejoindre le cycle
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Today's contribution highlight — premium dark/gold accent */}
       <Card className="overflow-hidden border-amber-400/20 bg-gradient-to-br from-black/60 via-card to-card shadow-[0_0_32px_rgba(245,158,11,0.08)]">
         <CardHeader>
@@ -321,7 +440,7 @@ export default function MemberTontinePanel() {
       </Card>
 
       {/* Categories */}
-      <Card className="bg-card border-border">
+      <Card ref={categoriesRef} className="scroll-mt-24 bg-card border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Coins className="h-5 w-5 text-primary" />
@@ -387,7 +506,7 @@ export default function MemberTontinePanel() {
       </Card>
 
       {/* Member contributions */}
-      <Card className="bg-card border-border">
+      <Card ref={contributionsRef} className="scroll-mt-24 bg-card border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5 text-primary" />

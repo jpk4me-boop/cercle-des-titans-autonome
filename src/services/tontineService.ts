@@ -76,6 +76,23 @@ export const fetchActiveCycle = async (): Promise<TontineCycle | null> => {
   return data && data.length > 0 ? (data[0] as TontineCycle) : null;
 };
 
+// Member-facing cycle lookup: prefer the active cycle ("En cours"), otherwise
+// fall back to the next planned/draft cycle ("Programmé"). Read-only, relies on
+// the existing "select cycles for authenticated users" RLS policy.
+export const fetchActiveOrPlannedCycle = async (): Promise<TontineCycle | null> => {
+  const { data, error } = await supabase
+    .from("tontine_cycles" as any)
+    .select("*")
+    .in("status", ["active", "planned", "draft"])
+    .order("start_date", { ascending: true });
+
+  if (error) throw error;
+  const rows = (data || []) as TontineCycle[];
+  const active = rows.find((c) => c.status === "active");
+  if (active) return active;
+  return rows.find((c) => c.status === "planned" || c.status === "draft") ?? null;
+};
+
 // --- Contributions ---
 
 export const fetchMemberContributions = async (
