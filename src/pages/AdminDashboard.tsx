@@ -27,12 +27,13 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, RefreshCw, Download, Users, CreditCard, TrendingUp, Clock, Filter, X, FileText } from "lucide-react";
+import { ArrowLeft, RefreshCw, Download, Users, CreditCard, TrendingUp, Clock, Filter, X, FileText, Coins } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import FinancingRequestsTab from "@/components/admin/FinancingRequestsTab";
 import CyclesTab from "@/components/admin/CyclesTab";
+import ContributionsTab from "@/components/admin/ContributionsTab";
 
 interface Transaction {
   id: string;
@@ -255,6 +256,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="cycles" className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
               Cycles des tontines
+            </TabsTrigger>
+            <TabsTrigger value="contributions" className="flex items-center gap-2">
+              <Coins className="h-4 w-4" />
+              Cotisations
             </TabsTrigger>
           </TabsList>
 
@@ -489,6 +494,11 @@ export default function AdminDashboard() {
           {/* Cycles Tab */}
           <TabsContent value="cycles">
             <CyclesTab readOnly={isReadOnly} />
+          </TabsContent>
+
+          {/* Contributions Tab */}
+          <TabsContent value="contributions">
+            <ContributionsTab readOnly={isReadOnly} />
           </TabsContent>
         </Tabs>
       </div>

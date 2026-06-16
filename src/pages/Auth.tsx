@@ -5,10 +5,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Loader2, Crown, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { z } from 'zod';
 import { signInWithGoogle, signInWithGitHub } from '@/lib/oauthUtils';
+
+// Stores ONLY the email address (never the password). The password is left to
+// the browser's native password manager via standard autocomplete attributes.
+const REMEMBERED_EMAIL_KEY = 'cercle_des_titans_remembered_email';
 
 const emailSchema = z.string().trim().email({ message: "Adresse email invalide" }).max(255, { message: "Email trop long (max 255 caractères)" });
 
@@ -35,7 +40,8 @@ const Auth = () => {
   const [isGitHubLoading, setIsGitHubLoading] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
-  
+  const [rememberMe, setRememberMe] = useState(false);
+
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -84,6 +90,17 @@ const Auth = () => {
       navigate('/dashboard');
     }
   }, [user, loading, navigate]);
+
+  // On mount: prefill the email field from the browser-side remembered email.
+  // Only the email is restored here; the password remains under the browser's
+  // native password manager.
+  useEffect(() => {
+    const savedEmail = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
@@ -149,6 +166,13 @@ const Auth = () => {
               : error.message
           });
         } else {
+          // Remember ONLY the email (never the password). The browser's password
+          // manager handles credential storage via autocomplete attributes.
+          if (rememberMe) {
+            localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim());
+          } else {
+            localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+          }
           toast({
             title: "Connexion réussie",
             description: "Bienvenue dans le Cercle des Titans !"
@@ -278,7 +302,7 @@ const Auth = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="on">
             {!isLogin && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -311,7 +335,9 @@ const Auth = () => {
               <div className="relative">
                 <Input
                   id="email"
+                  name="email"
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => setEmailTouched(true)}
@@ -342,7 +368,9 @@ const Auth = () => {
               <div className="relative">
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete={isLogin ? "current-password" : "new-password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() => setPasswordTouched(true)}
@@ -405,6 +433,19 @@ const Auth = () => {
                 </div>
               )}
             </div>
+
+            {isLogin && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                />
+                <Label htmlFor="rememberMe" className="text-sm font-normal cursor-pointer">
+                  Se souvenir de moi
+                </Label>
+              </div>
+            )}
 
             <Button type="submit" className="w-full" disabled={isLoading || (!isLogin && !isFormValid)}>
               {isLoading ? (

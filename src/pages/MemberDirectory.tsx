@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -44,38 +45,71 @@ import {
   Trash2,
   UserCog,
   Mail,
-  Phone,
+  Filter,
+  X,
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {
+  fetchAdminMembersEnriched,
+  type AdminMemberEnriched,
+} from '@/services/memberService';
 
-interface Member {
-  id: string | null;
-  user_id: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  email: string | null;
-  phone: string | null;
-  avatar_url: string | null;
-  city: string | null;
-  profession: string | null;
+type Member = AdminMemberEnriched;
+
+const roleLabels: Record<string, string> = {
+  admin: 'Admin',
+  moderator: 'Modérateur',
+  investor: 'Investisseur',
+  user: 'Membre',
+};
+
+const roleStyles: Record<string, string> = {
+  admin: 'bg-red-500/10 text-red-600',
+  moderator: 'bg-blue-500/10 text-blue-600',
+  investor: 'bg-purple-500/10 text-purple-600',
+  user: 'bg-muted text-muted-foreground',
+};
+
+const financingStatusLabels: Record<string, string> = {
+  pending: 'En attente',
+  approved: 'Approuvé',
+  rejected: 'Rejeté',
+};
+
+interface ToggleFilters {
+  activeTontine: boolean;
+  hasContributions: boolean;
+  hasDeclaredPayments: boolean;
+  hasValidatedPayments: boolean;
+  overdue: boolean;
+  hasFinancing: boolean;
 }
 
-interface UserRole {
-  user_id: string;
-  role: 'super_admin' | 'admin' | 'moderator' | 'user' | 'investor';
-}
+const initialToggles: ToggleFilters = {
+  activeTontine: false,
+  hasContributions: false,
+  hasDeclaredPayments: false,
+  hasValidatedPayments: false,
+  overdue: false,
+  hasFinancing: false,
+};
 
 const MemberDirectory = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  
+
   const [members, setMembers] = useState<Member[]>([]);
-  const [roles, setRoles] = useState<UserRole[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
+
+  // Filters
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [tontineCategoryFilter, setTontineCategoryFilter] = useState('all');
+  const [financingStatusFilter, setFinancingStatusFilter] = useState('all');
+  const [toggles, setToggles] = useState<ToggleFilters>(initialToggles);
+
   // Edit dialog state
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [editForm, setEditForm] = useState({
@@ -87,12 +121,12 @@ const MemberDirectory = () => {
     profession: '',
   });
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Role dialog state
   const [assigningRole, setAssigningRole] = useState<Member | null>(null);
   const [selectedRole, setSelectedRole] = useState<string>('user');
   const [isAssigningRole, setIsAssigningRole] = useState(false);
-  
+
   // Delete dialog state
   const [deletingMember, setDeletingMember] = useState<Member | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -108,7 +142,7 @@ const MemberDirectory = () => {
       if (!user) return;
 
       try {
-        // Check if user is admin
+        // Confirm the viewer is admin/super_admin (route is already guarded).
         const { data: adminData } = await supabase
           .from('user_roles')
           .select('role')
@@ -116,40 +150,13 @@ const MemberDirectory = () => {
           .in('role', ['admin', 'super_admin'])
           .limit(1);
 
-        const userIsAdmin = !!adminData && adminData.length > 0;
-        setIsAdmin(userIsAdmin);
+        setIsAdmin(!!adminData && adminData.length > 0);
 
-        // If admin, fetch all roles first (needed for filtering)
-        let rolesData: UserRole[] | null = null;
-        if (userIsAdmin) {
-          const { data: fetchedRoles } = await supabase
-            .from('user_roles')
-            .select('user_id, role');
-          
-          rolesData = fetchedRoles || [];
-          setRoles(rolesData);
-        }
-
-        // Fetch members from the public member directory view (excludes super_admin)
-        const { data, error } = await supabase
-          .from('member_directory_public')
-          .select('id, user_id, first_name, last_name, avatar_url, city, profession')
-          .order('first_name', { ascending: true });
-        
-        if (error) throw error;
-        
-        // Map view data to Member interface (email/phone will be null for all users)
-        let membersData: Member[] = (data || []).map(m => ({ ...m, email: null, phone: null }));
-        
-        // Frontend protection: exclude super_admin users from the member directory
-        if (userIsAdmin && rolesData) {
-          const superAdminUserIds = rolesData
-            .filter(r => r.role === 'super_admin')
-            .map(r => r.user_id);
-          membersData = membersData.filter(m => !superAdminUserIds.includes(m.user_id));
-        }
-        
-        setMembers(membersData);
+        // Admin-only enriched directory (RPC enforces authorization server-side
+        // and excludes super_admins). Sensitive tontine/financing data lives
+        // only here, never in member_directory_public.
+        const enriched = await fetchAdminMembersEnriched();
+        setMembers(enriched);
       } catch (error) {
         console.error('Error fetching members:', error);
         toast.error('Erreur lors du chargement des membres');
@@ -163,74 +170,117 @@ const MemberDirectory = () => {
     }
   }, [user]);
 
-  // Function to reload member data after admin actions
   const reloadMembers = async () => {
     if (!user) return;
-
     try {
-      // Fetch members from the public member directory view
-      const { data, error } = await supabase
-        .from('member_directory_public')
-        .select('id, user_id, first_name, last_name, avatar_url, city, profession')
-        .order('first_name', { ascending: true });
-      
-      if (error) throw error;
-      
-      // Map view data to Member interface
-      let membersData: Member[] = (data || []).map(m => ({ ...m, email: null, phone: null }));
-      
-      // Frontend protection: exclude super_admin users
-      if (isAdmin && roles.length > 0) {
-        const superAdminUserIds = roles
-          .filter(r => r.role === 'super_admin')
-          .map(r => r.user_id);
-        membersData = membersData.filter(m => !superAdminUserIds.includes(m.user_id));
-      }
-      
-      setMembers(membersData);
+      const enriched = await fetchAdminMembersEnriched();
+      setMembers(enriched);
     } catch (error) {
       console.error('Error reloading members:', error);
       toast.error('Erreur lors du rechargement des membres');
     }
   };
 
-  const getMemberRole = (userId: string): string | null => {
-    const role = roles.find(r => r.user_id === userId);
-    return role?.role || null;
+  const getMemberRole = (userId: string | null): string | null => {
+    if (!userId) return null;
+    return members.find((m) => m.user_id === userId)?.role ?? null;
   };
 
   const getRoleBadge = (role: string | null) => {
     if (!role) return null;
-    
-    const roleStyles: Record<string, string> = {
-      admin: 'bg-red-500/10 text-red-600',
-      moderator: 'bg-blue-500/10 text-blue-600',
-      investor: 'bg-purple-500/10 text-purple-600',
-      user: 'bg-muted text-muted-foreground',
-    };
-
-    const roleLabels: Record<string, string> = {
-      admin: 'Admin',
-      moderator: 'Modérateur',
-      investor: 'Investisseur',
-      user: 'Membre',
-    };
-
     return (
-      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${roleStyles[role] || roleStyles.user}`}>
+      <span
+        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+          roleStyles[role] || roleStyles.user
+        }`}
+      >
         {roleLabels[role] || role}
       </span>
     );
   };
 
-  const filteredMembers = members.filter(member => {
-    const fullName = `${member.first_name || ''} ${member.last_name || ''}`.toLowerCase();
-    const city = (member.city || '').toLowerCase();
-    const profession = (member.profession || '').toLowerCase();
+  // Distinct option lists derived from loaded data.
+  const tontineCategoryOptions = useMemo(
+    () =>
+      Array.from(new Set(members.flatMap((m) => m.tontine_category_names))).sort(),
+    [members]
+  );
+  const financingStatusOptions = useMemo(
+    () => Array.from(new Set(members.flatMap((m) => m.financing_statuses))).sort(),
+    [members]
+  );
+  const roleOptions = useMemo(
+    () =>
+      Array.from(new Set(members.map((m) => m.role).filter(Boolean))) as string[],
+    [members]
+  );
+
+  const filteredMembers = useMemo(() => {
     const query = searchQuery.toLowerCase();
-    
-    return fullName.includes(query) || city.includes(query) || profession.includes(query);
-  });
+    return members.filter((member) => {
+      const fullName = `${member.first_name || ''} ${member.last_name || ''}`.toLowerCase();
+      const city = (member.city || '').toLowerCase();
+      const profession = (member.profession || '').toLowerCase();
+      const email = (member.email || '').toLowerCase();
+
+      if (
+        query &&
+        !(
+          fullName.includes(query) ||
+          city.includes(query) ||
+          profession.includes(query) ||
+          email.includes(query)
+        )
+      ) {
+        return false;
+      }
+
+      if (roleFilter !== 'all' && member.role !== roleFilter) return false;
+      if (
+        tontineCategoryFilter !== 'all' &&
+        !member.tontine_category_names.includes(tontineCategoryFilter)
+      ) {
+        return false;
+      }
+      if (
+        financingStatusFilter !== 'all' &&
+        !member.financing_statuses.includes(financingStatusFilter)
+      ) {
+        return false;
+      }
+
+      if (toggles.activeTontine && !member.has_active_tontine) return false;
+      if (toggles.hasContributions && !member.has_contributions) return false;
+      if (toggles.hasDeclaredPayments && !member.has_declared_payment) return false;
+      if (toggles.hasValidatedPayments && !member.has_validated_payment) return false;
+      if (toggles.overdue && !member.has_overdue_contribution) return false;
+      if (toggles.hasFinancing && !member.has_financing_request) return false;
+
+      return true;
+    });
+  }, [
+    members,
+    searchQuery,
+    roleFilter,
+    tontineCategoryFilter,
+    financingStatusFilter,
+    toggles,
+  ]);
+
+  const hasActiveFilters =
+    Boolean(searchQuery) ||
+    roleFilter !== 'all' ||
+    tontineCategoryFilter !== 'all' ||
+    financingStatusFilter !== 'all' ||
+    Object.values(toggles).some(Boolean);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setRoleFilter('all');
+    setTontineCategoryFilter('all');
+    setFinancingStatusFilter('all');
+    setToggles(initialToggles);
+  };
 
   const getInitials = (member: Member) => {
     const first = member.first_name?.[0] || '';
@@ -245,7 +295,7 @@ const MemberDirectory = () => {
       first_name: member.first_name || '',
       last_name: member.last_name || '',
       email: member.email || '',
-      phone: member.phone || '',
+      phone: '',
       city: member.city || '',
       profession: member.profession || '',
     });
@@ -260,7 +310,6 @@ const MemberDirectory = () => {
 
     setIsSaving(true);
     try {
-      // Use RPC to update member profile
       const supabaseRpc = supabase as any;
       const { error } = await supabaseRpc.rpc('admin_update_member_profile', {
         target_user_id: editingMember.user_id,
@@ -270,14 +319,12 @@ const MemberDirectory = () => {
         p_profession: editForm.profession || null,
         p_phone: editForm.phone || null,
         p_email: editForm.email || null,
-        p_avatar_url: editingMember.avatar_url || null
+        p_avatar_url: editingMember.avatar_url || null,
       });
 
       if (error) throw error;
 
-      // Reload members to reflect changes
       await reloadMembers();
-      
       setEditingMember(null);
       toast.success('Profil mis à jour');
     } catch (error) {
@@ -287,7 +334,8 @@ const MemberDirectory = () => {
       setIsSaving(false);
     }
   };
-// Navigation carte membre + protection clics boutons admin
+
+  // Navigation carte membre + protection clics boutons admin
   const handleMemberCardClick = (
     e: ReactMouseEvent<HTMLDivElement>,
     member: Member
@@ -306,9 +354,7 @@ const MemberDirectory = () => {
     navigate(`/members/${member.user_id}`);
   };
 
-  const stopMemberActionPropagation = (
-    e: ReactMouseEvent<HTMLElement>
-  ) => {
+  const stopMemberActionPropagation = (e: ReactMouseEvent<HTMLElement>) => {
     e.stopPropagation();
   };
 
@@ -318,13 +364,6 @@ const MemberDirectory = () => {
       toast.error('Identifiant utilisateur manquant');
       return;
     }
-
-    console.log('ROLE CLICK MEMBER', {
-      id: member.id,
-      user_id: member.user_id,
-      first_name: member.first_name,
-      last_name: member.last_name,
-    });
 
     setAssigningRole(member);
     setSelectedRole(getMemberRole(member.user_id) || 'user');
@@ -339,43 +378,34 @@ const MemberDirectory = () => {
 
     // Prevent assigning super_admin role
     if (selectedRole === 'super_admin') {
-      toast.error('Impossible d\'attribuer le rôle super_admin');
+      toast.error("Impossible d'attribuer le rôle super_admin");
       return;
     }
 
-    // Check if user is currently super_admin (shouldn't happen due to filtering, but safety check)
+    // Safety: cannot modify a super_admin (also excluded server-side)
     const currentRole = getMemberRole(assigningRole.user_id);
     if (currentRole === 'super_admin') {
-      toast.error('Impossible de modifier le rôle d\'un super_admin');
+      toast.error("Impossible de modifier le rôle d'un super_admin");
       return;
     }
 
     setIsAssigningRole(true);
     try {
-      // Use RPC to assign user role
       const supabaseRpc = supabase as any;
       const { error } = await supabaseRpc.rpc('admin_assign_user_role', {
         target_user_id: assigningRole.user_id,
         p_role: selectedRole,
-        p_email: assigningRole.email ?? null
+        p_email: assigningRole.email ?? null,
       });
 
       if (error) throw error;
 
-      // Update local roles state
-      setRoles(prev => [
-        ...prev.filter(r => r.user_id !== assigningRole.user_id),
-        { user_id: assigningRole.user_id, role: selectedRole as 'admin' | 'moderator' | 'user' | 'investor' }
-      ]);
-      
-      // Reload members to reflect changes
       await reloadMembers();
-      
       setAssigningRole(null);
       toast.success('Rôle attribué avec succès');
     } catch (error) {
       console.error('Member action failed', { member: assigningRole, error });
-      toast.error('Erreur lors de l\'attribution du rôle');
+      toast.error("Erreur lors de l'attribution du rôle");
     } finally {
       setIsAssigningRole(false);
     }
@@ -391,17 +421,14 @@ const MemberDirectory = () => {
 
     setIsDeleting(true);
     try {
-      // Use RPC to delete member profile
       const supabaseRpc = supabase as any;
       const { error } = await supabaseRpc.rpc('admin_delete_member_profile', {
-        target_user_id: deletingMember.user_id
+        target_user_id: deletingMember.user_id,
       });
 
       if (error) throw error;
 
-      // Reload members to reflect changes
       await reloadMembers();
-      
       setDeletingMember(null);
       toast.success('Membre supprimé');
     } catch (error) {
@@ -453,21 +480,119 @@ const MemberDirectory = () => {
             </h2>
           </div>
           <p className="text-muted-foreground">
-            {members.length} membre{members.length > 1 ? 's' : ''} dans le cercle
+            {filteredMembers.length} / {members.length} membre
+            {members.length > 1 ? 's' : ''} affiché{filteredMembers.length > 1 ? 's' : ''}
           </p>
         </div>
 
         {/* Search */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Rechercher par nom, ville ou profession..."
+              placeholder="Rechercher par nom, ville, profession ou email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-6 rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium text-foreground">Filtres</span>
+            </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="w-4 h-4 mr-1" />
+                Réinitialiser
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Rôle</label>
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tous les rôles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les rôles</SelectItem>
+                  {roleOptions.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {roleLabels[r] || r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">
+                Catégorie de tontine
+              </label>
+              <Select value={tontineCategoryFilter} onValueChange={setTontineCategoryFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Toutes les catégories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les catégories</SelectItem>
+                  {tontineCategoryOptions.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">
+                Statut financement
+              </label>
+              <Select value={financingStatusFilter} onValueChange={setFinancingStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tous les statuts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  {financingStatusOptions.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {financingStatusLabels[s] || s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {([
+              ['activeTontine', 'Tontine active'],
+              ['hasContributions', 'A des cotisations'],
+              ['hasDeclaredPayments', 'A déclaré un paiement'],
+              ['hasValidatedPayments', 'Paiement validé'],
+              ['overdue', 'En retard'],
+              ['hasFinancing', 'Demande financement'],
+            ] as [keyof ToggleFilters, string][]).map(([key, label]) => (
+              <label
+                key={key}
+                className="flex items-center gap-2 text-sm text-foreground cursor-pointer"
+              >
+                <Checkbox
+                  checked={toggles[key]}
+                  onCheckedChange={(checked) =>
+                    setToggles((prev) => ({ ...prev, [key]: checked === true }))
+                  }
+                />
+                {label}
+              </label>
+            ))}
           </div>
         </div>
 
@@ -492,22 +617,22 @@ const MemberDirectory = () => {
                       {getInitials(member)}
                     </AvatarFallback>
                   </Avatar>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-foreground truncate">
                         {member.first_name || ''} {member.last_name || 'Membre'}
                       </h3>
-                      {isAdmin && getRoleBadge(getMemberRole(member.user_id))}
+                      {isAdmin && getRoleBadge(member.role)}
                     </div>
-                    
+
                     {member.profession && (
                       <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
                         <Briefcase className="w-3.5 h-3.5" />
                         <span className="truncate">{member.profession}</span>
                       </div>
                     )}
-                    
+
                     {member.city && (
                       <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
                         <MapPin className="w-3.5 h-3.5" />
@@ -515,23 +640,45 @@ const MemberDirectory = () => {
                       </div>
                     )}
 
-                    {/* Admin-only: show contact info */}
-                    {isAdmin && (
+                    {/* Admin-only: contact info */}
+                    {isAdmin && member.email && (
                       <div className="mt-2 pt-2 border-t border-border space-y-1">
-                        {member.email && (
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Mail className="w-3 h-3" />
-                            <span className="truncate">{member.email}</span>
-                          </div>
-                        )}
-                        {member.phone && (
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <Phone className="w-3 h-3" />
-                            <span>{member.phone}</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Mail className="w-3 h-3" />
+                          <span className="truncate">{member.email}</span>
+                        </div>
                       </div>
                     )}
+
+                    {/* Status chips */}
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {member.tontine_category_names.map((c) => (
+                        <span
+                          key={c}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary"
+                        >
+                          {c}
+                        </span>
+                      ))}
+                      {member.has_overdue_contribution && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-500/10 text-red-600">
+                          En retard
+                        </span>
+                      )}
+                      {member.has_validated_payment && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-500/10 text-green-600">
+                          Paiement validé
+                        </span>
+                      )}
+                      {member.financing_statuses.map((s) => (
+                        <span
+                          key={s}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-amber-500/10 text-amber-600"
+                        >
+                          Financement: {financingStatusLabels[s] || s}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -589,7 +736,7 @@ const MemberDirectory = () => {
                 <Input
                   id="first_name"
                   value={editForm.first_name}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, first_name: e.target.value }))}
                 />
               </div>
               <div>
@@ -597,7 +744,7 @@ const MemberDirectory = () => {
                 <Input
                   id="last_name"
                   value={editForm.last_name}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, last_name: e.target.value }))}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, last_name: e.target.value }))}
                 />
               </div>
             </div>
@@ -607,7 +754,7 @@ const MemberDirectory = () => {
                 id="email"
                 type="email"
                 value={editForm.email}
-                onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
               />
             </div>
             <div>
@@ -615,7 +762,7 @@ const MemberDirectory = () => {
               <Input
                 id="phone"
                 value={editForm.phone}
-                onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
               />
             </div>
             <div>
@@ -623,7 +770,7 @@ const MemberDirectory = () => {
               <Input
                 id="city"
                 value={editForm.city}
-                onChange={(e) => setEditForm(prev => ({ ...prev, city: e.target.value }))}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, city: e.target.value }))}
               />
             </div>
             <div>
@@ -631,7 +778,7 @@ const MemberDirectory = () => {
               <Input
                 id="profession"
                 value={editForm.profession}
-                onChange={(e) => setEditForm(prev => ({ ...prev, profession: e.target.value }))}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, profession: e.target.value }))}
               />
             </div>
           </div>
@@ -692,7 +839,8 @@ const MemberDirectory = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer ce membre ?</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Le profil de {deletingMember?.first_name} {deletingMember?.last_name} sera définitivement supprimé.
+              Cette action est irréversible. Le profil de {deletingMember?.first_name}{' '}
+              {deletingMember?.last_name} sera définitivement supprimé.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

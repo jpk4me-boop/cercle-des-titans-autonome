@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import MemberTontinePanel from '@/components/member/MemberTontinePanel';
 
 interface Profile {
   first_name: string | null;
@@ -467,6 +468,17 @@ const Dashboard = () => {
               )}
             </div>
           </div>
+        </div>
+
+        {/* Tontine module: categories, contributions and payment declaration */}
+        <div className="mt-8">
+          <div className="mb-4">
+            <h3 className="text-xl font-display font-bold text-foreground">Tontine</h3>
+            <p className="text-sm text-muted-foreground">
+              Vos catégories, cotisations journalières et déclarations de paiement
+            </p>
+          </div>
+          <MemberTontinePanel />
         </div>
       </main>
     </div>
