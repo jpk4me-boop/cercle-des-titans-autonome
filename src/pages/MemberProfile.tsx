@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { fetchMemberContributions } from '@/services/tontineService';
+import type { TontineContribution } from '@/types/tontine';
 
 interface Profile {
   id: string;
@@ -41,16 +43,6 @@ interface Profile {
   created_at: string;
 }
 
-interface Contribution {
-  id: string;
-  amount: number;
-  status: string;
-  due_date: string;
-  paid_date: string | null;
-  payment_method: string | null;
-  notes: string | null;
-}
-
 interface UserRole {
   role: 'super_admin' | 'admin' | 'moderator' | 'user' | 'investor';
 }
@@ -61,7 +53,7 @@ const MemberProfile = () => {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [contributions, setContributions] = useState<TontineContribution[]>([]);
   const [memberRole, setMemberRole] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -111,16 +103,14 @@ const MemberProfile = () => {
 
         setMemberRole(roleData?.role || null);
 
-        // Fetch contributions only if admin or own profile
+        // Fetch contributions only if admin or own profile.
+        // Source of truth: tontine_contributions (via tontineService), not the legacy table.
         if (userIsAdmin || isOwn) {
-          const { data: contributionsData, error: contribError } = await supabase
-            .from('contributions')
-            .select('*')
-            .eq('user_id', profileData.user_id)
-            .order('due_date', { ascending: false });
-
-          if (!contribError) {
-            setContributions(contributionsData || []);
+          try {
+            const contributionsData = await fetchMemberContributions(profileData.user_id);
+            setContributions(contributionsData);
+          } catch (contribError) {
+            console.error('Error fetching contributions:', contribError);
           }
         }
       } catch (error) {
@@ -166,10 +156,14 @@ const MemberProfile = () => {
     switch (status) {
       case 'paid':
         return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'partial':
+        return <Clock className="w-4 h-4 text-blue-500" />;
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-500" />;
       case 'overdue':
         return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'cancelled':
+        return <AlertCircle className="w-4 h-4 text-muted-foreground" />;
       default:
         return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
@@ -179,22 +173,42 @@ const MemberProfile = () => {
     switch (status) {
       case 'paid':
         return 'Payée';
+      case 'partial':
+        return 'Partielle';
       case 'pending':
         return 'En attente';
       case 'overdue':
         return 'En retard';
+      case 'cancelled':
+        return 'Annulée';
       default:
         return status;
     }
   };
 
-  const totalPaid = contributions
-    .filter(c => c.status === 'paid')
-    .reduce((sum, c) => sum + c.amount, 0);
+  const getStatusVariant = (
+    status: string
+  ): 'default' | 'secondary' | 'destructive' | 'outline' => {
+    switch (status) {
+      case 'paid':
+        return 'default';
+      case 'partial':
+      case 'pending':
+        return 'secondary';
+      case 'overdue':
+        return 'destructive';
+      case 'cancelled':
+        return 'outline';
+      default:
+        return 'secondary';
+    }
+  };
+
+  const totalPaid = contributions.reduce((sum, c) => sum + Number(c.paid_amount), 0);
 
   const totalPending = contributions
-    .filter(c => c.status === 'pending')
-    .reduce((sum, c) => sum + c.amount, 0);
+    .filter(c => ['pending', 'partial', 'overdue'].includes(c.status))
+    .reduce((sum, c) => sum + Math.max(Number(c.expected_amount) - Number(c.paid_amount), 0), 0);
 
   if (loading || loadingData) {
     return (
@@ -411,7 +425,7 @@ const MemberProfile = () => {
                       {getStatusIcon(contribution.status)}
                       <div>
                         <p className="font-medium">
-                          {contribution.amount.toLocaleString('fr-FR')} FCFA
+                          {Number(contribution.expected_amount).toLocaleString('fr-FR')} FCFA
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Échéance: {format(new Date(contribution.due_date), 'd MMM yyyy', { locale: fr })}
@@ -419,25 +433,12 @@ const MemberProfile = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <Badge
-                        variant={
-                          contribution.status === 'paid'
-                            ? 'default'
-                            : contribution.status === 'pending'
-                            ? 'secondary'
-                            : 'destructive'
-                        }
-                      >
+                      <Badge variant={getStatusVariant(contribution.status)}>
                         {getStatusLabel(contribution.status)}
                       </Badge>
-                      {contribution.paid_date && (
+                      {Number(contribution.paid_amount) > 0 && (
                         <p className="text-xs text-muted-foreground mt-1">
-                          Payé le {format(new Date(contribution.paid_date), 'd MMM yyyy', { locale: fr })}
-                        </p>
-                      )}
-                      {contribution.payment_method && (
-                        <p className="text-xs text-muted-foreground">
-                          via {contribution.payment_method}
+                          Payé: {Number(contribution.paid_amount).toLocaleString('fr-FR')} FCFA
                         </p>
                       )}
                     </div>

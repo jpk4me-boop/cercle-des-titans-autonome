@@ -13,14 +13,12 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { 
-  User, 
-  LogOut, 
-  Calendar, 
-  CreditCard, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle,
+import {
+  User,
+  LogOut,
+  CreditCard,
+  Clock,
+  CheckCircle2,
   Loader2,
   Home,
   Pencil,
@@ -29,9 +27,9 @@ import {
   MessageSquare,
   Users
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import MemberTontinePanel from '@/components/member/MemberTontinePanel';
+import { fetchMemberContributions } from '@/services/tontineService';
+import type { TontineContribution } from '@/types/tontine';
 
 interface Profile {
   first_name: string | null;
@@ -53,20 +51,11 @@ const categoryInfo: Record<string, { name: string; color: string; amount: string
   prestige: { name: 'Prestige', color: 'text-purple-500', amount: '200 000 FCFA/sem.' },
 };
 
-interface Contribution {
-  id: string;
-  amount: number;
-  status: string;
-  due_date: string;
-  paid_date: string | null;
-  payment_method: string | null;
-}
-
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [contributions, setContributions] = useState<TontineContribution[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -94,16 +83,10 @@ const Dashboard = () => {
           setProfile(profileData);
         }
 
-        // Fetch contributions
-        const { data: contributionsData } = await supabase
-          .from('contributions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('due_date', { ascending: false });
-
-        if (contributionsData) {
-          setContributions(contributionsData);
-        }
+        // Fetch contributions from the tontine module
+        // (source of truth: tontine_contributions, not the legacy table)
+        const contributionsData = await fetchMemberContributions(user.id);
+        setContributions(contributionsData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -157,34 +140,11 @@ const Dashboard = () => {
     );
   }
 
-  const upcomingContributions = contributions.filter(c => c.status === 'pending');
   const paidContributions = contributions.filter(c => c.status === 'paid');
-  const totalPaid = paidContributions.reduce((sum, c) => sum + Number(c.amount), 0);
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'paid':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-green-500/10 text-green-600">
-            <CheckCircle2 className="w-3 h-3" /> Payé
-          </span>
-        );
-      case 'pending':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-yellow-500/10 text-yellow-600">
-            <Clock className="w-3 h-3" /> En attente
-          </span>
-        );
-      case 'overdue':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-red-500/10 text-red-600">
-            <AlertCircle className="w-3 h-3" /> En retard
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
+  const upcomingContributions = contributions.filter(c =>
+    ['pending', 'partial', 'overdue'].includes(c.status)
+  );
+  const totalPaid = contributions.reduce((sum, c) => sum + Number(c.paid_amount), 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -235,7 +195,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total cotisé</p>
-                <p className="text-2xl font-bold text-foreground">{totalPaid.toLocaleString('fr-FR')} €</p>
+                <p className="text-2xl font-bold text-foreground">{totalPaid.toLocaleString('fr-FR')} FCFA</p>
               </div>
             </div>
           </div>
@@ -265,7 +225,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8">
           {/* Profile Section */}
           <div className="lg:col-span-1">
             <div className="bg-card border border-border rounded-xl p-6">
@@ -416,60 +376,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Contributions Section */}
-          <div className="lg:col-span-2">
-            <div className="bg-card border border-border rounded-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold text-foreground">Historique des cotisations</h3>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => navigate('/historique-cotisations')}>
-                  Voir tout
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
-
-              {contributions.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <CreditCard className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Aucune cotisation enregistrée</p>
-                  <p className="text-sm">Vos cotisations apparaîtront ici</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Date</th>
-                        <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Montant</th>
-                        <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Statut</th>
-                        <th className="text-left py-3 px-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">Méthode</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {contributions.map((contribution) => (
-                        <tr key={contribution.id} className="border-b border-border/50 last:border-0">
-                          <td className="py-3 px-2 text-sm">
-                            {format(new Date(contribution.due_date), 'dd MMM yyyy', { locale: fr })}
-                          </td>
-                          <td className="py-3 px-2 text-sm font-medium">
-                            {Number(contribution.amount).toLocaleString('fr-FR')} €
-                          </td>
-                          <td className="py-3 px-2">
-                            {getStatusBadge(contribution.status)}
-                          </td>
-                          <td className="py-3 px-2 text-sm text-muted-foreground">
-                            {contribution.payment_method || '-'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Tontine module: categories, contributions and payment declaration */}

@@ -1,18 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -34,7 +26,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { toast } from 'sonner';
-import { 
+import {
   ArrowLeft,
   Calendar as CalendarIcon,
   CreditCard,
@@ -49,45 +41,56 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Pencil,
-  Save
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
-
-interface Contribution {
-  id: string;
-  amount: number;
-  status: string;
-  due_date: string;
-  paid_date: string | null;
-  payment_method: string | null;
-  notes: string | null;
-}
+import { fetchMemberContributions } from '@/services/tontineService';
+import type { TontineContribution } from '@/types/tontine';
 
 interface Filters {
   status: string;
-  paymentMethod: string;
   dateFrom: string;
   dateTo: string;
   search: string;
 }
 
-type SortField = 'due_date' | 'amount' | 'status' | 'payment_method';
+type SortField = 'due_date' | 'expected_amount' | 'paid_amount' | 'status';
 type SortOrder = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 10;
 
+// FCFA amount formatting (the tontine module is FCFA, integer amounts).
+const fmtAmount = (value: number) => `${Number(value).toLocaleString('fr-FR')} FCFA`;
+
+const remainingAmount = (c: TontineContribution) =>
+  Math.max(Number(c.expected_amount) - Number(c.paid_amount), 0);
+
+const statusLabel = (status: string) => {
+  switch (status) {
+    case 'paid':
+      return 'Payé';
+    case 'partial':
+      return 'Partiel';
+    case 'pending':
+      return 'En attente';
+    case 'overdue':
+      return 'En retard';
+    case 'cancelled':
+      return 'Annulé';
+    default:
+      return status;
+  }
+};
+
 const ContributionHistory = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [contributions, setContributions] = useState<TontineContribution[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [filters, setFilters] = useState<Filters>({
     status: 'all',
-    paymentMethod: 'all',
     dateFrom: '',
     dateTo: '',
     search: '',
@@ -96,11 +99,6 @@ const ContributionHistory = () => {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  
-  // Edit modal state
-  const [editingContribution, setEditingContribution] = useState<Contribution | null>(null);
-  const [editDate, setEditDate] = useState<Date | undefined>();
-  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -113,14 +111,9 @@ const ContributionHistory = () => {
       if (!user) return;
 
       try {
-        const { data, error } = await supabase
-          .from('contributions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('due_date', { ascending: false });
-
-        if (error) throw error;
-        setContributions(data || []);
+        // Source of truth: tontine_contributions (via tontineService), not the legacy table.
+        const data = await fetchMemberContributions(user.id, 500);
+        setContributions(data);
       } catch (error) {
         console.error('Error fetching contributions:', error);
         toast.error('Erreur lors du chargement des cotisations');
@@ -142,9 +135,6 @@ const ContributionHistory = () => {
     if (filters.status !== 'all') {
       result = result.filter(c => c.status === filters.status);
     }
-    if (filters.paymentMethod !== 'all') {
-      result = result.filter(c => c.payment_method === filters.paymentMethod);
-    }
     if (filters.dateFrom) {
       result = result.filter(c => c.due_date >= filters.dateFrom);
     }
@@ -153,9 +143,9 @@ const ContributionHistory = () => {
     }
     if (filters.search) {
       const search = filters.search.toLowerCase();
-      result = result.filter(c => 
-        c.notes?.toLowerCase().includes(search) ||
-        c.amount.toString().includes(search)
+      result = result.filter(c =>
+        c.expected_amount.toString().includes(search) ||
+        c.paid_amount.toString().includes(search)
       );
     }
 
@@ -166,14 +156,14 @@ const ContributionHistory = () => {
         case 'due_date':
           comparison = new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
           break;
-        case 'amount':
-          comparison = a.amount - b.amount;
+        case 'expected_amount':
+          comparison = Number(a.expected_amount) - Number(b.expected_amount);
+          break;
+        case 'paid_amount':
+          comparison = Number(a.paid_amount) - Number(b.paid_amount);
           break;
         case 'status':
           comparison = a.status.localeCompare(b.status);
-          break;
-        case 'payment_method':
-          comparison = (a.payment_method || '').localeCompare(b.payment_method || '');
           break;
       }
       return sortOrder === 'asc' ? comparison : -comparison;
@@ -195,8 +185,8 @@ const ContributionHistory = () => {
     const paid = contributions.filter(c => c.status === 'paid').length;
     const pending = contributions.filter(c => c.status === 'pending').length;
     const overdue = contributions.filter(c => c.status === 'overdue').length;
-    const totalAmount = contributions.filter(c => c.status === 'paid').reduce((sum, c) => sum + Number(c.amount), 0);
-    return { total, paid, pending, overdue, totalAmount };
+    const totalPaid = contributions.reduce((sum, c) => sum + Number(c.paid_amount), 0);
+    return { total, paid, pending, overdue, totalPaid };
   }, [contributions]);
 
   const handleSort = (field: SortField) => {
@@ -211,7 +201,6 @@ const ContributionHistory = () => {
   const clearFilters = () => {
     setFilters({
       status: 'all',
-      paymentMethod: 'all',
       dateFrom: '',
       dateTo: '',
       search: '',
@@ -219,59 +208,25 @@ const ContributionHistory = () => {
     setCurrentPage(1);
   };
 
-  const hasActiveFilters = filters.status !== 'all' || filters.paymentMethod !== 'all' || 
+  const hasActiveFilters = filters.status !== 'all' ||
     filters.dateFrom || filters.dateTo || filters.search;
-
-  // Edit contribution date
-  const openEditModal = (contribution: Contribution) => {
-    setEditingContribution(contribution);
-    setEditDate(new Date(contribution.due_date));
-  };
-
-  const handleSaveDate = async () => {
-    if (!editingContribution || !editDate) return;
-
-    setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('contributions')
-        .update({ due_date: format(editDate, 'yyyy-MM-dd') })
-        .eq('id', editingContribution.id);
-
-      if (error) throw error;
-
-      setContributions(prev => prev.map(c => 
-        c.id === editingContribution.id 
-          ? { ...c, due_date: format(editDate, 'yyyy-MM-dd') }
-          : c
-      ));
-      setEditingContribution(null);
-      toast.success('Date de cotisation mise à jour');
-    } catch (error) {
-      console.error('Error updating contribution:', error);
-      toast.error('Erreur lors de la mise à jour');
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   // Export functions
   const exportToCSV = () => {
-    const headers = ['Date d\'échéance', 'Montant', 'Statut', 'Méthode de paiement', 'Date de paiement', 'Notes'];
+    const headers = ['Date d\'échéance', 'Attendu (FCFA)', 'Payé (FCFA)', 'Reste (FCFA)', 'Statut'];
     const rows = filteredContributions.map(c => [
       format(new Date(c.due_date), 'dd/MM/yyyy'),
-      c.amount.toLocaleString('fr-FR') + ' FCFA',
-      c.status === 'paid' ? 'Payé' : c.status === 'pending' ? 'En attente' : 'En retard',
-      c.payment_method || '-',
-      c.paid_date ? format(new Date(c.paid_date), 'dd/MM/yyyy') : '-',
-      c.notes || '-',
+      Number(c.expected_amount).toLocaleString('fr-FR'),
+      Number(c.paid_amount).toLocaleString('fr-FR'),
+      remainingAmount(c).toLocaleString('fr-FR'),
+      statusLabel(c.status),
     ]);
 
     const csvContent = [headers, ...rows]
       .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n');
 
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -283,7 +238,7 @@ const ContributionHistory = () => {
 
   const exportToPDF = () => {
     const doc = new jsPDF();
-    
+
     doc.setFontSize(18);
     doc.text('Historique des Cotisations', 14, 22);
     doc.setFontSize(10);
@@ -291,17 +246,18 @@ const ContributionHistory = () => {
 
     // Stats
     doc.setFontSize(12);
-    doc.text(`Total cotisé: ${stats.totalAmount.toLocaleString('fr-FR')} FCFA`, 14, 42);
-    doc.text(`Cotisations payées: ${stats.paid} | En attente: ${stats.pending} | En retard: ${stats.overdue}`, 14, 50);
+    doc.text(`Total payé: ${stats.totalPaid.toLocaleString('fr-FR')} FCFA`, 14, 42);
+    doc.text(`Payées: ${stats.paid} | En attente: ${stats.pending} | En retard: ${stats.overdue}`, 14, 50);
 
     // Table
     let yPos = 65;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text('Date', 14, yPos);
-    doc.text('Montant', 50, yPos);
-    doc.text('Statut', 100, yPos);
-    doc.text('Méthode', 140, yPos);
+    doc.text('Échéance', 14, yPos);
+    doc.text('Attendu', 55, yPos);
+    doc.text('Payé', 90, yPos);
+    doc.text('Reste', 125, yPos);
+    doc.text('Statut', 160, yPos);
 
     doc.setFont('helvetica', 'normal');
     yPos += 8;
@@ -312,9 +268,10 @@ const ContributionHistory = () => {
         yPos = 20;
       }
       doc.text(format(new Date(c.due_date), 'dd/MM/yyyy'), 14, yPos);
-      doc.text(c.amount.toLocaleString('fr-FR') + ' FCFA', 50, yPos);
-      doc.text(c.status === 'paid' ? 'Payé' : c.status === 'pending' ? 'En attente' : 'En retard', 100, yPos);
-      doc.text(c.payment_method || '-', 140, yPos);
+      doc.text(Number(c.expected_amount).toLocaleString('fr-FR'), 55, yPos);
+      doc.text(Number(c.paid_amount).toLocaleString('fr-FR'), 90, yPos);
+      doc.text(remainingAmount(c).toLocaleString('fr-FR'), 125, yPos);
+      doc.text(statusLabel(c.status), 160, yPos);
       yPos += 7;
     });
 
@@ -326,10 +283,14 @@ const ContributionHistory = () => {
     switch (status) {
       case 'paid':
         return <Badge variant="secondary" className="bg-green-500/10 text-green-600 hover:bg-green-500/20"><CheckCircle2 className="w-3 h-3 mr-1" /> Payé</Badge>;
+      case 'partial':
+        return <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20"><Clock className="w-3 h-3 mr-1" /> Partiel</Badge>;
       case 'pending':
         return <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20"><Clock className="w-3 h-3 mr-1" /> En attente</Badge>;
       case 'overdue':
         return <Badge variant="secondary" className="bg-red-500/10 text-red-600 hover:bg-red-500/20"><AlertCircle className="w-3 h-3 mr-1" /> En retard</Badge>;
+      case 'cancelled':
+        return <Badge variant="outline" className="text-muted-foreground"><X className="w-3 h-3 mr-1" /> Annulé</Badge>;
       default:
         return null;
     }
@@ -377,8 +338,8 @@ const ContributionHistory = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-card border border-border rounded-xl p-4">
-            <p className="text-sm text-muted-foreground">Total cotisé</p>
-            <p className="text-xl font-bold text-foreground">{stats.totalAmount.toLocaleString('fr-FR')} FCFA</p>
+            <p className="text-sm text-muted-foreground">Total payé</p>
+            <p className="text-xl font-bold text-foreground">{stats.totalPaid.toLocaleString('fr-FR')} FCFA</p>
           </div>
           <div className="bg-card border border-border rounded-xl p-4">
             <p className="text-sm text-muted-foreground">Payées</p>
@@ -397,19 +358,19 @@ const ContributionHistory = () => {
         {/* Filters */}
         <div className="bg-card border border-border rounded-xl p-4 mb-6">
           <div className="flex flex-wrap items-center gap-4">
-            <Button 
-              variant={showFilters ? "secondary" : "outline"} 
-              size="sm" 
+            <Button
+              variant={showFilters ? "secondary" : "outline"}
+              size="sm"
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter className="w-4 h-4 mr-2" />
               Filtres
               {hasActiveFilters && <Badge className="ml-2 bg-primary text-primary-foreground">Actif</Badge>}
             </Button>
-            
+
             <div className="flex-1">
               <Input
-                placeholder="Rechercher..."
+                placeholder="Rechercher un montant..."
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                 className="max-w-xs"
@@ -425,7 +386,7 @@ const ContributionHistory = () => {
           </div>
 
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 pt-4 border-t border-border">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-border">
               <div>
                 <label className="text-sm text-muted-foreground mb-1 block">Statut</label>
                 <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
@@ -435,22 +396,10 @@ const ContributionHistory = () => {
                   <SelectContent>
                     <SelectItem value="all">Tous</SelectItem>
                     <SelectItem value="paid">Payé</SelectItem>
+                    <SelectItem value="partial">Partiel</SelectItem>
                     <SelectItem value="pending">En attente</SelectItem>
                     <SelectItem value="overdue">En retard</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Méthode de paiement</label>
-                <Select value={filters.paymentMethod} onValueChange={(value) => setFilters({ ...filters, paymentMethod: value })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous</SelectItem>
-                    <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                    <SelectItem value="bank_transfer">Virement</SelectItem>
-                    <SelectItem value="cash">Espèces</SelectItem>
+                    <SelectItem value="cancelled">Annulé</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -511,25 +460,35 @@ const ContributionHistory = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead 
+                      <TableHead
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => handleSort('due_date')}
                       >
                         <div className="flex items-center gap-1">
-                          Date d'échéance
+                          Échéance
                           <SortIcon field="due_date" />
                         </div>
                       </TableHead>
-                      <TableHead 
+                      <TableHead
                         className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => handleSort('amount')}
+                        onClick={() => handleSort('expected_amount')}
                       >
                         <div className="flex items-center gap-1">
-                          Montant
-                          <SortIcon field="amount" />
+                          Attendu
+                          <SortIcon field="expected_amount" />
                         </div>
                       </TableHead>
-                      <TableHead 
+                      <TableHead
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSort('paid_amount')}
+                      >
+                        <div className="flex items-center gap-1">
+                          Payé
+                          <SortIcon field="paid_amount" />
+                        </div>
+                      </TableHead>
+                      <TableHead>Reste</TableHead>
+                      <TableHead
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => handleSort('status')}
                       >
@@ -538,17 +497,6 @@ const ContributionHistory = () => {
                           <SortIcon field="status" />
                         </div>
                       </TableHead>
-                      <TableHead 
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => handleSort('payment_method')}
-                      >
-                        <div className="flex items-center gap-1">
-                          Méthode
-                          <SortIcon field="payment_method" />
-                        </div>
-                      </TableHead>
-                      <TableHead>Date de paiement</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -558,29 +506,15 @@ const ContributionHistory = () => {
                           {format(new Date(contribution.due_date), 'dd MMMM yyyy', { locale: fr })}
                         </TableCell>
                         <TableCell className="font-medium">
-                          {contribution.amount.toLocaleString('fr-FR')} FCFA
+                          {fmtAmount(contribution.expected_amount)}
+                        </TableCell>
+                        <TableCell>
+                          {fmtAmount(contribution.paid_amount)}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {fmtAmount(remainingAmount(contribution))}
                         </TableCell>
                         <TableCell>{getStatusBadge(contribution.status)}</TableCell>
-                        <TableCell>
-                          {contribution.payment_method === 'mobile_money' ? 'Mobile Money' :
-                           contribution.payment_method === 'bank_transfer' ? 'Virement' :
-                           contribution.payment_method === 'cash' ? 'Espèces' : '-'}
-                        </TableCell>
-                        <TableCell>
-                          {contribution.paid_date 
-                            ? format(new Date(contribution.paid_date), 'dd/MM/yyyy', { locale: fr })
-                            : '-'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditModal(contribution)}
-                            disabled={contribution.status === 'paid'}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -617,39 +551,6 @@ const ContributionHistory = () => {
           )}
         </div>
       </main>
-
-      {/* Edit Date Modal */}
-      <Dialog open={!!editingContribution} onOpenChange={() => setEditingContribution(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Modifier la date d'échéance</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              Sélectionnez une nouvelle date pour cette cotisation de{' '}
-              <span className="font-medium text-foreground">
-                {editingContribution?.amount.toLocaleString('fr-FR')} FCFA
-              </span>
-            </p>
-            <Calendar
-              mode="single"
-              selected={editDate}
-              onSelect={setEditDate}
-              className={cn("rounded-md border pointer-events-auto")}
-              locale={fr}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingContribution(null)}>
-              Annuler
-            </Button>
-            <Button onClick={handleSaveDate} disabled={isSaving || !editDate}>
-              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-              Sauvegarder
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
