@@ -61,7 +61,7 @@ const TestimonialsSection = () => {
     : fallbackTestimonials;
 
   return (
-    <section id="temoignages" className="relative py-24 px-6 bg-background overflow-hidden">
+    <section id="temoignages" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-background overflow-hidden">
       {/* Floating decorative elements */}
       <FloatingElement intensity="subtle" className="absolute top-20 right-10 pointer-events-none">
         <div className="w-48 h-48 bg-gold/5 rounded-full blur-3xl" />

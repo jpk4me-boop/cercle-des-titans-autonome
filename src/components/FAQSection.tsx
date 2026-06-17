@@ -36,7 +36,7 @@ const FAQSection = () => {
     <section
       id="faq"
       ref={ref}
-      className={`py-24 px-6 bg-card/50 pattern-adinkra transition-all duration-700 ${
+      className={`py-24 px-4 sm:px-6 lg:px-8 bg-card/50 pattern-adinkra overflow-hidden transition-all duration-700 ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
       }`}
     >

@@ -9,6 +9,15 @@
     scroll-behavior: smooth;
   }
 
+  /* Guard against horizontal overflow on mobile/tablet.
+     `overflow-x: clip` (not `hidden`) avoids creating a scroll container,
+     so `position: sticky` headers keep working. */
+  html,
+  body {
+    overflow-x: clip;
+    max-width: 100%;
+  }
+
   :root {
     /* Earth tones inspired by African landscapes */
     --background: 30 15% 7%;

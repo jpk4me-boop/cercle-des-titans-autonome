@@ -39,7 +39,7 @@ const TontineSection = () => {
   ];
 
   return (
-    <section id="tontine" className="relative py-24 px-6 bg-card/50 pattern-kente overflow-hidden">
+    <section id="tontine" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-card/50 pattern-kente overflow-hidden">
       {/* Parallax background elements */}
       <FloatingElement intensity="subtle" className="absolute top-20 left-10 pointer-events-none">
         <div className="w-64 h-64 bg-gold/5 rounded-full blur-3xl" />

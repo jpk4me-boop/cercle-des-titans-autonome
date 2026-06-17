@@ -33,13 +33,13 @@ const BenefitsSection = () => {
   ];
 
   return (
-    <section id="benefits" className="py-24 px-6 bg-background relative overflow-hidden">
+    <section id="benefits" className="py-24 px-4 sm:px-6 lg:px-8 bg-background relative overflow-hidden">
       {/* Decorative floating background elements */}
-      <FloatingElement intensity="subtle" className="absolute top-0 left-0 pointer-events-none">
-        <div className="w-96 h-96 bg-gold/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+      <FloatingElement intensity="subtle" className="hidden xl:block absolute top-0 left-0 pointer-events-none">
+        <div className="w-96 h-96 bg-gold/5 rounded-full blur-3xl -translate-y-1/2" />
       </FloatingElement>
-      <FloatingElement intensity="medium" className="absolute bottom-0 right-0 pointer-events-none">
-        <div className="w-80 h-80 bg-terracotta/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      <FloatingElement intensity="medium" className="hidden xl:block absolute bottom-0 right-0 pointer-events-none">
+        <div className="w-80 h-80 bg-terracotta/5 rounded-full blur-3xl translate-y-1/2" />
       </FloatingElement>
 
       <div className="max-w-6xl mx-auto relative z-10">

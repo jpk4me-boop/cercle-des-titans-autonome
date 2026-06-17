@@ -21,22 +21,17 @@ const HeroSection = () => {
     <section id="accueil" className="relative min-h-[100svh] flex items-center overflow-hidden">
       {/* Background with African pattern overlay */}
       <div className="absolute inset-0 z-0 bg-black overflow-hidden">
-        {/* Image layer: parallax lives on this wrapper so the image's translate-x classes
-            actually take effect (an inline transform on the img would override them). */}
-        <div
-          className="absolute inset-0"
-          style={{
-            transform: `scale(1.05) translate3d(${mousePosition.x * 0.5}px, ${mousePosition.y * 0.5}px, 0)`,
-          }}
-        >
+        {/* Static image layer: no scale and no transform, so the box can never
+            exceed the viewport (object-cover keeps it full-bleed and elegant). */}
+        <div className="absolute inset-0">
           <picture className="block w-full h-full">
             <source srcSet={heroImageWebp} type="image/webp" />
             <img
               src={heroImageWebp}
               alt="Équipe professionnelle du Cercle des Titans dans un bureau premium"
-              className="w-full h-full object-cover object-center sm:object-[58%_center] lg:object-[60%_center] brightness-115 contrast-105 saturate-110 transition-transform duration-1000"
+              className="w-full h-full max-w-full object-cover object-center sm:object-[58%_center] lg:object-[60%_center] brightness-115 contrast-105 saturate-110"
               loading="eager"
-              fetchPriority="high"
+              fetchpriority="high"
               decoding="async"
             />
           </picture>
@@ -53,27 +48,27 @@ const HeroSection = () => {
       </div>
 
       {/* Decorative floating elements with parallax */}
-      <FloatingElement intensity="subtle" className="absolute top-1/4 right-1/4 pointer-events-none">
+      <FloatingElement intensity="subtle" className="hidden xl:block absolute top-1/4 right-1/4 pointer-events-none">
         <ParallaxLayer speed={0.3} direction="up">
           <div className="w-72 h-72 bg-gold/10 rounded-full blur-3xl animate-pulse-glow" />
         </ParallaxLayer>
       </FloatingElement>
-      
-      <FloatingElement intensity="medium" className="absolute bottom-1/4 right-1/3 pointer-events-none">
+
+      <FloatingElement intensity="medium" className="hidden xl:block absolute bottom-1/4 right-1/3 pointer-events-none">
         <ParallaxLayer speed={0.5} direction="down">
           <div className="w-96 h-96 bg-terracotta/10 rounded-full blur-3xl" />
         </ParallaxLayer>
       </FloatingElement>
 
       {/* Additional floating orbs */}
-      <div 
-        className="absolute top-1/3 right-1/6 w-32 h-32 bg-gold/20 rounded-full blur-2xl animate-float pointer-events-none"
+      <div
+        className="hidden xl:block absolute top-1/3 right-1/6 w-32 h-32 bg-gold/20 rounded-full blur-2xl animate-float pointer-events-none"
         style={{
           transform: `translate3d(${mousePosition.x * 2}px, ${mousePosition.y * 2}px, 0)`,
         }}
       />
-      <div 
-        className="absolute bottom-1/3 right-1/4 w-24 h-24 bg-forest/10 rounded-full blur-xl animate-float-slow pointer-events-none"
+      <div
+        className="hidden xl:block absolute bottom-1/3 right-1/4 w-24 h-24 bg-forest/10 rounded-full blur-xl animate-float-slow pointer-events-none"
         style={{
           animationDelay: '1s',
           transform: `translate3d(${mousePosition.x * -1.5}px, ${mousePosition.y * -1.5}px, 0)`,

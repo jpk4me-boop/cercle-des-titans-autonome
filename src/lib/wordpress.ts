@@ -79,6 +79,10 @@ export interface WPMedia {
 // Set your WordPress URL here or via environment variable
 const WP_API_URL = import.meta.env.VITE_WORDPRESS_API_URL || '';
 
+// Emit the "not configured" notice at most once, and only in development,
+// so an absent VITE_WORDPRESS_API_URL never floods the console in production.
+let hasWarnedMissingUrl = false;
+
 class WordPressClient {
   private baseUrl: string;
 
@@ -88,7 +92,12 @@ class WordPressClient {
 
   private async fetch<T>(endpoint: string, params?: Record<string, string | number>): Promise<T> {
     if (!this.baseUrl) {
-      console.warn('WordPress API URL not configured');
+      if (import.meta.env.DEV && !hasWarnedMissingUrl) {
+        hasWarnedMissingUrl = true;
+        console.info(
+          '[WordPress] VITE_WORDPRESS_API_URL non définie — le contenu CMS (blog) est désactivé.'
+        );
+      }
       return [] as T;
     }
 

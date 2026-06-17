@@ -27,12 +27,12 @@ const HowItWorksSection = () => {
   ];
 
   return (
-    <section id="comment-ca-marche" className="relative py-24 px-6 bg-gradient-to-b from-earth to-earth-light pattern-adinkra overflow-hidden">
+    <section id="comment-ca-marche" className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-earth to-earth-light pattern-adinkra overflow-hidden">
       {/* Parallax decorative elements */}
-      <FloatingElement intensity="subtle" className="absolute top-1/4 -left-20 pointer-events-none">
+      <FloatingElement intensity="subtle" className="hidden xl:block absolute top-1/4 left-6 pointer-events-none">
         <div className="w-80 h-80 bg-gold/10 rounded-full blur-3xl" />
       </FloatingElement>
-      <FloatingElement intensity="medium" className="absolute bottom-1/4 -right-20 pointer-events-none">
+      <FloatingElement intensity="medium" className="hidden xl:block absolute bottom-1/4 right-6 pointer-events-none">
         <div className="w-96 h-96 bg-terracotta/10 rounded-full blur-3xl" />
       </FloatingElement>
 

@@ -71,10 +71,10 @@ const Navbar = () => {
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       scrolled ? 'bg-background/95 backdrop-blur-md border-b border-border/50 shadow-lg' : 'bg-transparent'
     }`}>
-      <nav className="container mx-auto flex items-center justify-between py-4 px-6">
+      <nav className="container mx-auto flex items-center justify-between py-4 px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-3 group">
           <Logo />
-          <span className="font-display text-xl font-bold text-gold group-hover:text-gold-light transition-colors">
+          <span className="font-display text-lg sm:text-xl font-bold text-gold group-hover:text-gold-light transition-colors whitespace-nowrap">
             Cercle des Titans
           </span>
         </Link>
@@ -217,7 +217,7 @@ const Navbar = () => {
 
       {/* Mobile menu panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 bg-card z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-card z-50 transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
