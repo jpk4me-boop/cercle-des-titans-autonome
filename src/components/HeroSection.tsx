@@ -20,26 +20,34 @@ const HeroSection = () => {
   return (
     <section id="accueil" className="relative min-h-screen flex items-center overflow-hidden">
       {/* Background with African pattern overlay */}
-      <div className="absolute inset-0 z-0">
-        <picture>
-          <source srcSet={heroImageWebp} type="image/webp" />
-          <img
-            src={heroImageWebp}
-            alt="Équipe professionnelle du Cercle des Titans dans un bureau premium"
-            className="w-full h-full object-cover object-center brightness-105 contrast-105 saturate-105 scale-105 transition-transform duration-1000"
-            style={{
-              transform: `scale(1.05) translate3d(${mousePosition.x * 0.5}px, ${mousePosition.y * 0.5}px, 0)`,
-            }}
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-          />
-        </picture>
-        {/* Deep black base for legibility */}
-        <div className="absolute inset-0 bg-background/40" />
-        {/* Directional fade keeping text side readable */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-background/30" />
-        {/* Subtle gold accent wash */}
+      <div className="absolute inset-0 z-0 bg-black overflow-hidden">
+        {/* Image layer: parallax lives on this wrapper so the image's translate-x classes
+            actually take effect (an inline transform on the img would override them). */}
+        <div
+          className="absolute inset-0"
+          style={{
+            transform: `scale(1.05) translate3d(${mousePosition.x * 0.5}px, ${mousePosition.y * 0.5}px, 0)`,
+          }}
+        >
+          <picture className="block w-full h-full">
+            <source srcSet={heroImageWebp} type="image/webp" />
+            <img
+              src={heroImageWebp}
+              alt="Équipe professionnelle du Cercle des Titans dans un bureau premium"
+              className="w-full h-full object-cover object-[60%_center] brightness-115 contrast-105 saturate-110 transition-transform duration-1000"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
+          </picture>
+        </div>
+        {/* Layer 1: very light global tint only (max bg-black/10) */}
+        <div className="absolute inset-0 bg-black/10" />
+        {/* Layer 2: strong fade behind the LEFT text block, limited width — stops just after it */}
+        <div className="absolute inset-y-0 left-0 w-[58%] md:w-[52%] lg:w-[48%] bg-gradient-to-r from-black/75 via-black/45 to-transparent" />
+        {/* Layer 3: top band so the Navbar stays legible without darkening the whole image */}
+        <div className="absolute inset-x-0 top-0 h-32 md:h-40 bg-gradient-to-b from-black/65 via-black/25 to-transparent" />
+        {/* Layer 4: very subtle warm gold halo */}
         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-gold/10" />
         <div className="absolute inset-0 pattern-adinkra opacity-20" />
       </div>
@@ -74,14 +82,14 @@ const HeroSection = () => {
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-6 pt-28 pb-16">
-        <div className="max-w-2xl">
+        <div className="max-w-2xl [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]">
           {/* Badge with bounce animation */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-8 opacity-0 animate-fade-in-up hover:bg-gold/15 hover:scale-105 transition-all duration-300 cursor-default">
             <Sparkles className="w-4 h-4 text-gold animate-pulse" />
             <span className="text-sm font-medium text-gold">Circle of Titans</span>
           </div>
 
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] mb-8">
+          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] mb-8 [text-shadow:0_3px_20px_rgba(0,0,0,0.65)]">
             <span 
               className="text-foreground inline-block opacity-0 animate-fade-in-up"
               style={{ animationDelay: "0.1s" }}
