@@ -2,7 +2,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
-type AppRole = "super_admin" | "admin" | "moderator" | "user" | "investor";
+type AppRole = "user" | "admin" | "super_admin";
 
 interface RoleGuardProps {
   children: ReactNode;

@@ -207,9 +207,9 @@ const FondsFinancement = () => {
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <a href="/#financement" className="text-muted-foreground hover:text-gold transition-colors">
+                    <Link to="/#financement" className="text-muted-foreground hover:text-gold transition-colors">
                       Financement
-                    </a>
+                    </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />

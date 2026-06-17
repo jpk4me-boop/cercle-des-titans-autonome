@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   Accordion,
   AccordionContent,
@@ -91,7 +92,7 @@ const FAQSection = () => {
               </p>
             </div>
             <Button variant="default" size="sm" asChild>
-              <a href="/#contact">{t('nav.join')}</a>
+              <Link to="/#contact">{t('nav.join')}</Link>
             </Button>
           </div>
         </div>
