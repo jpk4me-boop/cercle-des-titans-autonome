@@ -18,7 +18,7 @@ const HeroSection = () => {
   ];
 
   return (
-    <section id="accueil" className="relative min-h-screen flex items-center overflow-hidden">
+    <section id="accueil" className="relative min-h-[100svh] flex items-center overflow-hidden">
       {/* Background with African pattern overlay */}
       <div className="absolute inset-0 z-0 bg-black overflow-hidden">
         {/* Image layer: parallax lives on this wrapper so the image's translate-x classes
@@ -34,19 +34,19 @@ const HeroSection = () => {
             <img
               src={heroImageWebp}
               alt="Équipe professionnelle du Cercle des Titans dans un bureau premium"
-              className="w-full h-full object-cover object-[60%_center] brightness-115 contrast-105 saturate-110 transition-transform duration-1000"
+              className="w-full h-full object-cover object-center sm:object-[58%_center] lg:object-[60%_center] brightness-115 contrast-105 saturate-110 transition-transform duration-1000"
               loading="eager"
               fetchPriority="high"
               decoding="async"
             />
           </picture>
         </div>
-        {/* Layer 1: very light global tint only (max bg-black/10) */}
-        <div className="absolute inset-0 bg-black/10" />
-        {/* Layer 2: strong fade behind the LEFT text block, limited width — stops just after it */}
-        <div className="absolute inset-y-0 left-0 w-[58%] md:w-[52%] lg:w-[48%] bg-gradient-to-r from-black/75 via-black/45 to-transparent" />
+        {/* Layer 1: global tint — a bit darker on mobile for readability, very light on desktop */}
+        <div className="absolute inset-0 bg-black/30 sm:bg-black/15 md:bg-black/10" />
+        {/* Layer 2: fade behind the text. Full-width & strong on mobile, limited width on desktop. */}
+        <div className="absolute inset-y-0 left-0 w-full sm:w-[72%] md:w-[55%] lg:w-[48%] bg-gradient-to-r from-black/80 via-black/45 to-transparent md:from-black/75 md:via-black/40" />
         {/* Layer 3: top band so the Navbar stays legible without darkening the whole image */}
-        <div className="absolute inset-x-0 top-0 h-32 md:h-40 bg-gradient-to-b from-black/65 via-black/25 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-28 sm:h-32 md:h-40 bg-gradient-to-b from-black/70 via-black/25 to-transparent" />
         {/* Layer 4: very subtle warm gold halo */}
         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-gold/10" />
         <div className="absolute inset-0 pattern-adinkra opacity-20" />
@@ -81,15 +81,15 @@ const HeroSection = () => {
       />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-6 pt-28 pb-16">
-        <div className="max-w-2xl [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]">
+      <div className="relative z-10 container mx-auto px-5 sm:px-6 pt-24 sm:pt-28 pb-20 sm:pb-16">
+        <div className="max-w-xl md:max-w-2xl [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]">
           {/* Badge with bounce animation */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-8 opacity-0 animate-fade-in-up hover:bg-gold/15 hover:scale-105 transition-all duration-300 cursor-default">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-6 sm:mb-8 opacity-0 animate-fade-in-up hover:bg-gold/15 hover:scale-105 transition-all duration-300 cursor-default">
             <Sparkles className="w-4 h-4 text-gold animate-pulse" />
             <span className="text-sm font-medium text-gold">Circle of Titans</span>
           </div>
 
-          <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] mb-8 [text-shadow:0_3px_20px_rgba(0,0,0,0.65)]">
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] mb-6 sm:mb-8 [text-shadow:0_3px_20px_rgba(0,0,0,0.65)]">
             <span 
               className="text-foreground inline-block opacity-0 animate-fade-in-up"
               style={{ animationDelay: "0.1s" }}
@@ -112,15 +112,15 @@ const HeroSection = () => {
             </span>
           </h1>
 
-          <p 
-            className="text-lg sm:text-xl text-muted-foreground mb-10 leading-relaxed max-w-xl opacity-0 animate-fade-in-up" 
+          <p
+            className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-8 sm:mb-10 leading-relaxed max-w-xl opacity-0 animate-fade-in-up"
             style={{ animationDelay: "0.4s" }}
           >
             {t('hero.subtitle')}
           </p>
 
-          <div 
-            className="grid grid-cols-2 gap-4 mb-12 opacity-0 animate-fade-in-up" 
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-10 sm:mb-12 opacity-0 animate-fade-in-up"
             style={{ animationDelay: "0.5s" }}
           >
             {features.map((feature, index) => (
@@ -141,8 +141,8 @@ const HeroSection = () => {
             className="flex flex-col sm:flex-row gap-4 opacity-0 animate-fade-in-up" 
             style={{ animationDelay: "0.7s" }}
           >
-            <MagneticButton strength={0.2}>
-              <Button size="lg" className="text-base font-semibold group relative overflow-hidden" asChild>
+            <MagneticButton strength={0.2} className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto text-base font-semibold group relative overflow-hidden" asChild>
                 <Link to="/#contact">
                   <span className="relative z-10 flex items-center">
                     {t('hero.cta')}
@@ -152,8 +152,8 @@ const HeroSection = () => {
                 </Link>
               </Button>
             </MagneticButton>
-            <MagneticButton strength={0.2}>
-              <Button variant="outline" size="lg" className="text-base font-medium group hover:border-gold/50 hover:bg-gold/5 transition-all duration-300" asChild>
+            <MagneticButton strength={0.2} className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto text-base font-medium group hover:border-gold/50 hover:bg-gold/5 transition-all duration-300" asChild>
                 <Link to="/#comment-ca-marche">
                   <span className="group-hover:text-gold transition-colors">{t('hero.ctaSecondary')}</span>
                 </Link>
@@ -167,7 +167,7 @@ const HeroSection = () => {
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
       
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 opacity-0 animate-fade-in" style={{ animationDelay: "1.2s" }}>
+      <div className="hidden sm:block absolute bottom-8 left-1/2 -translate-x-1/2 opacity-0 animate-fade-in" style={{ animationDelay: "1.2s" }}>
         <div className="flex flex-col items-center gap-2 animate-bounce-subtle">
           <span className="text-xs text-muted-foreground uppercase tracking-wider">Scroll</span>
           <div className="w-5 h-8 border-2 border-gold/30 rounded-full flex items-start justify-center p-1">
