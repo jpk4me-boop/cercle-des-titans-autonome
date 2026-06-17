@@ -109,19 +109,10 @@ export const initiatePayment = async (data: TransactionData): Promise<Transactio
   const paymentResult = await simulatePayment(data);
 
   if (paymentResult.success) {
-    // Update transaction with confirmed status
-    const { error: updateError } = await supabase
-      .from("transactions")
-      .update({
-        status: "confirmed",
-        transaction_id: paymentResult.transactionId,
-      })
-      .eq("id", transaction.id);
-
-    if (updateError) {
-      console.error("Error updating transaction:", updateError);
-    }
-
+    // Transaction status is managed server-side. Client roles have no UPDATE
+    // privilege on public.transactions under RLS, so no direct update is attempted
+    // here (it would be denied). Persistence is handled by the secure backend
+    // (create_transaction RPC / generate-receipt Edge Function).
     return {
       id: transaction.id,
       reference,
