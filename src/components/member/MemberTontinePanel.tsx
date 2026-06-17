@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, CheckCircle2, Clock, Coins, CreditCard, Layers, Loader2, ReceiptText, RefreshCw, XCircle } from "lucide-react";
-import { format } from "date-fns";
+import { endOfWeek, format, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import {
@@ -51,7 +51,14 @@ import type {
 
 const DECLARABLE_STATUSES = new Set(["pending", "partial", "overdue"]);
 
-const todayStr = () => format(new Date(), "yyyy-MM-dd");
+// Current week range (Monday–Sunday) as yyyy-MM-dd strings, for week-based filtering.
+const currentWeekRange = () => {
+  const now = new Date();
+  return {
+    start: format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+    end: format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+  };
+};
 
 const formatDate = (value: string) =>
   format(new Date(`${value}T00:00:00`), "dd MMM yyyy", { locale: fr });
@@ -167,10 +174,13 @@ export default function MemberTontinePanel() {
     return map;
   }, [methods]);
 
-  const todayContributions = useMemo(() => {
-    const today = todayStr();
-    return contributions.filter((c) => c.due_date === today);
-  }, [contributions]);
+  // Contributions due within the current week (the cotisation cadence is now weekly).
+  const weekRange = useMemo(() => currentWeekRange(), []);
+  const weekContributions = useMemo(() => {
+    return contributions.filter(
+      (c) => c.due_date >= weekRange.start && c.due_date <= weekRange.end
+    );
+  }, [contributions, weekRange]);
 
   const loadAll = async () => {
     if (!user) return;
@@ -260,9 +270,9 @@ export default function MemberTontinePanel() {
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   // Primary "declare a payment" CTA from the cycle card: open the dialog on a
-  // declarable contribution due today, otherwise guide to the contributions list.
+  // declarable contribution due this week, otherwise guide to the contributions list.
   const handleDeclareCta = () => {
-    const target = todayContributions.find((c) => DECLARABLE_STATUSES.has(c.status));
+    const target = weekContributions.find((c) => DECLARABLE_STATUSES.has(c.status));
     if (target) {
       openDeclare(target);
     } else {
@@ -380,27 +390,29 @@ export default function MemberTontinePanel() {
         </CardContent>
       </Card>
 
-      {/* Today's contribution highlight — premium dark/gold accent */}
+      {/* This week's contribution highlight — premium dark/gold accent */}
       <Card className="overflow-hidden border-amber-400/20 bg-gradient-to-br from-black/60 via-card to-card shadow-[0_0_32px_rgba(245,158,11,0.08)]">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Coins className="h-5 w-5 text-amber-300" />
-            Cotisation du jour
+            Cotisation de la semaine
           </CardTitle>
-          <CardDescription>{formatDate(todayStr())}</CardDescription>
+          <CardDescription>
+            Semaine du {formatDate(weekRange.start)} au {formatDate(weekRange.end)}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex justify-center py-4">
               <Loader2 className="h-6 w-6 animate-spin text-amber-300" />
             </div>
-          ) : todayContributions.length === 0 ? (
+          ) : weekContributions.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Aucune cotisation due aujourd'hui. Sélectionnez une catégorie pour en générer.
+              Aucune cotisation due cette semaine. Sélectionnez une catégorie pour en générer.
             </p>
           ) : (
             <div className="space-y-3">
-              {todayContributions.map((c) => {
+              {weekContributions.map((c) => {
                 const canDeclare = DECLARABLE_STATUSES.has(c.status);
                 return (
                   <div

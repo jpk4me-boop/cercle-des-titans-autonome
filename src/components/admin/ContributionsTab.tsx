@@ -58,7 +58,7 @@ import {
   fetchAllContributions,
   fetchAllPayments,
   fetchAllPaymentMethods,
-  generateDailyContributions,
+  generateWeeklyContributions,
 } from "@/services/tontineService";
 import type {
   ContributionPayment,
@@ -232,13 +232,13 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
       return;
     }
     if (!generateDate) {
-      toast.error("Veuillez choisir une date de génération");
+      toast.error("Veuillez choisir une date d'échéance");
       return;
     }
     setGenerating(true);
     try {
-      const count = await generateDailyContributions(generateDate);
-      toast.success(`${count} cotisation(s) générée(s) pour le ${formatDate(generateDate)}`);
+      const count = await generateWeeklyContributions(generateDate);
+      toast.success(`${count} cotisation(s) hebdomadaire(s) générée(s) (échéance ${formatDate(generateDate)})`);
       loadAll();
     } catch (error) {
       console.error("Erreur génération cotisations:", error);
@@ -417,15 +417,15 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <CalendarPlus className="h-5 w-5" />
-                Générer les cotisations du jour
+                Générer les cotisations de la semaine
               </CardTitle>
               <CardDescription>
-                Crée les cotisations journalières pour les membres actifs (cycle actif requis).
+                Crée les cotisations hebdomadaires pour les membres actifs (cycle actif requis).
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end">
               <div className="flex-1 space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">Date cible</label>
+                <label className="text-sm font-medium text-muted-foreground">Date d'échéance (semaine)</label>
                 <Input
                   type="date"
                   value={generateDate}

@@ -9,6 +9,9 @@ export interface TontineCategory {
   // Canonical weekly tier amount (added by the harmonize migration). Optional so the
   // app keeps working before the migration is deployed; falls back to daily_amount.
   weekly_amount?: number | null;
+  // Contribution cadence (added by the harmonize migration). Official tiers are 'weekly'.
+  // Optional so the app keeps working before the migration is deployed.
+  frequency?: 'daily' | 'weekly';
   currency: string;
   is_active: boolean;
   created_at: string;

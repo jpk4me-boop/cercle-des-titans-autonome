@@ -13,25 +13,31 @@ import {
 
 // --- Categories ---
 
+// Effective tier amount used for sorting: the canonical weekly amount when present,
+// otherwise the legacy daily amount (keeps a sensible order before/after the migration).
+const effectiveCategoryAmount = (c: TontineCategory): number =>
+  c.weekly_amount != null ? c.weekly_amount : c.daily_amount;
+
+const sortCategoriesByAmount = (rows: TontineCategory[]): TontineCategory[] =>
+  [...rows].sort((a, b) => effectiveCategoryAmount(a) - effectiveCategoryAmount(b));
+
 export const fetchActiveCategories = async (): Promise<TontineCategory[]> => {
   const { data, error } = await supabase
     .from("tontine_categories" as any)
     .select("*")
-    .eq("is_active", true)
-    .order("daily_amount", { ascending: true });
+    .eq("is_active", true);
 
   if (error) throw error;
-  return (data || []) as TontineCategory[];
+  return sortCategoriesByAmount((data || []) as TontineCategory[]);
 };
 
 export const fetchAllCategories = async (): Promise<TontineCategory[]> => {
   const { data, error } = await supabase
     .from("tontine_categories" as any)
-    .select("*")
-    .order("daily_amount", { ascending: true });
+    .select("*");
 
   if (error) throw error;
-  return (data || []) as TontineCategory[];
+  return sortCategoriesByAmount((data || []) as TontineCategory[]);
 };
 
 export const fetchMemberCategories = async (userId: string): Promise<MemberTontineCategory[]> => {
@@ -243,4 +249,35 @@ export const closeDailyContributions = async (targetDate: string): Promise<numbe
 
   if (error) throw error;
   return data as number;
+};
+
+// --- Weekly cadence (clean weekly model) ---
+// The weekly RPCs are added by 20260616140000_create_tontine_weekly_functions.sql and are
+// not yet in the generated Supabase types, hence the `rpc as any` cast. They mirror the
+// daily ones but charge weekly_amount once per week (due_date = the week's due date).
+
+export const generateWeeklyContributions = async (weekDueDate: string): Promise<number> => {
+  const { data, error } = await (supabase.rpc as any)("generate_weekly_tontine_contributions", {
+    p_week_due_date: weekDueDate,
+  });
+
+  if (error) throw error;
+  return data as number;
+};
+
+// Service-role-only maintenance runner (used by the future cron / edge function). Exposed
+// here for completeness; member/admin UI does not call it directly under RLS.
+export const runWeeklyTontineMaintenance = async (
+  generateDate: string,
+  closeDate: string,
+  dryRun = true
+): Promise<unknown> => {
+  const { data, error } = await (supabase.rpc as any)("run_weekly_tontine_maintenance", {
+    p_generate_date: generateDate,
+    p_close_date: closeDate,
+    p_dry_run: dryRun,
+  });
+
+  if (error) throw error;
+  return data;
 };
