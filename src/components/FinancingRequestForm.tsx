@@ -111,7 +111,7 @@ const FinancingRequestForm = ({ trigger }: FinancingRequestFormProps) => {
       setIsSuccess(true);
       toast({
         title: "Demande envoyée !",
-        description: "Nous avons bien reçu votre demande de financement. Notre équipe vous contactera sous 48h.",
+        description: "Nous avons bien reçu votre demande d'appui. Notre équipe vous contactera sous 48h.",
       });
 
       setTimeout(() => {
@@ -145,7 +145,7 @@ const FinancingRequestForm = ({ trigger }: FinancingRequestFormProps) => {
         {trigger || (
           <Button className="bg-gold hover:bg-gold/90 text-forest font-semibold px-8 py-6 text-lg rounded-full">
             <FileText className="w-5 h-5 mr-2" />
-            Demander un financement
+            Demander un appui
           </Button>
         )}
       </DialogTrigger>
@@ -164,10 +164,10 @@ const FinancingRequestForm = ({ trigger }: FinancingRequestFormProps) => {
           <>
             <DialogHeader>
               <DialogTitle className="font-display text-2xl text-forest">
-                Demande de financement
+                Demande d'appui
               </DialogTitle>
               <DialogDescription>
-                Remplissez ce formulaire pour soumettre votre demande de financement. 
+                Remplissez ce formulaire pour soumettre votre demande d'appui.
                 Notre équipe vous recontactera sous 48h.
               </DialogDescription>
             </DialogHeader>
@@ -297,7 +297,7 @@ const FinancingRequestForm = ({ trigger }: FinancingRequestFormProps) => {
                       <FormLabel>Description du projet *</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Décrivez votre projet, vos objectifs, et comment vous comptez utiliser le financement..."
+                          placeholder="Décrivez votre projet, vos objectifs, et comment vous comptez utiliser l'appui..."
                           className="min-h-[120px] resize-none"
                           {...field} 
                         />

@@ -45,8 +45,8 @@ const categories = [
     avantages: [
       "Cotisation accessible",
       "Discipline d'épargne collective",
-      "Bonus de participation",
-      "Accès à un fonds de financement de projet pouvant aller jusqu'à 500 000 FCFA"
+      "Avantages de participation",
+      "Accès à un fonds d'appui communautaire pouvant aller jusqu'à 500 000 FCFA"
     ],
     ideal: [
       "Petit commerce",
@@ -64,14 +64,14 @@ const categories = [
     description: "La Catégorie Silver permet de passer à un niveau supérieur. Ici, on ne parle plus seulement de survie financière, mais de croissance réelle.",
     avantages: [
       "Cotisation maîtrisée",
-      "Bonus renforcé",
-      "Accès à un fonds de financement pouvant atteindre 1 000 000 FCFA"
+      "Avantages renforcés",
+      "Accès à un fonds d'appui communautaire pouvant atteindre 1 000 000 FCFA"
     ],
     ideal: [
       "Développement d'un commerce existant",
       "Achat de stock important",
       "Projet agricole ou artisanal",
-      "Activité stable avec besoin de capital"
+      "Activité stable avec besoin d'appui"
     ]
   },
   {
@@ -83,14 +83,14 @@ const categories = [
     description: "La Catégorie Gold s'adresse aux membres qui ont déjà une vision structurée et souhaitent accélérer leur réussite.",
     avantages: [
       "Cotisation stratégique",
-      "Bonus plus élevé",
-      "Accès à un fonds de financement de projet jusqu'à 2 000 000 FCFA"
+      "Avantages plus élevés",
+      "Accès à un fonds d'appui communautaire jusqu'à 2 000 000 FCFA"
     ],
     ideal: [
       "Entreprises en croissance",
       "Projets commerciaux d'envergure",
       "Expansion d'activité",
-      "Investissements à moyen terme"
+      "Projets à moyen terme"
     ]
   },
   {
@@ -102,13 +102,13 @@ const categories = [
     description: "La Catégorie Diamond est réservée à ceux qui pensent grand et agissent avec méthode.",
     avantages: [
       "Cotisation premium",
-      "Bonus significatif",
-      "Accès à un fonds de financement pouvant atteindre 3 000 000 FCFA"
+      "Avantages significatifs",
+      "Accès à un fonds d'appui communautaire pouvant atteindre 3 000 000 FCFA"
     ],
     ideal: [
       "Structuration d'entreprise",
       "Lancement de projets ambitieux",
-      "Investissements à fort potentiel",
+      "Projets à fort potentiel",
       "Création d'emplois"
     ]
   },
@@ -120,13 +120,13 @@ const categories = [
     icon: "⚫",
     description: "La Catégorie Platinium représente le sommet du Cercle des Titans. Ici, on parle de leaders, d'investisseurs et de bâtisseurs.",
     avantages: [
-      "Cotisation élite",
-      "Bonus maximal",
-      "Accès à un fonds de financement pouvant aller jusqu'à 5 000 000 FCFA"
+      "Cotisation premium",
+      "Avantages renforcés",
+      "Accès à un fonds d'appui communautaire pouvant aller jusqu'à 5 000 000 FCFA"
     ],
     ideal: [
       "Grands projets structurés",
-      "Investissements majeurs",
+      "Projets majeurs",
       "Expansion nationale ou internationale",
       "Création de véritables entreprises solides"
     ]
@@ -134,43 +134,43 @@ const categories = [
 ];
 
 const keyPoints = [
-  "Chaque membre peut s'inscrire avec 2, 3 ou 4 noms pour multiplier ses opportunités et ses financements",
-  "Le Fonds de financement n'est pas un prêt bancaire, mais un mécanisme communautaire intelligent",
-  "Plus ta catégorie est élevée, plus ton potentiel de financement augmente",
+  "Chaque membre peut s'inscrire avec 2, 3 ou 4 noms pour multiplier ses opportunités et ses appuis",
+  "Le Fonds d'appui communautaire n'est pas un prêt bancaire, mais un mécanisme communautaire intelligent",
+  "Plus ta catégorie est élevée, plus ton potentiel d'appui augmente",
   "Tout est basé sur la discipline, la transparence et la solidarité"
 ];
 
 const faqItems = [
   {
-    question: "Comment fonctionne le fonds de financement ?",
-    answer: "Le fonds de financement est alimenté par les cotisations des membres du Cercle. Chaque membre cotise selon sa catégorie, et ces fonds sont redistribués sous forme de financement à ceux qui en ont besoin pour leurs projets. C'est un système de solidarité financière basé sur la confiance et la discipline collective."
+    question: "Comment fonctionne le fonds d'appui communautaire ?",
+    answer: "Le fonds d'appui communautaire est alimenté par les cotisations des membres du Cercle. Chaque membre cotise selon sa catégorie, et ces fonds sont redistribués sous forme d'appui à ceux qui en ont besoin pour leurs projets. C'est un système de solidarité communautaire basé sur la confiance et la discipline collective."
   },
   {
-    question: "Quelles sont les conditions pour obtenir un financement ?",
-    answer: "Pour être éligible au financement, vous devez être membre actif du Cercle des Titans, avoir cotisé régulièrement pendant au moins un cycle complet, et présenter un projet viable. Le montant accessible dépend de votre catégorie d'adhésion."
+    question: "Quelles sont les conditions pour obtenir un appui ?",
+    answer: "Pour être éligible à l'appui, vous devez être membre actif du Cercle des Titans, avoir cotisé régulièrement pendant au moins un cycle complet, et présenter un projet viable. Le montant accessible dépend de votre catégorie d'adhésion."
   },
   {
-    question: "Combien de temps faut-il pour recevoir le financement ?",
-    answer: "Une fois votre demande validée par le comité, le financement est généralement disponible sous 48 à 72 heures. La rapidité du processus est l'un des avantages majeurs par rapport aux banques traditionnelles."
+    question: "Combien de temps faut-il pour recevoir l'appui ?",
+    answer: "Une fois votre demande validée par le comité, l'appui est généralement disponible sous 48 à 72 heures. La rapidité du processus est l'un des avantages majeurs par rapport aux banques traditionnelles."
   },
   {
-    question: "Y a-t-il des intérêts à payer sur le financement ?",
-    answer: "Non, le fonds de financement du Cercle des Titans fonctionne sans intérêt. C'est un mécanisme communautaire solidaire, pas un prêt bancaire. Vous remboursez uniquement le montant emprunté selon un échéancier convenu."
+    question: "Y a-t-il des intérêts à payer sur l'appui ?",
+    answer: "Non, le fonds d'appui communautaire du Cercle des Titans fonctionne sans intérêt. C'est un mécanisme communautaire solidaire, pas un prêt bancaire. Vous restituez uniquement le montant reçu selon un échéancier convenu."
   },
   {
     question: "Puis-je m'inscrire dans plusieurs catégories ?",
-    answer: "Oui, chaque membre peut s'inscrire avec 2, 3 ou 4 noms différents pour multiplier ses opportunités et ses financements potentiels. Cela vous permet d'accéder à des montants plus importants tout en diversifiant vos placements."
+    answer: "Oui, chaque membre peut s'inscrire avec 2, 3 ou 4 noms différents pour multiplier ses opportunités et ses appuis potentiels. Cela vous permet d'accéder à des montants plus importants tout en diversifiant vos projets."
   },
   {
     question: "Que se passe-t-il si je ne peux pas rembourser à temps ?",
     answer: "Le Cercle des Titans privilégie le dialogue et la solidarité. En cas de difficulté, contactez immédiatement le comité pour discuter d'un réaménagement de votre échéancier. Des solutions flexibles sont toujours envisageables pour les membres de bonne foi."
   },
   {
-    question: "Quels types de projets peuvent être financés ?",
-    answer: "Tous types de projets peuvent être financés : commerce, agriculture, artisanat, services, immobilier, etc. L'important est de présenter un projet réaliste et viable. Le comité vous accompagne dans la structuration de votre demande."
+    question: "Quels types de projets peuvent être soutenus ?",
+    answer: "Tous types de projets peuvent être soutenus : commerce, agriculture, artisanat, services, immobilier, etc. L'important est de présenter un projet réaliste et viable. Le comité vous accompagne dans la structuration de votre demande."
   },
   {
-    question: "Comment changer de catégorie pour augmenter mon potentiel de financement ?",
+    question: "Comment changer de catégorie pour augmenter mon potentiel d'appui ?",
     answer: "Vous pouvez évoluer vers une catégorie supérieure à tout moment en ajustant votre cotisation. Cette évolution prend effet au cycle suivant et vous donne immédiatement accès aux avantages de la nouvelle catégorie."
   }
 ];
@@ -179,12 +179,12 @@ const FondsFinancement = () => {
   return (
     <>
       <Helmet>
-        <title>Fonds de Financement de Projet | Cercle des Titans</title>
-        <meta 
-          name="description" 
-          content="Découvrez le Fonds de Financement de Projet du Cercle des Titans. Accédez à des financements de 500 000 à 5 000 000 FCFA sans banque, sans intérêts. Tontine solidaire pour réaliser vos projets." 
+        <title>Fonds d'Appui Communautaire de Projet | Cercle des Titans</title>
+        <meta
+          name="description"
+          content="Découvrez le Fonds d'Appui Communautaire de Projet du Cercle des Titans. Accédez à un appui de 500 000 à 5 000 000 FCFA sans banque, sans intérêts. Tontine solidaire pour réaliser vos projets."
         />
-        <meta name="keywords" content="financement projet, tontine, cercle des titans, épargne collective, prêt sans intérêt, FCFA" />
+        <meta name="keywords" content="appui projet, tontine, cercle des titans, épargne collective, entraide communautaire, FCFA" />
         <link rel="canonical" href="/financement/fonds-de-financement" />
       </Helmet>
 
@@ -208,14 +208,14 @@ const FondsFinancement = () => {
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link to="/#financement" className="text-muted-foreground hover:text-gold transition-colors">
-                      Financement
+                      Appui
                     </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbPage className="text-gold font-medium">
-                    Fonds de financement
+                    Fonds d'appui communautaire
                   </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
@@ -233,11 +233,11 @@ const FondsFinancement = () => {
               </div>
               
               <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-forest mb-6 leading-tight">
-                Fonds de Financement de Projet
+                Fonds d'Appui Communautaire de Projet
               </h1>
-              
+
               <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Le Fonds de Financement de Projet est l'un des piliers les plus puissants du Cercle des Titans.
+                Le Fonds d'Appui Communautaire de Projet est l'un des piliers les plus puissants du Cercle des Titans.
                 Il a été conçu pour transformer une simple cotisation collective en un véritable levier de réalisation de projets personnels et professionnels.
               </p>
             </div>
@@ -249,7 +249,7 @@ const FondsFinancement = () => {
               <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
                 <p className="text-lg text-foreground leading-relaxed mb-6">
                   Grâce à la discipline de la tontine, à la force du collectif et à l'organisation interne du Cercle, 
-                  chaque membre peut accéder, selon sa catégorie, à un financement structuré, <strong>sans passer par les banques</strong>, 
+                  chaque membre peut accéder, selon sa catégorie, à un appui structuré, <strong>sans passer par les banques</strong>,
                   <strong> sans dossiers interminables</strong>, et <strong>sans intérêts étouffants</strong>.
                 </p>
                 <div className="flex items-center gap-3 text-gold font-semibold text-lg">
@@ -264,7 +264,7 @@ const FondsFinancement = () => {
           <section className="px-6 py-12">
             <div className="max-w-6xl mx-auto">
               <h2 className="font-display text-3xl md:text-4xl text-forest text-center mb-12">
-                Les Catégories de Financement
+                Les Catégories d'Appui
               </h2>
               
               <div className="grid gap-8">
@@ -369,13 +369,13 @@ const FondsFinancement = () => {
                 Conclusion
               </h2>
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-4">
-                Le Fonds de Financement de Projet du Cercle des Titans n'est pas une promesse vide.
+                Le Fonds d'Appui Communautaire de Projet du Cercle des Titans n'est pas une promesse vide.
               </p>
               <p className="text-xl md:text-2xl text-forest font-semibold mb-8">
-                C'est un outil concret, pensé pour ceux qui veulent passer à l'action, bâtir, investir et réussir.
+                C'est un outil concret, pensé pour ceux qui veulent passer à l'action, bâtir et progresser.
               </p>
               <p className="text-lg text-gold font-medium">
-                Ne reste pas spectateur. Choisis ta catégorie. Intègre le Cercle. Et finance ton avenir.
+                Ne reste pas spectateur. Choisis ta catégorie. Intègre le Cercle. Et bâtis ton avenir.
               </p>
             </div>
           </section>
@@ -413,7 +413,7 @@ const FondsFinancement = () => {
           <section className="px-6 py-16 bg-gradient-to-t from-gold/10 to-background">
             <div className="max-w-2xl mx-auto text-center">
               <h2 className="font-display text-2xl md:text-3xl text-forest mb-8">
-                Prêt à financer votre projet ?
+                Prêt à concrétiser votre projet ?
               </h2>
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -424,7 +424,7 @@ const FondsFinancement = () => {
                       className="bg-gold hover:bg-gold/90 text-forest font-semibold px-10 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all"
                     >
                       <FileText className="w-5 h-5 mr-2" />
-                      Demander un financement
+                      Demander un appui
                     </Button>
                   }
                 />

@@ -35,8 +35,8 @@ const questions: Question[] = [
     icon: <Target className="h-5 w-5" />,
     options: [
       { value: 'small-savings', label: 'Constituer une petite épargne de sécurité', score: { bronze: 3, silver: 2, gold: 1, platinum: 0, diamond: 0, prestige: 0 } },
-      { value: 'project', label: 'Financer un projet personnel (équipement, voyage)', score: { bronze: 1, silver: 3, gold: 3, platinum: 1, diamond: 2, prestige: 0 } },
-      { value: 'investment', label: 'Investir dans un projet important (immobilier, véhicule)', score: { bronze: 0, silver: 0, gold: 1, platinum: 3, diamond: 3, prestige: 2 } },
+      { value: 'project', label: 'Réaliser un projet personnel (équipement, voyage)', score: { bronze: 1, silver: 3, gold: 3, platinum: 1, diamond: 2, prestige: 0 } },
+      { value: 'investment', label: 'Concrétiser un projet important (immobilier, véhicule)', score: { bronze: 0, silver: 0, gold: 1, platinum: 3, diamond: 3, prestige: 2 } },
       { value: 'wealth', label: 'Construire un patrimoine significatif', score: { bronze: 0, silver: 0, gold: 0, platinum: 2, diamond: 1, prestige: 3 } },
     ],
   },
@@ -169,7 +169,7 @@ export default function CategoryRecommender() {
             <h3 className={`text-4xl font-bold ${rec.color}`}>{rec.name}</h3>
             <div className="mt-4 space-y-1 text-muted-foreground">
               <p>{rec.amount}</p>
-              <p className="text-lg font-semibold text-foreground">Gain potentiel: {rec.gain}</p>
+              <p className="text-lg font-semibold text-foreground">Montant du cycle : {rec.gain}</p>
             </div>
           </div>
 

@@ -72,7 +72,7 @@ const categoriesData: Record<string, CategoryData> = {
       "Discipline financière renforcée",
       "Intégration dans une communauté solidaire",
       "Accès aux opportunités de base",
-      "Possibilité de micro-financement",
+      "Possibilité de micro-appui",
       "Accompagnement personnalisé pour débutants"
     ],
     icon: <Shield className="w-12 h-12" />,
@@ -80,7 +80,7 @@ const categoriesData: Record<string, CategoryData> = {
     features: [
       { title: "Groupe de 12 membres", description: "Intégrez un groupe restreint pour une meilleure cohésion", icon: <Users className="w-6 h-6" /> },
       { title: "Cycle de 12 semaines", description: "Un cycle court pour voir rapidement les résultats", icon: <Calendar className="w-6 h-6" /> },
-      { title: "Gain de 60 000 FCFA", description: "Recevez la cagnotte complète à votre tour", icon: <Wallet className="w-6 h-6" /> },
+      { title: "Montant du cycle : 60 000 FCFA", description: "Recevez la cagnotte complète à votre tour", icon: <Wallet className="w-6 h-6" /> },
       { title: "Progression possible", description: "Évoluez vers les catégories supérieures", icon: <TrendingUp className="w-6 h-6" /> }
     ],
     eligibility: ["Être majeur (+18 ans)", "Disposer d'un revenu régulier", "S'engager sur la durée du cycle", "Fournir une pièce d'identité valide"],
@@ -95,13 +95,13 @@ const categoriesData: Record<string, CategoryData> = {
     amount: "10 000 FCFA",
     amountNumber: 10000,
     tagline: "Le premier vrai levier de progression",
-    description: "La catégorie Silver représente le premier vrai levier de progression financière. Elle offre un équilibre parfait entre accessibilité et rendement, idéale pour ceux qui veulent accélérer leur épargne.",
+    description: "La catégorie Silver représente le premier vrai levier de progression financière. Elle offre un équilibre parfait entre accessibilité et régularité, idéale pour ceux qui veulent accélérer leur épargne.",
     benefits: [
       "Tontine renforcée avec des gains plus importants",
-      "Bonus amélioré à chaque cycle",
+      "Avantages améliorés à chaque cycle",
       "Accès prioritaire à certaines opportunités",
       "Réseau actif et dynamique",
-      "Possibilité de financement de projet",
+      "Possibilité d'appui aux projets",
       "Mentorat par des membres expérimentés"
     ],
     icon: <Medal className="w-12 h-12" />,
@@ -109,8 +109,8 @@ const categoriesData: Record<string, CategoryData> = {
     features: [
       { title: "Groupe de 12 membres", description: "Un groupe légèrement plus grand pour plus de dynamisme", icon: <Users className="w-6 h-6" /> },
       { title: "Cycle de 12 semaines", description: "Un trimestre pour optimiser votre épargne", icon: <Calendar className="w-6 h-6" /> },
-      { title: "Gain de 120 000 FCFA", description: "Une cagnotte conséquente pour vos projets", icon: <Wallet className="w-6 h-6" /> },
-      { title: "Bonus de fidélité", description: "Récompenses pour les membres réguliers", icon: <TrendingUp className="w-6 h-6" /> }
+      { title: "Montant du cycle : 120 000 FCFA", description: "Une cagnotte conséquente pour vos projets", icon: <Wallet className="w-6 h-6" /> },
+      { title: "Avantages de fidélité", description: "Récompenses pour les membres réguliers", icon: <TrendingUp className="w-6 h-6" /> }
     ],
     eligibility: ["Être majeur (+18 ans)", "Justifier d'un revenu stable", "Avoir une bonne réputation financière", "S'engager sur la durée complète"],
     frequency: "Hebdomadaire",
@@ -126,9 +126,9 @@ const categoriesData: Record<string, CategoryData> = {
     tagline: "Transformer l'ambition en action",
     description: "La catégorie Gold est conçue pour les membres ambitieux qui souhaitent transformer leurs rêves en réalité. Avec des gains substantiels et un réseau influent, c'est le tremplin vers le succès.",
     benefits: [
-      "Gains significativement plus importants",
-      "Bonus renforcé à chaque participation",
-      "Éligibilité élevée au fonds de financement",
+      "Montants de cycle plus élevés",
+      "Avantages renforcés à chaque participation",
+      "Éligibilité élevée au fonds d'appui communautaire",
       "Reconnaissance communautaire",
       "Accès aux événements exclusifs",
       "Priorité sur les nouveaux projets"
@@ -138,8 +138,8 @@ const categoriesData: Record<string, CategoryData> = {
     features: [
       { title: "Groupe de 12 membres", description: "Une communauté élargie de professionnels", icon: <Users className="w-6 h-6" /> },
       { title: "Cycle de 12 semaines", description: "Plus de temps pour des gains optimisés", icon: <Calendar className="w-6 h-6" /> },
-      { title: "Gain de 300 000 FCFA", description: "Un capital important pour vos investissements", icon: <Wallet className="w-6 h-6" /> },
-      { title: "Accès financement", description: "Éligibilité aux prêts du fonds commun", icon: <TrendingUp className="w-6 h-6" /> }
+      { title: "Montant du cycle : 300 000 FCFA", description: "Une cagnotte importante pour vos projets", icon: <Wallet className="w-6 h-6" /> },
+      { title: "Accès à l'appui", description: "Éligibilité à l'appui du fonds commun", icon: <TrendingUp className="w-6 h-6" /> }
     ],
     eligibility: ["Être majeur (+18 ans)", "Avoir complété au moins 1 cycle Silver", "Démontrer une stabilité financière", "Recommandation d'un membre existant"],
     frequency: "Hebdomadaire",
@@ -153,11 +153,11 @@ const categoriesData: Record<string, CategoryData> = {
     amount: "50 000 FCFA",
     amountNumber: 50000,
     tagline: "Accélérer sa réussite financière",
-    description: "La catégorie Diamond est réservée aux membres qui veulent accélérer significativement leur réussite financière. C'est un investissement conséquent qui ouvre des portes exceptionnelles.",
+    description: "La catégorie Diamond est réservée aux membres qui veulent accélérer significativement leur réussite financière. C'est un engagement conséquent qui ouvre des portes exceptionnelles.",
     benefits: [
-      "Tontine à fort impact financier",
-      "Bonus élevé et privilèges exclusifs",
-      "Priorité absolue au financement",
+      "Tontine à engagement renforcé",
+      "Avantages élevés et privilèges exclusifs",
+      "Priorité absolue à l'appui",
       "Position stratégique dans la communauté",
       "Accès aux partenariats commerciaux",
       "Conseils financiers personnalisés"
@@ -167,10 +167,10 @@ const categoriesData: Record<string, CategoryData> = {
     features: [
       { title: "Groupe de 12 membres", description: "Un réseau d'affaires puissant", icon: <Users className="w-6 h-6" /> },
       { title: "Cycle de 12 semaines", description: "Un engagement sur près de 3 mois", icon: <Calendar className="w-6 h-6" /> },
-      { title: "Gain de 600 000 FCFA", description: "Un capital pour concrétiser vos ambitions", icon: <Wallet className="w-6 h-6" /> },
+      { title: "Montant du cycle : 600 000 FCFA", description: "Une cagnotte pour concrétiser vos ambitions", icon: <Wallet className="w-6 h-6" /> },
       { title: "Réseau VIP", description: "Connexions avec des entrepreneurs établis", icon: <TrendingUp className="w-6 h-6" /> }
     ],
-    eligibility: ["Être majeur (+18 ans)", "Avoir complété au moins 2 cycles Gold", "Présenter un projet d'investissement", "Entretien avec le comité"],
+    eligibility: ["Être majeur (+18 ans)", "Avoir complété au moins 2 cycles Gold", "Présenter un projet structuré", "Entretien avec le comité"],
     frequency: "Hebdomadaire",
     minDuration: "12 semaines",
     cycleDuration: 12,
@@ -184,8 +184,8 @@ const categoriesData: Record<string, CategoryData> = {
     tagline: "Jouer dans la cour des grands",
     description: "La catégorie Platinium est l'antichambre de l'excellence. Réservée aux membres confirmés, elle offre des avantages exceptionnels et un accès privilégié aux plus grandes opportunités.",
     benefits: [
-      "Accès privilégié aux gros financements",
-      "Bonus premium sur chaque cycle",
+      "Accès privilégié aux appuis importants",
+      "Avantages premium sur chaque cycle",
       "Accompagnement stratégique personnalisé",
       "Visibilité renforcée dans le réseau",
       "Invitation aux summits exclusifs",
@@ -194,9 +194,9 @@ const categoriesData: Record<string, CategoryData> = {
     icon: <Star className="w-12 h-12" />,
     color: "from-slate-300 to-slate-500",
     features: [
-      { title: "Groupe de 12 membres", description: "L'élite des entrepreneurs du Cercle", icon: <Users className="w-6 h-6" /> },
+      { title: "Groupe de 12 membres", description: "Un réseau privé d'entrepreneurs du Cercle", icon: <Users className="w-6 h-6" /> },
       { title: "Cycle de 12 semaines", description: "Un trimestre d'engagement premium", icon: <Calendar className="w-6 h-6" /> },
-      { title: "Gain de 1 200 000 FCFA", description: "Un capital majeur pour des projets d'envergure", icon: <Wallet className="w-6 h-6" /> },
+      { title: "Montant du cycle : 1 200 000 FCFA", description: "Une cagnotte importante pour des projets d'envergure", icon: <Wallet className="w-6 h-6" /> },
       { title: "Mentorat exclusif", description: "Accompagnement par des membres Prestige", icon: <TrendingUp className="w-6 h-6" /> }
     ],
     eligibility: ["Avoir complété au moins 2 cycles Diamond", "Présenter un business plan solide", "Validation par le conseil d'administration", "Parrainage par un membre Platinium ou Prestige"],
@@ -213,9 +213,9 @@ const categoriesData: Record<string, CategoryData> = {
     tagline: "Le sommet du Cercle des Titans",
     description: "La catégorie Prestige représente le sommet absolu du Cercle des Titans. C'est l'aboutissement d'un parcours d'excellence, réservé aux leaders qui façonnent l'avenir de la communauté.",
     benefits: [
-      "Accès maximal aux fonds de financement",
-      "Bonus exclusifs et parts sur les bénéfices",
-      "Réseau d'élite et connexions internationales",
+      "Accès maximal aux fonds d'appui communautaire",
+      "Avantages membres et accès aux avantages collectifs",
+      "Réseau privé et connexions internationales",
       "Traitement prioritaire de tous les projets",
       "Siège au conseil consultatif",
       "Représentation officielle du Cercle"
@@ -224,8 +224,8 @@ const categoriesData: Record<string, CategoryData> = {
     color: "from-primary to-primary/70",
     features: [
       { title: "Groupe de 12 membres", description: "Les titans de l'économie locale", icon: <Users className="w-6 h-6" /> },
-      { title: "Cycle de 12 semaines", description: "Un trimestre d'engagement d'élite", icon: <Calendar className="w-6 h-6" /> },
-      { title: "Gain de 2 400 000 FCFA", description: "Un capital majeur pour des investissements stratégiques", icon: <Wallet className="w-6 h-6" /> },
+      { title: "Cycle de 12 semaines", description: "Un trimestre d'engagement premium", icon: <Calendar className="w-6 h-6" /> },
+      { title: "Montant du cycle : 2 400 000 FCFA", description: "Une cagnotte importante pour des projets structurés", icon: <Wallet className="w-6 h-6" /> },
       { title: "Statut de fondateur", description: "Participation aux décisions stratégiques", icon: <TrendingUp className="w-6 h-6" /> }
     ],
     eligibility: ["Avoir complété au moins 2 cycles Platinium", "Être recommandé par 3 membres Prestige", "Entretien avec le comité exécutif", "Engagement sur 2 cycles minimum"],

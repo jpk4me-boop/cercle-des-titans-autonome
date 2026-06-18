@@ -44,10 +44,10 @@ const GainsSimulator = ({
         </div>
         <div>
           <h3 className="font-display text-xl md:text-2xl font-bold text-foreground">
-            Simulateur de Gains
+            Simulateur de montants
           </h3>
           <p className="text-sm text-muted-foreground">
-            Estimez vos gains pour la catégorie {categoryName}
+            Estimez les montants de cycle pour la catégorie {categoryName}
           </p>
         </div>
       </div>
@@ -84,7 +84,7 @@ const GainsSimulator = ({
         <div className="bg-muted/50 rounded-xl p-4">
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <TrendingUp className="w-4 h-4" />
-            <span className="text-xs">Gains totaux</span>
+            <span className="text-xs">Montants totaux</span>
           </div>
           <p className="text-lg font-bold text-primary">
             {formatCurrency(calculations.totalGains)}
@@ -94,7 +94,7 @@ const GainsSimulator = ({
         <div className="bg-muted/50 rounded-xl p-4">
           <div className="flex items-center gap-2 text-muted-foreground mb-2">
             <PiggyBank className="w-4 h-4" />
-            <span className="text-xs">Bénéfice net</span>
+            <span className="text-xs">Solde net</span>
           </div>
           <p className={`text-lg font-bold ${calculations.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
             {calculations.netProfit >= 0 ? '+' : ''}{formatCurrency(calculations.netProfit)}
@@ -129,7 +129,7 @@ const GainsSimulator = ({
             <span className="font-medium text-foreground">{groupSize} membres</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Gain par cycle :</span>
+            <span className="text-muted-foreground">Montant du cycle :</span>
             <span className="font-medium text-primary">{formatCurrency(calculations.potentialGainPerCycle)}</span>
           </div>
           <div className="border-t border-primary/20 pt-2 mt-3">
@@ -143,7 +143,7 @@ const GainsSimulator = ({
 
       {/* Note */}
       <p className="text-xs text-muted-foreground mt-4 text-center">
-        * Cette simulation est indicative. Les gains réels dépendent de la participation régulière de tous les membres du groupe.
+        * Cette simulation est indicative. Les montants réels dépendent de la participation régulière de tous les membres du groupe.
       </p>
     </div>;
 };

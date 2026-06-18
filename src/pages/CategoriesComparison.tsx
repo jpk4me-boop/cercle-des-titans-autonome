@@ -169,9 +169,9 @@ const categories: CategoryInfo[] = [
 ];
 
 const featureLabels = [
-  { key: "microFinancement", label: "Micro-financement" },
-  { key: "bonusFidelite", label: "Bonus fidélité" },
-  { key: "accesFinancement", label: "Accès financement" },
+  { key: "microFinancement", label: "Micro-appui" },
+  { key: "bonusFidelite", label: "Avantages de fidélité" },
+  { key: "accesFinancement", label: "Accès à l'appui" },
   { key: "reseauVIP", label: "Réseau VIP" },
   { key: "mentorat", label: "Mentorat" },
   { key: "conseilConsultatif", label: "Conseil consultatif" },
@@ -283,7 +283,7 @@ const CategoriesComparison = () => {
             {/* Gain Filter */}
             <div className="space-y-4">
               <Label className="text-foreground font-medium">
-                Gain souhaité: {formatNumber(gainRange[0])} - {formatNumber(gainRange[1])}
+                Montant souhaité : {formatNumber(gainRange[0])} - {formatNumber(gainRange[1])}
               </Label>
               <Slider
                 value={gainRange}
@@ -382,7 +382,7 @@ const CategoriesComparison = () => {
                   {/* Gain total */}
                   <TableRow className="bg-primary/5">
                     <TableCell className="font-medium text-foreground">
-                      Gain par cycle
+                      Montant du cycle
                     </TableCell>
                     {filteredCategories.map((cat) => (
                       <TableCell key={cat.slug} className="text-center font-bold text-primary">
@@ -481,7 +481,7 @@ const CategoriesComparison = () => {
                       <span className="text-foreground">{cat.groupSize}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Gain</span>
+                      <span className="text-muted-foreground">Montant du cycle</span>
                       <span className="font-bold text-primary">{cat.totalGainDisplay}</span>
                     </div>
                   </div>
