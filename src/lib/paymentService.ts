@@ -21,8 +21,7 @@ export const TONTINE_CATEGORIES: TontineCategory[] = [
 // payment, transaction or tontine business logic. Keyed by lowercased
 // category name/slug. Aliases ("platinum"/"platinium") both map to the same
 // value because display sources use different spellings.
-// NOTE: "prestige" is intentionally absent until its fee is provided —
-// the UI simply omits the line when no fee is defined.
+// The UI omits the line for any category not listed here.
 export const SITE_MAINTENANCE_FEES: Record<string, number> = {
   bronze: 800,
   silver: 1000,
@@ -30,6 +29,7 @@ export const SITE_MAINTENANCE_FEES: Record<string, number> = {
   diamond: 5000,
   platinum: 10000,
   platinium: 10000,
+  prestige: 14500,
 };
 
 // Returns the site maintenance fee for a category, or null when none is
