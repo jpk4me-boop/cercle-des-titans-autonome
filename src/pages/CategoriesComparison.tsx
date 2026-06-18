@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, X, Crown, Star, Diamond, Award, Medal, Shield, ArrowLeft, ArrowRight, Filter, RotateCcw, Sparkles, TrendingUp } from "lucide-react";
@@ -221,6 +222,13 @@ const CategoriesComparison = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Comparatif des catégories — Cercle des Titans</title>
+        <meta
+          name="description"
+          content="Comparez les catégories de cotisation du Cercle des Titans : épargne collective organisée, appui communautaire et gouvernance transparente. Réseau privé, sans crédit ni rendement garanti."
+        />
+      </Helmet>
       <Navbar />
 
       {/* Hero Section */}

@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import TontineSection from "@/components/TontineSection";
@@ -19,6 +20,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Cercle des Titans — Communauté privée d'épargne collective</title>
+        <meta
+          name="description"
+          content="Communauté privée d'épargne collective fondée sur des tontines organisées, l'appui communautaire et une gouvernance transparente. Réseau privé, entraide encadrée, progression financière responsable."
+        />
+      </Helmet>
       <Navbar />
       <main id="main-content">
         <HeroSection />

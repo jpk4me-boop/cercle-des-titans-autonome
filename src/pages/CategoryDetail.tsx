@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, Crown, Star, Diamond, Award, Medal, Shield, ArrowLeft, Users, TrendingUp, Calendar, Wallet, CreditCard, Smartphone, Globe, Building2 } from "lucide-react";
@@ -97,7 +98,7 @@ const categoriesData: Record<string, CategoryData> = {
     tagline: "Le premier vrai levier de progression",
     description: "La catégorie Silver représente le premier vrai levier de progression financière. Elle offre un équilibre parfait entre accessibilité et régularité, idéale pour ceux qui veulent accélérer leur épargne.",
     benefits: [
-      "Tontine renforcée avec des gains plus importants",
+      "Tontine renforcée avec des montants de cycle plus élevés",
       "Avantages améliorés à chaque cycle",
       "Accès prioritaire à certaines opportunités",
       "Réseau actif et dynamique",
@@ -124,7 +125,7 @@ const categoriesData: Record<string, CategoryData> = {
     amount: "25 000 FCFA",
     amountNumber: 25000,
     tagline: "Transformer l'ambition en action",
-    description: "La catégorie Gold est conçue pour les membres ambitieux qui souhaitent transformer leurs rêves en réalité. Avec des gains substantiels et un réseau influent, c'est le tremplin vers le succès.",
+    description: "La catégorie Gold est conçue pour les membres ambitieux qui souhaitent transformer leurs rêves en réalité. Avec des montants de cycle plus élevés et un réseau influent, c'est le tremplin vers le succès.",
     benefits: [
       "Montants de cycle plus élevés",
       "Avantages renforcés à chaque participation",
@@ -137,7 +138,7 @@ const categoriesData: Record<string, CategoryData> = {
     color: "from-yellow-500 to-yellow-700",
     features: [
       { title: "Groupe de 12 membres", description: "Une communauté élargie de professionnels", icon: <Users className="w-6 h-6" /> },
-      { title: "Cycle de 12 semaines", description: "Plus de temps pour des gains optimisés", icon: <Calendar className="w-6 h-6" /> },
+      { title: "Cycle de 12 semaines", description: "Plus de temps pour des cycles mieux structurés", icon: <Calendar className="w-6 h-6" /> },
       { title: "Montant du cycle : 300 000 FCFA", description: "Une cagnotte importante pour vos projets", icon: <Wallet className="w-6 h-6" /> },
       { title: "Accès à l'appui", description: "Éligibilité à l'appui du fonds commun", icon: <TrendingUp className="w-6 h-6" /> }
     ],
@@ -271,8 +272,15 @@ const CategoryDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{`Catégorie ${category.name} — Cercle des Titans`}</title>
+        <meta
+          name="description"
+          content={`Catégorie ${category.name} du Cercle des Titans : épargne collective organisée, appui communautaire et gouvernance transparente. ${category.tagline}.`}
+        />
+      </Helmet>
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className={`pt-32 pb-20 bg-gradient-to-br ${category.color} relative overflow-hidden`}>
         <div className="absolute inset-0 bg-black/30" />
