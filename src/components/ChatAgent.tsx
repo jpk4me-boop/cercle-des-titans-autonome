@@ -103,7 +103,7 @@ const ChatAgent = forwardRef<HTMLDivElement>((_, ref) => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className={`fixed bottom-24 right-6 z-50 w-[380px] h-[520px] bg-card border border-border rounded-2xl shadow-2xl shadow-black/50 flex flex-col overflow-hidden ${isClosing ? 'animate-chat-close' : 'animate-chat-open'}`}>
+        <div className={`fixed bottom-24 right-6 z-50 w-[calc(100vw-2rem)] sm:w-[380px] h-[520px] bg-card border border-border rounded-2xl shadow-2xl shadow-black/50 flex flex-col overflow-hidden ${isClosing ? 'animate-chat-close' : 'animate-chat-open'}`}>
           {/* Header */}
           <div className="bg-gradient-to-r from-gold-dark via-gold to-gold-light p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
