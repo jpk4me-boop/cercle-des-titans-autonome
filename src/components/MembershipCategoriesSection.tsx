@@ -1,9 +1,10 @@
 import React from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Check, Crown, Star, Diamond, Award, Medal, Shield, ArrowRight, Sparkles } from "lucide-react";
+import { Check, Crown, Star, Diamond, Award, Medal, Shield, ArrowRight, Sparkles, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { getSiteMaintenanceFee, formatAmount } from "@/lib/paymentService";
 
 interface Category {
   nameKey: string;
@@ -73,6 +74,7 @@ const CategoryCard = ({ category, index }: { category: Category; index: number }
   const { t } = useLanguage();
 
   const categoryName = t(`category.${category.nameKey}.name`);
+  const maintenanceFee = getSiteMaintenanceFee(category.nameKey);
 
   return (
     <div
@@ -113,6 +115,15 @@ const CategoryCard = ({ category, index }: { category: Category; index: number }
             {category.amount}
           </span>
           <span className="text-muted-foreground text-sm ml-2">{t('membership.perWeek')}</span>
+
+          {/* Site maintenance fee — sober, clearly a fee (not a gain), distinct from the contribution */}
+          {maintenanceFee !== null && (
+            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-gold/20 bg-gold/5 px-3 py-1 text-xs">
+              <Wrench className="w-3 h-3 text-gold/70 shrink-0" />
+              <span className="font-semibold text-foreground/90">+{formatAmount(maintenanceFee)}</span>
+              <span className="text-muted-foreground">{t('category.siteMaintenanceFee')}</span>
+            </div>
+          )}
         </div>
 
         {/* Benefits */}

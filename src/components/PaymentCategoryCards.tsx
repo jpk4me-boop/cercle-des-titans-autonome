@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { TONTINE_CATEGORIES, TontineCategory, formatAmount } from "@/lib/paymentService";
+import { TONTINE_CATEGORIES, TontineCategory, formatAmount, getSiteMaintenanceFee } from "@/lib/paymentService";
 import PaymentModal from "./PaymentModal";
-import { CreditCard, Sparkles } from "lucide-react";
+import { CreditCard, Sparkles, Wrench } from "lucide-react";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -73,12 +73,21 @@ export default function PaymentCategoryCards() {
 
                 <h3 className="font-display text-2xl text-foreground mb-4">{category.name}</h3>
 
-                <div className="text-center py-6 mb-4 rounded-xl bg-background/50 border border-border">
+                <div className="text-center py-6 mb-3 rounded-xl bg-background/50 border border-border">
                   <p className="text-sm text-muted-foreground mb-1">{t('payment.monthlyAmount')}</p>
                   <p className="text-3xl font-bold font-display" style={{ color: category.color }}>
                     {formatAmount(category.amount)}
                   </p>
                 </div>
+
+                {/* Site maintenance fee — discreet mention, clearly a fee (not a gain) */}
+                {getSiteMaintenanceFee(category.name) !== null && (
+                  <div className="flex items-center justify-center gap-1.5 mb-4 text-xs text-muted-foreground">
+                    <Wrench className="w-3 h-3 text-gold/70 shrink-0" />
+                    <span className="font-semibold text-foreground/90">+{formatAmount(getSiteMaintenanceFee(category.name)!)}</span>
+                    <span>{t('category.siteMaintenanceFee')}</span>
+                  </div>
+                )}
 
                 <Button
                   onClick={() => handlePayClick(category)}

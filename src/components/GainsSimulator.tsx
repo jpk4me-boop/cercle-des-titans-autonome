@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Calculator, TrendingUp, Wallet, Calendar, PiggyBank } from "lucide-react";
+import { getSiteMaintenanceFee } from "@/lib/paymentService";
 interface GainsSimulatorProps {
   weeklyAmount: number;
   cycleDuration: number;
@@ -37,6 +38,7 @@ const GainsSimulator = ({
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
   };
+  const maintenanceFee = getSiteMaintenanceFee(categoryName);
   return <div className="bg-card border border-border rounded-2xl p-6 md:p-8">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-primary/10 rounded-xl text-primary">
@@ -128,6 +130,12 @@ const GainsSimulator = ({
             <span className="text-muted-foreground">Membres par groupe :</span>
             <span className="font-medium text-foreground">{groupSize} membres</span>
           </div>
+          {maintenanceFee !== null && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Frais d'entretien du site :</span>
+              <span className="font-medium text-foreground">+{formatCurrency(maintenanceFee)}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-muted-foreground">Montant du cycle :</span>
             <span className="font-medium text-primary">{formatCurrency(calculations.potentialGainPerCycle)}</span>

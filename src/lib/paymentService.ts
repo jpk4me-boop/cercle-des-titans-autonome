@@ -16,6 +16,29 @@ export const TONTINE_CATEGORIES: TontineCategory[] = [
   { name: "Prestige", amount: 200000, color: "#D4AF37", icon: "🏆" },
 ];
 
+// Site maintenance fee per category (FCFA) — DISPLAY ONLY.
+// This is a service/maintenance charge, NOT a gain and NOT part of any
+// payment, transaction or tontine business logic. Keyed by lowercased
+// category name/slug. Aliases ("platinum"/"platinium") both map to the same
+// value because display sources use different spellings.
+// NOTE: "prestige" is intentionally absent until its fee is provided —
+// the UI simply omits the line when no fee is defined.
+export const SITE_MAINTENANCE_FEES: Record<string, number> = {
+  bronze: 800,
+  silver: 1000,
+  gold: 3800,
+  diamond: 5000,
+  platinum: 10000,
+  platinium: 10000,
+};
+
+// Returns the site maintenance fee for a category, or null when none is
+// defined (e.g. Prestige). Accepts either the display name or the slug.
+export const getSiteMaintenanceFee = (category: string): number | null => {
+  const key = category.trim().toLowerCase();
+  return SITE_MAINTENANCE_FEES[key] ?? null;
+};
+
 export type PaymentMethod = "MTN MoMo" | "Orange Money";
 
 export interface PaymentInfo {

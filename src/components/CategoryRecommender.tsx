@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Sparkles, ArrowRight, RotateCcw, Trophy, Target, Clock, Wallet, Save, Check as CheckIcon, LogIn } from 'lucide-react';
+import { Sparkles, ArrowRight, RotateCcw, Trophy, Target, Clock, Wallet, Save, Check as CheckIcon, LogIn, Wrench } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { getSiteMaintenanceFee, formatAmount } from '@/lib/paymentService';
 import { toast } from 'sonner';
 
 interface Question {
@@ -171,6 +172,15 @@ export default function CategoryRecommender() {
               <p>{rec.amount}</p>
               <p className="text-lg font-semibold text-foreground">Montant du cycle : {rec.gain}</p>
             </div>
+
+            {/* Site maintenance fee — sober mention, clearly a fee (not a gain) */}
+            {getSiteMaintenanceFee(recommendation) !== null && (
+              <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs">
+                <Wrench className="w-3 h-3 text-primary/70 shrink-0" />
+                <span className="font-semibold text-foreground/90">+{formatAmount(getSiteMaintenanceFee(recommendation)!)}</span>
+                <span className="text-muted-foreground">Frais d'entretien du site</span>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">

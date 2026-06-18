@@ -246,6 +246,7 @@ const translations = {
     en: 'Need help choosing? Contact our team for personalized guidance.'
   },
   'membership.contactUs': { fr: 'Nous contacter', en: 'Contact Us' },
+  'category.siteMaintenanceFee': { fr: 'Frais d\'entretien du site', en: 'Site maintenance fee' },
 
   // Category names and taglines
   'category.bronze.name': { fr: 'Bronze', en: 'Bronze' },
