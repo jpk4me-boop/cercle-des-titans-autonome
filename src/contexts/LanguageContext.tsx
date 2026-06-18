@@ -146,6 +146,26 @@ const translations = {
     en: 'Avatars are generated illustrations and do not represent real photographs. Some names have been changed to protect members’ privacy.',
   },
   
+  // Trust / Confiance
+  'trust.badge': { fr: 'Confiance & encadrement', en: 'Trust & Oversight' },
+  'trust.title': { fr: 'Une tontine encadrée, claire et suivie', en: 'A structured, clear and tracked tontine' },
+  'trust.subtitle': {
+    fr: 'Chaque étape est documentée et vérifiable. Vous savez toujours où en sont vos cotisations.',
+    en: 'Every step is documented and verifiable. You always know where your contributions stand.'
+  },
+  'trust.transparency.title': { fr: 'Fonctionnement transparent', en: 'Transparent process' },
+  'trust.transparency.desc': { fr: 'Des règles claires, connues de tous dès le départ.', en: 'Clear rules, known to everyone from the start.' },
+  'trust.tracking.title': { fr: 'Cotisations suivies', en: 'Tracked contributions' },
+  'trust.tracking.desc': { fr: 'Chaque cotisation est enregistrée et consultable à tout moment.', en: 'Every contribution is recorded and viewable at any time.' },
+  'trust.rules.title': { fr: 'Règles encadrées', en: 'Structured rules' },
+  'trust.rules.desc': { fr: 'Des cycles organisés et un cadre défini pour chaque catégorie.', en: 'Organized cycles and a defined framework for each category.' },
+  'trust.payments.title': { fr: 'Paiements vérifiables', en: 'Verifiable payments' },
+  'trust.payments.desc': { fr: 'Déclaration, validation et historique pour chaque paiement.', en: 'Declaration, validation and history for every payment.' },
+  'trust.support.title': { fr: 'Accompagnement des membres', en: 'Member support' },
+  'trust.support.desc': { fr: 'Une équipe disponible pour guider chaque membre.', en: 'A team available to guide each member.' },
+  'trust.cta': { fr: 'Rejoindre le Cercle', en: 'Join the Circle' },
+  'trust.ctaNote': { fr: 'Inscription simple. Notre équipe vous accompagne dès le départ.', en: 'Simple sign-up. Our team supports you from the start.' },
+
   // FAQ
   'faq.title': { fr: 'Questions fréquentes', en: 'Frequently Asked Questions' },
   'faq.subtitle': { fr: 'Tout ce que vous devez savoir sur la tontine et notre communauté', en: 'Everything you need to know about tontine and our community' },
