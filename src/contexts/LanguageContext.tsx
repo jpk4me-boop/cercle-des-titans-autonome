@@ -139,7 +139,12 @@ const translations = {
 
   // Testimonials
   'testimonials.title': { fr: 'Témoignages', en: 'Testimonials' },
+  'testimonials.badge': { fr: 'Ils nous font confiance', en: 'Trusted by our members' },
   'testimonials.subtitle': { fr: 'Découvrez ce que nos membres disent de leur expérience', en: 'Discover what our members say about their experience' },
+  'testimonials.disclaimer': {
+    fr: 'Les avatars sont des illustrations générées et ne représentent pas de photographies réelles. Certains noms ont été modifiés pour préserver la confidentialité des membres.',
+    en: 'Avatars are generated illustrations and do not represent real photographs. Some names have been changed to protect members’ privacy.',
+  },
   
   // FAQ
   'faq.title': { fr: 'Questions fréquentes', en: 'Frequently Asked Questions' },
