@@ -29,9 +29,9 @@ const translations = {
   'hero.title1': { fr: 'Ensemble, nous', en: 'Together, we' },
   'hero.title2': { fr: 'épargnons, investissons', en: 'save, invest' },
   'hero.title3': { fr: 'et réussissons', en: 'and succeed' },
-  'hero.subtitle': { 
-    fr: 'Rejoignez le Cercle des Titans, une communauté africaine dynamique dédiée à la réussite financière collective. Grâce à des tontines disciplinées, les membres transforment de petites cotisations en opportunités de croissance réelles.',
-    en: 'Join the Circle of Titans, a vibrant African community committed to collective financial success. Through disciplined rotating savings and credit associations, members transform small contributions into real opportunities for growth.'
+  'hero.subtitle': {
+    fr: 'Rejoignez le Cercle des Titans, une communauté africaine solidaire dédiée à l\'épargne collective. Grâce à des tontines encadrées et un suivi transparent des cotisations, chaque membre épargne avec régularité et avance en confiance.',
+    en: 'Join the Circle of Titans, a solidarity-driven African community dedicated to collective savings. Through structured tontines and transparent contribution tracking, each member saves consistently and moves forward with confidence.'
   },
   'hero.feature1': { fr: 'Tontine structurée', en: 'Structured ROSCA' },
   'hero.feature2': { fr: 'Fonds d\'appui communautaire', en: 'Community Support Fund' },
@@ -78,10 +78,10 @@ const translations = {
     fr: 'Renforcez vos liens avec une communauté partageant les mêmes valeurs d\'entraide, discipline et ambition.',
     en: 'Strengthen your bonds with a community sharing the same values of mutual aid, discipline, and ambition.'
   },
-  'advantage.access.title': { fr: 'Accès rapide aux fonds', en: 'Quick Access to Funds' },
-  'advantage.access.desc': { 
-    fr: 'Mobilisez des montants importants rapidement, sans procédures complexes ni conditions inaccessibles.',
-    en: 'Mobilize significant amounts quickly, without complex procedures or inaccessible conditions.'
+  'advantage.access.title': { fr: 'Accès aux fonds mobilisés', en: 'Access to Pooled Funds' },
+  'advantage.access.desc': {
+    fr: 'Accédez aux montants mobilisés par le groupe selon des règles claires et un calendrier défini, sans procédures complexes.',
+    en: 'Access the amounts pooled by the group according to clear rules and a defined schedule, without complex procedures.'
   },
   'advantage.flexibility.title': { fr: 'Flexibilité', en: 'Flexibility' },
   'advantage.flexibility.desc': { 
@@ -112,7 +112,7 @@ const translations = {
   'benefits.title': { fr: 'Pourquoi nous rejoindre ?', en: 'Why Join Us?' },
   'benefits.subtitle': { fr: 'Le Cercle offre un accès facile à l\'appui de projets sans banques ni procédures complexes', en: 'The Circle provides easy access to project support without banks or complex procedures' },
   'benefits.growth.title': { fr: 'Croissance financière', en: 'Financial Growth' },
-  'benefits.growth.desc': { fr: 'Atteignez vos objectifs d\'épargne et accédez à des fonds importants', en: 'Reach your savings goals and access significant funds' },
+  'benefits.growth.desc': { fr: 'Atteignez vos objectifs d\'épargne dans un cadre régulier, structuré et transparent', en: 'Reach your savings goals within a regular, structured and transparent framework' },
   'benefits.community.title': { fr: 'Soutien communautaire', en: 'Community Support' },
   'benefits.community.desc': { fr: 'La force du groupe favorise la progression individuelle', en: 'The strength of the group fosters individual growth' },
   'benefits.noBank.title': { fr: 'Sans contraintes bancaires', en: 'No Bank Constraints' },
@@ -130,8 +130,8 @@ const translations = {
   'financing.investment.desc': { fr: 'Participez à des projets communautaires solidaires et progressez équitablement avec le groupe.', en: 'Take part in solidarity-driven community projects and progress fairly with the group.' },
   'financing.investment.amount': { fr: 'Progression collective', en: 'Collective progress' },
   'financing.emergency.title': { fr: 'Fonds d\'urgence', en: 'Emergency Fund' },
-  'financing.emergency.desc': { fr: 'Bénéficiez d\'une aide rapide en cas d\'imprévu grâce au fonds de solidarité du cercle.', en: 'Get quick help in case of emergencies through the circle\'s solidarity fund.' },
-  'financing.emergency.amount': { fr: 'Disponible 24h/24', en: 'Available 24/7' },
+  'financing.emergency.desc': { fr: 'Bénéficiez d\'un appui solidaire en cas d\'imprévu grâce au fonds de solidarité du cercle, selon les règles du groupe.', en: 'Benefit from solidarity support in case of unexpected events through the circle\'s solidarity fund, according to group rules.' },
+  'financing.emergency.amount': { fr: 'Solidarité en cas d\'imprévu', en: 'Solidarity in unexpected times' },
   'financing.loan.title': { fr: 'Appui communautaire encadré', en: 'Structured Community Support' },
   'financing.loan.desc': { fr: 'Bénéficiez d\'un appui du cercle, sans intérêts bancaires ni frais cachés. Restitution flexible selon les règles du groupe.', en: 'Benefit from community support, without bank interest or hidden fees. Flexible restitution according to group rules.' },
   'financing.loan.amount': { fr: 'Sans intérêts bancaires', en: 'No bank interest' },
@@ -160,9 +160,9 @@ const translations = {
     en: 'Click "Join Now" and fill out the form. Our team will contact you to present the different available circles.'
   },
   'faq.q3': { fr: 'Quel est le montant minimum de cotisation ?', en: 'What is the minimum contribution amount?' },
-  'faq.a3': { 
-    fr: 'Les montants varient selon les cercles. Nous proposons des cercles adaptés à tous les budgets, à partir de 50€ par mois.',
-    en: 'Amounts vary by circle. We offer circles adapted to all budgets, starting from €50 per month.'
+  'faq.a3': {
+    fr: 'Les montants varient selon les catégories. Nous proposons des cercles adaptés à tous les budgets, à partir de 5 000 FCFA par semaine.',
+    en: 'Amounts vary by category. We offer circles adapted to all budgets, starting from 5,000 FCFA per week.'
   },
   'faq.q4': { fr: 'Comment est déterminé l\'ordre de réception ?', en: 'How is the receiving order determined?' },
   'faq.a4': { 
@@ -179,9 +179,9 @@ const translations = {
   'contact.label': { fr: 'Contact', en: 'Contact' },
   'contact.title': { fr: 'Rejoignez le', en: 'Join the' },
   'contact.titleHighlight': { fr: 'Cercle', en: 'Circle' },
-  'contact.subtitle': { 
-    fr: 'Prêt à transformer votre avenir financier ? Remplissez le formulaire et notre équipe vous contactera.',
-    en: 'Ready to transform your financial future? Fill out the form and our team will contact you.'
+  'contact.subtitle': {
+    fr: 'Envie d\'épargner au sein d\'une communauté encadrée et transparente ? Remplissez le formulaire et notre équipe vous recontactera.',
+    en: 'Want to save within a structured and transparent community? Fill out the form and our team will get back to you.'
   },
   'contact.address': { fr: 'Adresse', en: 'Address' },
   'contact.phone': { fr: 'Téléphone', en: 'Phone' },

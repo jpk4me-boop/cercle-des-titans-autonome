@@ -65,7 +65,7 @@ const GainsSimulator = ({
         <Slider value={[numberOfCycles]} onValueChange={value => setNumberOfCycles(value[0])} min={1} max={10} step={1} className="w-full" />
         <div className="flex justify-between text-xs text-muted-foreground mt-1">
           <span>1 cycle</span>
-          <span>12 cycles</span>
+          <span>10 cycles</span>
         </div>
       </div>
 
@@ -143,7 +143,7 @@ const GainsSimulator = ({
 
       {/* Note */}
       <p className="text-xs text-muted-foreground mt-4 text-center">
-        * Cette simulation est indicative. Les montants réels dépendent de la participation régulière de tous les membres du groupe.
+        * Cette simulation est purement indicative. Une tontine n'est pas un placement : elle redistribue les cotisations des membres. Les montants réels dépendent de la participation régulière de chacun.
       </p>
     </div>;
 };
