@@ -150,26 +150,24 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="font-display text-xl font-bold text-primary">Cercle des Titans</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/members')}>
-              <Users className="w-4 h-4 mr-2" />
-              Membres
+        <div className="container mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-display text-lg sm:text-xl font-bold text-primary">Cercle des Titans</h1>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button variant="ghost" size="sm" aria-label="Membres" onClick={() => navigate('/members')}>
+              <Users className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Membres</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/messages')}>
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Messages
+            <Button variant="ghost" size="sm" aria-label="Messages" onClick={() => navigate('/messages')}>
+              <MessageSquare className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Messages</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
-              <Home className="w-4 h-4 mr-2" />
-              Accueil
+            <Button variant="ghost" size="sm" aria-label="Accueil" onClick={() => navigate('/')}>
+              <Home className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Accueil</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Déconnexion
+            <Button variant="outline" size="sm" aria-label="Déconnexion" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Déconnexion</span>
             </Button>
           </div>
         </div>
@@ -383,7 +381,7 @@ const Dashboard = () => {
           <div className="mb-4">
             <h3 className="text-xl font-display font-bold text-foreground">Tontine</h3>
             <p className="text-sm text-muted-foreground">
-              Vos catégories, cotisations journalières et déclarations de paiement
+              Vos catégories, cotisations hebdomadaires et déclarations de paiement
             </p>
           </div>
           <MemberTontinePanel />

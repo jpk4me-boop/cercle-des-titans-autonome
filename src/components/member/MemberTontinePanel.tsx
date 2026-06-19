@@ -465,7 +465,7 @@ export default function MemberTontinePanel() {
             Catégories de tontine
           </CardTitle>
           <CardDescription>
-            Choisissez une ou plusieurs catégories pour générer vos cotisations journalières.
+            Choisissez une ou plusieurs catégories pour générer vos cotisations hebdomadaires.
           </CardDescription>
         </CardHeader>
         <CardContent>
