@@ -33,6 +33,7 @@ const ProfileEdit = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
+  const [errors, setErrors] = useState<Partial<Record<keyof Profile, string>>>({});
   const [profile, setProfile] = useState<Profile>({
     first_name: '',
     last_name: '',
@@ -93,11 +94,58 @@ const ProfileEdit = () => {
 
   const handleChange = (field: keyof Profile, value: string) => {
     setProfile(prev => ({ ...prev, [field]: value }));
+    // Clear the field error as soon as the user edits it.
+    setErrors(prev => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
+
+  // All visible profile fields are mandatory. Returns true when the profile is
+  // valid; otherwise populates `errors` with a clear message per empty field.
+  const validateProfile = (): boolean => {
+    const requiredFields: [keyof Profile, string][] = [
+      ['first_name', 'Le prénom est obligatoire.'],
+      ['last_name', 'Le nom est obligatoire.'],
+      ['email', "L'email est obligatoire."],
+      ['phone', 'Le téléphone est obligatoire.'],
+      ['birth_date', 'La date de naissance est obligatoire.'],
+      ['profession', 'La profession est obligatoire.'],
+      ['address', "L'adresse est obligatoire."],
+      ['city', 'La ville est obligatoire.'],
+    ];
+
+    const next: Partial<Record<keyof Profile, string>> = {};
+    for (const [field, message] of requiredFields) {
+      if (!String(profile[field] ?? '').trim()) {
+        next[field] = message;
+      }
+    }
+
+    const email = String(profile.email ?? '').trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      next.email = 'Adresse email invalide.';
+    }
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    if (!validateProfile()) {
+      setActiveTab('profile');
+      toast({
+        variant: "destructive",
+        title: "Champs obligatoires manquants",
+        description: "Veuillez remplir tous les champs du profil avant d'enregistrer."
+      });
+      return;
+    }
 
     setSaving(true);
     try {
@@ -190,85 +238,117 @@ const ProfileEdit = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="first_name">Prénom</Label>
+                    <Label htmlFor="first_name">Prénom <span className="text-destructive">*</span></Label>
                     <Input
                       id="first_name"
                       value={profile.first_name || ''}
                       onChange={(e) => handleChange('first_name', e.target.value)}
                       placeholder="Jean"
+                      required
+                      aria-required
+                      aria-invalid={Boolean(errors.first_name)}
                     />
+                    {errors.first_name && <p className="text-sm text-destructive">{errors.first_name}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="last_name">Nom</Label>
+                    <Label htmlFor="last_name">Nom <span className="text-destructive">*</span></Label>
                     <Input
                       id="last_name"
                       value={profile.last_name || ''}
                       onChange={(e) => handleChange('last_name', e.target.value)}
                       placeholder="Dupont"
+                      required
+                      aria-required
+                      aria-invalid={Boolean(errors.last_name)}
                     />
+                    {errors.last_name && <p className="text-sm text-destructive">{errors.last_name}</p>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
                   <Input
                     id="email"
                     type="email"
                     value={profile.email || ''}
                     onChange={(e) => handleChange('email', e.target.value)}
                     placeholder="votre@email.com"
+                    required
+                    aria-required
+                    aria-invalid={Boolean(errors.email)}
                   />
+                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Téléphone</Label>
+                  <Label htmlFor="phone">Téléphone <span className="text-destructive">*</span></Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={profile.phone || ''}
                     onChange={(e) => handleChange('phone', e.target.value)}
                     placeholder="+33 6 12 34 56 78"
+                    required
+                    aria-required
+                    aria-invalid={Boolean(errors.phone)}
                   />
+                  {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="birth_date">Date de naissance</Label>
+                  <Label htmlFor="birth_date">Date de naissance <span className="text-destructive">*</span></Label>
                   <Input
                     id="birth_date"
                     type="date"
                     value={profile.birth_date || ''}
                     onChange={(e) => handleChange('birth_date', e.target.value)}
+                    required
+                    aria-required
+                    aria-invalid={Boolean(errors.birth_date)}
                   />
+                  {errors.birth_date && <p className="text-sm text-destructive">{errors.birth_date}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="profession">Profession</Label>
+                  <Label htmlFor="profession">Profession <span className="text-destructive">*</span></Label>
                   <Input
                     id="profession"
                     value={profile.profession || ''}
                     onChange={(e) => handleChange('profession', e.target.value)}
                     placeholder="Ingénieur, Médecin, Entrepreneur..."
+                    required
+                    aria-required
+                    aria-invalid={Boolean(errors.profession)}
                   />
+                  {errors.profession && <p className="text-sm text-destructive">{errors.profession}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="address">Adresse</Label>
+                  <Label htmlFor="address">Adresse <span className="text-destructive">*</span></Label>
                   <Input
                     id="address"
                     value={profile.address || ''}
                     onChange={(e) => handleChange('address', e.target.value)}
                     placeholder="123 Rue de la Paix"
+                    required
+                    aria-required
+                    aria-invalid={Boolean(errors.address)}
                   />
+                  {errors.address && <p className="text-sm text-destructive">{errors.address}</p>}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="city">Ville</Label>
+                  <Label htmlFor="city">Ville <span className="text-destructive">*</span></Label>
                   <Input
                     id="city"
                     value={profile.city || ''}
                     onChange={(e) => handleChange('city', e.target.value)}
                     placeholder="Paris"
+                    required
+                    aria-required
+                    aria-invalid={Boolean(errors.city)}
                   />
+                  {errors.city && <p className="text-sm text-destructive">{errors.city}</p>}
                 </div>
 
                 <div className="flex gap-4 pt-4">

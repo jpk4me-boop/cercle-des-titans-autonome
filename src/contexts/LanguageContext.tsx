@@ -214,6 +214,10 @@ const translations = {
   'contact.messagePlaceholder': { fr: 'Parlez-nous de vos objectifs financiers...', en: 'Tell us about your financial goals...' },
   'contact.submit': { fr: 'Envoyer ma demande', en: 'Send my request' },
   'contact.submitting': { fr: 'Envoi en cours...', en: 'Sending...' },
+  'contact.phoneRequired': { fr: 'Le téléphone est obligatoire.', en: 'Phone number is required.' },
+  'contact.messageRequired': { fr: 'Le message est obligatoire.', en: 'The message is required.' },
+  'contact.messageMinWords': { fr: 'Veuillez décrire vos objectifs en au moins 50 mots.', en: 'Please describe your goals in at least 50 words.' },
+  'contact.wordsLabel': { fr: 'mots', en: 'words' },
   'contact.success.title': { fr: 'Demande envoyée !', en: 'Request sent!' },
   'contact.success.desc': { fr: 'Nous vous contacterons dans les plus brefs délais.', en: 'We will contact you as soon as possible.' },
 

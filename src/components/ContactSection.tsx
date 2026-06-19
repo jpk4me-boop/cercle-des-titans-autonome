@@ -7,22 +7,56 @@ import { Send, MapPin, Phone, Mail } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AnimatedSection, FloatingElement, MagneticButton, ParallaxLayer } from "@/components/AnimatedElements";
 
+// Counts real words (whitespace-separated, empty tokens ignored).
+const countWords = (value: string): number =>
+  value.trim().split(/\s+/).filter(Boolean).length;
+
+const MIN_MESSAGE_WORDS = 50;
+
 const ContactSection = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "" });
+  const [errors, setErrors] = useState<{ phone?: string; message?: string }>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear the error for the edited field (phone / message only).
+    if (name === "phone" || name === "message") {
+      setErrors(prev => {
+        if (!prev[name]) return prev;
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+  };
+
+  // All visible fields are mandatory; the message requires at least 50 words.
+  const validate = (): boolean => {
+    const next: { phone?: string; message?: string } = {};
+    if (!formData.phone.trim()) {
+      next.phone = t('contact.phoneRequired');
+    }
+    if (!formData.message.trim()) {
+      next.message = t('contact.messageRequired');
+    } else if (countWords(formData.message) < MIN_MESSAGE_WORDS) {
+      next.message = t('contact.messageMinWords');
+    }
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     toast({ title: t('contact.success.title'), description: t('contact.success.desc') });
     setFormData({ name: "", email: "", phone: "", message: "" });
+    setErrors({});
     setIsSubmitting(false);
   };
 
@@ -104,24 +138,43 @@ const ContactSection = () => {
                     maxLength={255} 
                     className="bg-background border-border focus:border-gold/50 focus:ring-gold/20 transition-all duration-300" 
                   />
-                  <Input 
-                    name="phone" 
-                    type="tel" 
-                    placeholder={t('contact.phonePlaceholder')} 
-                    value={formData.phone} 
-                    onChange={handleChange} 
-                    maxLength={20} 
-                    className="bg-background border-border focus:border-gold/50 focus:ring-gold/20 transition-all duration-300" 
-                  />
-                  <Textarea 
-                    name="message" 
-                    placeholder={t('contact.messagePlaceholder')} 
-                    value={formData.message} 
-                    onChange={handleChange} 
-                    rows={4} 
-                    maxLength={1000} 
-                    className="bg-background border-border resize-none focus:border-gold/50 focus:ring-gold/20 transition-all duration-300" 
-                  />
+                  <div>
+                    <Input
+                      name="phone"
+                      type="tel"
+                      placeholder={t('contact.phonePlaceholder')}
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      aria-required
+                      aria-invalid={Boolean(errors.phone)}
+                      maxLength={20}
+                      className="bg-background border-border focus:border-gold/50 focus:ring-gold/20 transition-all duration-300"
+                    />
+                    {errors.phone && <p className="mt-1.5 text-sm text-destructive">{errors.phone}</p>}
+                  </div>
+                  <div>
+                    <Textarea
+                      name="message"
+                      placeholder={t('contact.messagePlaceholder')}
+                      value={formData.message}
+                      onChange={handleChange}
+                      required
+                      aria-required
+                      aria-invalid={Boolean(errors.message)}
+                      rows={4}
+                      maxLength={2000}
+                      className="bg-background border-border resize-none focus:border-gold/50 focus:ring-gold/20 transition-all duration-300"
+                    />
+                    <div className="mt-1.5 flex items-center justify-between gap-2">
+                      {errors.message
+                        ? <p className="text-sm text-destructive">{errors.message}</p>
+                        : <span />}
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {countWords(formData.message)} / {MIN_MESSAGE_WORDS} {t('contact.wordsLabel')}
+                      </span>
+                    </div>
+                  </div>
                   <MagneticButton strength={0.15} className="w-full">
                     <Button 
                       type="submit" 

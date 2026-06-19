@@ -32,13 +32,26 @@ import {
 } from "@/components/ui/select";
 import { Loader2, FileText, CheckCircle } from "lucide-react";
 
+// Counts real words (whitespace-separated, empty tokens ignored).
+const countWords = (value: string): number =>
+  value.trim().split(/\s+/).filter(Boolean).length;
+
+const MIN_DESCRIPTION_WORDS = 50;
+
 const formSchema = z.object({
   fullName: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100, "Le nom ne peut pas dépasser 100 caractères"),
   email: z.string().trim().email("Adresse email invalide").max(255, "L'email ne peut pas dépasser 255 caractères"),
   phone: z.string().trim().min(8, "Numéro de téléphone invalide").max(20, "Numéro de téléphone trop long"),
   category: z.string().min(1, "Veuillez sélectionner une catégorie"),
   projectType: z.string().min(1, "Veuillez sélectionner un type de projet"),
-  projectDescription: z.string().trim().min(20, "Décrivez votre projet en au moins 20 caractères").max(1000, "La description ne peut pas dépasser 1000 caractères"),
+  projectDescription: z
+    .string()
+    .trim()
+    .max(2000, "La description ne peut pas dépasser 2000 caractères")
+    .refine(
+      (value) => countWords(value) >= MIN_DESCRIPTION_WORDS,
+      "Veuillez décrire vos objectifs en au moins 50 mots."
+    ),
   amountRequested: z.coerce.number().min(50000, "Le montant minimum est de 50 000 FCFA").max(5000000, "Le montant maximum est de 5 000 000 FCFA"),
 });
 
@@ -182,7 +195,7 @@ const FinancingRequestForm = ({ trigger }: FinancingRequestFormProps) => {
                       <FormItem>
                         <FormLabel>Nom complet *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Jean Dupont" {...field} />
+                          <Input placeholder="Jean Dupont" aria-required {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -196,7 +209,7 @@ const FinancingRequestForm = ({ trigger }: FinancingRequestFormProps) => {
                       <FormItem>
                         <FormLabel>Téléphone *</FormLabel>
                         <FormControl>
-                          <Input placeholder="+237 6XX XXX XXX" {...field} />
+                          <Input placeholder="+237 6XX XXX XXX" aria-required {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -211,7 +224,7 @@ const FinancingRequestForm = ({ trigger }: FinancingRequestFormProps) => {
                     <FormItem>
                       <FormLabel>Email *</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="votre@email.com" {...field} />
+                        <Input type="email" placeholder="votre@email.com" aria-required {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,14 +307,18 @@ const FinancingRequestForm = ({ trigger }: FinancingRequestFormProps) => {
                   name="projectDescription"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description du projet *</FormLabel>
+                      <FormLabel>Objectifs financiers *</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Décrivez votre projet, vos objectifs, et comment vous comptez utiliser l'appui..."
+                        <Textarea
+                          placeholder="Décrivez vos objectifs, votre situation actuelle, vos attentes et la manière dont Cercle des Titans peut vous accompagner. Minimum 50 mots."
                           className="min-h-[120px] resize-none"
-                          {...field} 
+                          aria-required
+                          {...field}
                         />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        {countWords(field.value || "")} / {MIN_DESCRIPTION_WORDS} mots
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
