@@ -35,16 +35,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Filter, Loader2, MoreHorizontal, RefreshCw, Search, Users, X } from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Ban, Filter, Loader2, MoreHorizontal, Pause, Play, RefreshCw, Search, ShieldOff, Users, X } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { fetchAllCategories, fetchAllContributions } from "@/services/tontineService";
+import {
+  adminSetMemberStatus,
+  fetchAllMemberStatuses,
+  type MemberStatusValue,
+} from "@/services/memberStatusService";
 import type { TontineCategory, TontineContribution } from "@/types/tontine";
 
 interface WeeklyContributionsOverviewProps {
@@ -93,10 +101,18 @@ const statusBadge = (status: string) => {
 const formatWeek = (value: string) =>
   format(new Date(`${value}T00:00:00`), "dd MMM yyyy", { locale: fr });
 
-// No sanction rule exists in code or DB yet, so the planned sanction is undefined.
-const SANCTION_LABEL = "À définir";
-// No admin RPC/service exists for member sanctions yet, so all actions are disabled.
-const ACTIONS_DISABLED_REASON = "Action indisponible : règle admin non configurée";
+// Member account status badges (active is the default when no row exists).
+const MEMBER_STATUS_META: Record<MemberStatusValue, { label: string; className: string }> = {
+  active: { label: "Actif", className: "bg-green-500/20 text-green-400 border-green-500/30" },
+  paused: { label: "En pause", className: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+  suspended: { label: "Suspendu", className: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
+  banned: { label: "Banni", className: "bg-red-500/20 text-red-400 border-red-500/30" },
+};
+
+const memberStatusBadge = (status: MemberStatusValue) => {
+  const meta = MEMBER_STATUS_META[status] ?? MEMBER_STATUS_META.active;
+  return <Badge className={meta.className}>{meta.label}</Badge>;
+};
 
 export default function WeeklyContributionsOverview({
   readOnly = false,
@@ -105,6 +121,7 @@ export default function WeeklyContributionsOverview({
   const [categories, setCategories] = useState<TontineCategory[]>([]);
   const [members, setMembers] = useState<MemberIdentity[]>([]);
   const [cycles, setCycles] = useState<CycleLite[]>([]);
+  const [memberStatuses, setMemberStatuses] = useState<Record<string, MemberStatusValue>>({});
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -112,23 +129,37 @@ export default function WeeklyContributionsOverview({
   const [statusFilter, setStatusFilter] = useState("all");
   const [cycleFilter, setCycleFilter] = useState("all");
 
+  // Status change dialog state.
+  const [statusAction, setStatusAction] = useState<
+    { userId: string; memberName: string; status: MemberStatusValue; label: string } | null
+  >(null);
+  const [statusReason, setStatusReason] = useState("");
+  const [applyingStatus, setApplyingStatus] = useState(false);
+
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [contribData, catData, profilesRes, cyclesRes] = await Promise.all([
+      const [contribData, catData, profilesRes, cyclesRes, statusesData] = await Promise.all([
         fetchAllContributions(),
         fetchAllCategories(),
         supabase.from("profiles").select("user_id, first_name, last_name, email, phone"),
         (supabase as any).from("tontine_cycles").select("id, name"),
+        fetchAllMemberStatuses(),
       ]);
 
       if (profilesRes.error) throw profilesRes.error;
       if (cyclesRes.error) throw cyclesRes.error;
 
+      const statusMap: Record<string, MemberStatusValue> = {};
+      (statusesData || []).forEach((s) => {
+        statusMap[s.user_id] = s.status;
+      });
+
       setContributions(contribData);
       setCategories(catData);
       setMembers((profilesRes.data as MemberIdentity[]) || []);
       setCycles((cyclesRes.data as CycleLite[]) || []);
+      setMemberStatuses(statusMap);
     } catch (error) {
       console.error("Erreur chargement état hebdomadaire:", error);
       toast.error(
@@ -213,34 +244,73 @@ export default function WeeklyContributionsOverview({
     setCycleFilter("all");
   };
 
-  // Actions are intentionally disabled: no admin sanction RPC/service exists yet.
-  const actionsMenu = (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span tabIndex={0} className="inline-flex">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" className="border-amber-400/30 text-amber-200">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                  {ACTIONS_DISABLED_REASON}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem disabled>Suspendre</DropdownMenuItem>
-                <DropdownMenuItem disabled>Pause</DropdownMenuItem>
-                <DropdownMenuItem disabled>Bannir</DropdownMenuItem>
-                <DropdownMenuItem disabled>Activer</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>{ACTIONS_DISABLED_REASON}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+  const memberStatus = (userId: string): MemberStatusValue => memberStatuses[userId] ?? "active";
+
+  const openStatusAction = (
+    userId: string,
+    name: string,
+    status: MemberStatusValue,
+    label: string
+  ) => {
+    setStatusReason("");
+    setStatusAction({ userId, memberName: name, status, label });
+  };
+
+  const applyStatusChange = async () => {
+    if (!statusAction) return;
+    setApplyingStatus(true);
+    try {
+      await adminSetMemberStatus(
+        statusAction.userId,
+        statusAction.status,
+        statusReason.trim() || null
+      );
+      toast.success(`Statut mis à jour : ${statusAction.label}`);
+      setStatusAction(null);
+      await loadAll();
+    } catch (error) {
+      console.error("Erreur mise à jour statut membre:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Erreur lors de la mise à jour du statut"
+      );
+    } finally {
+      setApplyingStatus(false);
+    }
+  };
+
+  // Admin actions: change the member account status via admin_set_member_status.
+  const renderActions = (userId: string, name: string) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={readOnly}
+          className="border-amber-400/30 text-amber-200"
+        >
+          <MoreHorizontal className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          Statut du membre
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => openStatusAction(userId, name, "paused", "En pause")}>
+          <Pause className="h-4 w-4 mr-2" /> Pause
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => openStatusAction(userId, name, "suspended", "Suspendu")}>
+          <ShieldOff className="h-4 w-4 mr-2" /> Suspendre
+        </DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => openStatusAction(userId, name, "banned", "Banni")}>
+          <Ban className="h-4 w-4 mr-2" /> Bannir
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => openStatusAction(userId, name, "active", "Actif")}>
+          <Play className="h-4 w-4 mr-2" /> Activer
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 
   return (
@@ -358,7 +428,7 @@ export default function WeeklyContributionsOverview({
                     <TableHead className="text-muted-foreground">Attendu</TableHead>
                     <TableHead className="text-muted-foreground">Cotisé</TableHead>
                     <TableHead className="text-muted-foreground">Statut</TableHead>
-                    <TableHead className="text-muted-foreground">Sanction prévue</TableHead>
+                    <TableHead className="text-muted-foreground">Statut membre</TableHead>
                     <TableHead className="text-muted-foreground text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -385,12 +455,10 @@ export default function WeeklyContributionsOverview({
                       <TableCell className="text-foreground">{formatAmount(c.expected_amount)}</TableCell>
                       <TableCell className="text-foreground">{formatAmount(c.paid_amount)}</TableCell>
                       <TableCell>{statusBadge(c.status)}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-muted-foreground">
-                          {SANCTION_LABEL}
-                        </Badge>
+                      <TableCell>{memberStatusBadge(memberStatus(c.user_id))}</TableCell>
+                      <TableCell className="text-right">
+                        {renderActions(c.user_id, memberName(c.user_id))}
                       </TableCell>
-                      <TableCell className="text-right">{actionsMenu}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -399,6 +467,42 @@ export default function WeeklyContributionsOverview({
           )}
         </CardContent>
       </Card>
+
+      {/* Member status change — confirmation + optional reason */}
+      <Dialog
+        open={Boolean(statusAction)}
+        onOpenChange={(open) => !open && !applyingStatus && setStatusAction(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Changer le statut du membre</DialogTitle>
+            <DialogDescription>
+              {statusAction ? `${statusAction.memberName} → ${statusAction.label}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <label className="text-sm font-medium text-muted-foreground">Raison (facultatif)</label>
+            <Textarea
+              value={statusReason}
+              onChange={(e) => setStatusReason(e.target.value)}
+              placeholder="Motif interne (facultatif)"
+              className="bg-background border-border"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatusAction(null)} disabled={applyingStatus}>
+              Annuler
+            </Button>
+            <Button
+              onClick={applyStatusChange}
+              disabled={applyingStatus}
+              className="bg-amber-500/90 text-black hover:bg-amber-500"
+            >
+              {applyingStatus ? "Application..." : "Confirmer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

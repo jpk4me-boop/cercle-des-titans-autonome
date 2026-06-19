@@ -41,6 +41,7 @@ import {
   memberSelectCategory,
   memberUnselectCategory,
 } from "@/services/tontineService";
+import { fetchMyMemberStatus, type MemberStatusValue } from "@/services/memberStatusService";
 import type {
   ContributionPayment,
   PaymentMethod,
@@ -143,6 +144,7 @@ export default function MemberTontinePanel() {
   const [payments, setPayments] = useState<ContributionPayment[]>([]);
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
   const [cycle, setCycle] = useState<TontineCycle | null>(null);
+  const [memberStatusValue, setMemberStatusValue] = useState<MemberStatusValue>("active");
   const [loading, setLoading] = useState(true);
   const [refreshingPayments, setRefreshingPayments] = useState(false);
   const [savingCategoryId, setSavingCategoryId] = useState<string | null>(null);
@@ -186,7 +188,7 @@ export default function MemberTontinePanel() {
     if (!user) return;
     setLoading(true);
     try {
-      const [catData, memberCats, contribData, methodData, paymentData, cycleData] =
+      const [catData, memberCats, contribData, methodData, paymentData, cycleData, statusData] =
         await Promise.all([
           fetchActiveCategories(),
           fetchMemberCategories(user.id),
@@ -194,6 +196,7 @@ export default function MemberTontinePanel() {
           fetchPaymentMethods(),
           fetchMemberPayments(user.id),
           fetchActiveOrPlannedCycle(),
+          fetchMyMemberStatus(user.id),
         ]);
       setCategories(catData);
       setMemberCategoryIds(new Set(memberCats.map((m) => m.category_id)));
@@ -201,6 +204,7 @@ export default function MemberTontinePanel() {
       setMethods(methodData);
       setPayments(paymentData);
       setCycle(cycleData);
+      setMemberStatusValue(statusData);
     } catch (error) {
       console.error("Erreur chargement tontine:", error);
       toast.error(
@@ -266,6 +270,10 @@ export default function MemberTontinePanel() {
   // Has the member joined at least one category (i.e. entered the cycle)?
   const hasJoined = memberCategoryIds.size > 0;
 
+  // Account restriction (paused/suspended/banned). The DB already blocks these
+  // actions; the UI just reflects it and disables the sensitive buttons.
+  const isRestricted = memberStatusValue !== "active";
+
   const scrollToRef = (ref: { current: HTMLDivElement | null }) =>
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -327,6 +335,12 @@ export default function MemberTontinePanel() {
 
   return (
     <div className="space-y-6">
+      {isRestricted && (
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          Votre compte est temporairement restreint. Contactez l'administration.
+        </div>
+      )}
+
       {/* Available cycle — entry point to the tontine flow (premium dark/gold) */}
       <Card className="overflow-hidden border-amber-400/20 bg-gradient-to-br from-black/60 via-card to-card shadow-[0_0_32px_rgba(245,158,11,0.08)]">
         <CardHeader>
@@ -379,7 +393,7 @@ export default function MemberTontinePanel() {
               {cycle && (
                 <div className="flex flex-col gap-2 sm:items-end">
                   {hasJoined ? (
-                    <Button onClick={handleDeclareCta} className="gap-2">
+                    <Button onClick={handleDeclareCta} disabled={isRestricted} className="gap-2">
                       <CreditCard className="h-4 w-4" />
                       Déclarer un paiement
                     </Button>
@@ -440,7 +454,7 @@ export default function MemberTontinePanel() {
                       </p>
                     </div>
                     {canDeclare ? (
-                      <Button size="sm" onClick={() => openDeclare(c)}>
+                      <Button size="sm" onClick={() => openDeclare(c)} disabled={isRestricted}>
                         Déclarer le paiement
                       </Button>
                     ) : (
@@ -508,7 +522,7 @@ export default function MemberTontinePanel() {
                     <Button
                       size="sm"
                       variant={isMember ? "secondary" : "outline"}
-                      disabled={savingCategoryId === category.id}
+                      disabled={savingCategoryId === category.id || (isRestricted && !isMember)}
                       onClick={() => toggleCategory(category, isMember)}
                     >
                       {savingCategoryId === category.id
@@ -572,7 +586,7 @@ export default function MemberTontinePanel() {
                         <td className="py-3 px-2">{contributionStatusBadge(c.status)}</td>
                         <td className="py-3 px-2">
                           {canDeclare ? (
-                            <Button size="sm" variant="outline" onClick={() => openDeclare(c)}>
+                            <Button size="sm" variant="outline" onClick={() => openDeclare(c)} disabled={isRestricted}>
                               Déclarer
                             </Button>
                           ) : (
