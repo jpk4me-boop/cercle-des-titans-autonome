@@ -52,10 +52,11 @@ const translations = {
     en: 'This system, passed down through generations, allows everyone to access significant funds while cultivating solidarity and trust within the community.'
   },
   'about.exampleTitle': { fr: 'Exemple concret', en: 'Concrete Example' },
-  'about.exampleText1': { fr: '24 membres cotisent 10 000 FCFA chaque mois.', en: '24 members contribute 10,000 FCFA each month.' },
-  'about.exampleText2': { fr: 'Cagnotte mensuelle totale:', en: 'Total monthly pot:' },
+  'about.exampleText1': { fr: '24 membres cotisent chacun 10 000 FCFA par semaine.', en: '24 members each contribute 10,000 FCFA per week.' },
+  'about.exampleText2': { fr: 'Fonds collectif mobilisé par tour :', en: 'Collective fund mobilized per round:' },
   'about.exampleAmount': { fr: '240 000 FCFA', en: '240,000 FCFA' },
-  'about.exampleFooter': { fr: 'Aucun intérêt • Aucun frais • 100% solidaire', en: 'No interest • No fees • 100% solidarity' },
+  'about.exampleComplement': { fr: '+ complément selon la catégorie sélectionnée', en: '+ supplement based on the selected category' },
+  'about.exampleFooter': { fr: 'Rotation transparente • Règles claires • Engagement collectif', en: 'Transparent rotation • Clear rules • Collective commitment' },
 
   // Advantages
   'advantage.noInterest.title': { fr: 'Sans intérêts', en: 'Interest-Free' },

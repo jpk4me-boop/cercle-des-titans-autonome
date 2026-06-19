@@ -78,6 +78,7 @@ const TontineSection = () => {
                     <div className="text-3xl font-display font-bold text-gold mt-4 animate-pulse-glow inline-block px-4 py-2 rounded-lg bg-gold/5">
                       {t('about.exampleAmount')}
                     </div>
+                    <p className="text-sm text-gold/70">{t('about.exampleComplement')}</p>
                   </div>
                   <div className="mt-8 pt-6 border-t border-gold/20">
                     <p className="text-sm text-muted-foreground">{t('about.exampleFooter')}</p>
