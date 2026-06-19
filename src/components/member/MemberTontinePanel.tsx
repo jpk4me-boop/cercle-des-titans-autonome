@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, CheckCircle2, Clock, Coins, CreditCard, Layers, Loader2, ReceiptText, RefreshCw, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, Clock, Coins, CreditCard, Layers, Loader2, ReceiptText, RefreshCw, XCircle } from "lucide-react";
 import { endOfWeek, format, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -336,7 +336,8 @@ export default function MemberTontinePanel() {
   return (
     <div className="space-y-6">
       {isRestricted && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
           Votre compte est temporairement restreint. Contactez l'administration.
         </div>
       )}

@@ -427,7 +427,7 @@ export default function WeeklyContributionsOverview({
                     <TableHead className="text-muted-foreground">Cycle / Semaine</TableHead>
                     <TableHead className="text-muted-foreground">Attendu</TableHead>
                     <TableHead className="text-muted-foreground">Cotisé</TableHead>
-                    <TableHead className="text-muted-foreground">Statut</TableHead>
+                    <TableHead className="text-muted-foreground">Cotisation</TableHead>
                     <TableHead className="text-muted-foreground">Statut membre</TableHead>
                     <TableHead className="text-muted-foreground text-right">Actions</TableHead>
                   </TableRow>
@@ -496,7 +496,13 @@ export default function WeeklyContributionsOverview({
             <Button
               onClick={applyStatusChange}
               disabled={applyingStatus}
-              className="bg-amber-500/90 text-black hover:bg-amber-500"
+              className={
+                statusAction?.status === "active"
+                  ? "bg-green-500/90 text-black hover:bg-green-500"
+                  : statusAction?.status === "paused"
+                  ? "bg-amber-500/90 text-black hover:bg-amber-500"
+                  : "bg-red-500/90 text-white hover:bg-red-500"
+              }
             >
               {applyingStatus ? "Application..." : "Confirmer"}
             </Button>
