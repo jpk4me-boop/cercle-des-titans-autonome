@@ -41,6 +41,7 @@ import {
   CheckCircle,
   Clock,
   Coins,
+  ExternalLink,
   Filter,
   Layers,
   RefreshCw,
@@ -113,6 +114,43 @@ const paymentStatusBadge = (status: string) => {
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
+};
+
+// Only http(s) URLs may be turned into a clickable link. Anything else
+// (javascript:, data:, relative, malformed) is rejected so it can never be
+// rendered as an href. Returns the normalized URL, or null when unsafe/empty.
+const safeProofHref = (raw: string | null | undefined): string | null => {
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw.trim());
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.href : null;
+  } catch {
+    return null;
+  }
+};
+
+// Justificatif cell for the admin payments table: a "Voir" link in a new tab
+// for valid URLs, an explicit "Justificatif non valide" hint otherwise, and a
+// neutral dash when the member supplied no proof.
+const renderProof = (proofUrl: string | null | undefined) => {
+  if (!proofUrl) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  const href = safeProofHref(proofUrl);
+  if (!href) {
+    return <span className="text-xs text-red-300">Justificatif non valide</span>;
+  }
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 text-xs text-amber-300 underline underline-offset-2 hover:text-amber-200"
+    >
+      <ExternalLink className="h-3 w-3" />
+      Voir
+    </a>
+  );
 };
 
 export default function ContributionsTab({ readOnly = false }: ContributionsTabProps) {
@@ -497,6 +535,7 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
                     <TableHead className="text-muted-foreground">Méthode</TableHead>
                     <TableHead className="text-muted-foreground">Montant</TableHead>
                     <TableHead className="text-muted-foreground">Référence</TableHead>
+                    <TableHead className="text-muted-foreground">Justificatif</TableHead>
                     <TableHead className="text-muted-foreground">Statut</TableHead>
                     <TableHead className="text-muted-foreground">Action</TableHead>
                   </TableRow>
@@ -519,6 +558,7 @@ export default function ContributionsTab({ readOnly = false }: ContributionsTabP
                       <TableCell className="font-mono text-xs text-foreground">
                         {p.payment_reference || "—"}
                       </TableCell>
+                      <TableCell>{renderProof(p.proof_url)}</TableCell>
                       <TableCell>{paymentStatusBadge(p.status)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
