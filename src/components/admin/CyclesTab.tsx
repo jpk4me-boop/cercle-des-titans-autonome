@@ -4,8 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CalendarDays, Plus, RefreshCw } from "lucide-react";
+import { CalendarDays, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TontineCycle {
   id: string;
@@ -26,6 +36,8 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
   const [cycles, setCycles] = useState<TontineCycle[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [cycleToDelete, setCycleToDelete] = useState<TontineCycle | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const [newCycle, setNewCycle] = useState({
     name: "",
@@ -138,6 +150,59 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
     } catch (error) {
       console.error("Erreur mise à jour cycle:", error);
       toast.error("Erreur lors de la mise à jour du cycle");
+    }
+  };
+
+  // Permanent deletion, allowed ONLY when the cycle has zero linked data.
+  // The cycle_id foreign keys on tontine_contributions / contribution_payments
+  // cascade on delete, so removing a cycle that holds rows would silently wipe
+  // financial history. We therefore re-check counts server-side right before the
+  // delete and block when any linked row exists.
+  const confirmDelete = async () => {
+    if (!cycleToDelete) return;
+    if (readOnly) {
+      toast.error("Action non autorisée en lecture seule");
+      setCycleToDelete(null);
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const [contribRes, payRes] = await Promise.all([
+        (supabase as any)
+          .from("tontine_contributions")
+          .select("id", { count: "exact", head: true })
+          .eq("cycle_id", cycleToDelete.id),
+        (supabase as any)
+          .from("contribution_payments")
+          .select("id", { count: "exact", head: true })
+          .eq("cycle_id", cycleToDelete.id),
+      ]);
+
+      if (contribRes.error) throw contribRes.error;
+      if (payRes.error) throw payRes.error;
+
+      if ((contribRes.count ?? 0) > 0 || (payRes.count ?? 0) > 0) {
+        toast.error("Ce cycle contient déjà des données. Utilisez plutôt Clôturer.");
+        setCycleToDelete(null);
+        return;
+      }
+
+      const { error } = await (supabase as any)
+        .from("tontine_cycles")
+        .delete()
+        .eq("id", cycleToDelete.id);
+
+      if (error) throw error;
+
+      toast.success("Cycle supprimé définitivement");
+      setCycleToDelete(null);
+      fetchCycles();
+    } catch (error) {
+      console.error("Erreur suppression cycle:", error);
+      toast.error("Erreur lors de la suppression du cycle");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -297,7 +362,7 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
                   </div>
 
                   {!readOnly && (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button
                         size="sm"
                         variant="outline"
@@ -315,6 +380,16 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
                       >
                         Clôturer
                       </Button>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setCycleToDelete(cycle)}
+                        className="border-red-500/40 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Supprimer
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -323,6 +398,34 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={Boolean(cycleToDelete)}
+        onOpenChange={(open) => !open && !deleting && setCycleToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer définitivement ce cycle ? Cette action est irréversible.</AlertDialogTitle>
+            <AlertDialogDescription>
+              {cycleToDelete ? `Cycle : « ${cycleToDelete.name} ». ` : ""}
+              La suppression n'est possible que si le cycle ne contient aucune cotisation ni paiement lié.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              disabled={deleting}
+              className="bg-red-500/90 text-white hover:bg-red-500"
+            >
+              {deleting ? "Suppression..." : "Supprimer définitivement"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
