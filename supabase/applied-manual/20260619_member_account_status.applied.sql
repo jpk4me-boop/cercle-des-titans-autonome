@@ -1,8 +1,10 @@
--- DRAFT — DO NOT APPLY. Member account status (sanctions) — preparation only.
--- File: supabase/drafts/20260619_draft_member_account_status.sql
+-- APPLIED MANUALLY 2026-06-19 — DO NOT RE-APPLY.
+-- File: supabase/applied-manual/20260619_member_account_status.applied.sql
+-- Supabase project: txllxnqcptegsgwkvzeb
 --
--- STATUS: DRAFT, NOT a migration. Placed under supabase/drafts/ on purpose so it is
--- NEVER picked up by `supabase db push`. Apply manually only after validation.
+-- STATUS: Applied manually (out of the CLI), NOT registered in
+-- supabase_migrations.schema_migrations. Kept here as an audit record only.
+-- Do NOT move this into supabase/migrations/ and do NOT re-run it.
 --
 -- SCOPE
 --   * Creates public.member_account_status (one row per member, default 'active').

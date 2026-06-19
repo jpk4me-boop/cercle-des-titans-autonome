@@ -1,9 +1,12 @@
--- DRAFT — DO NOT APPLY. Member-status guards for tontine RPCs — preparation only.
--- File: supabase/drafts/20260619_draft_member_status_guards.sql
+-- APPLIED MANUALLY 2026-06-19 — DO NOT RE-APPLY.
+-- File: supabase/applied-manual/20260619_member_status_guards.applied.sql
+-- Supabase project: txllxnqcptegsgwkvzeb
 --
--- STATUS: DRAFT, NOT a migration (lives under supabase/drafts/, never pushed).
--- Apply manually ONLY AFTER 20260619_draft_member_account_status.sql, which creates
--- public.member_account_status and public.current_member_status().
+-- STATUS: Applied manually (out of the CLI), NOT registered in
+-- supabase_migrations.schema_migrations. Kept here as an audit record only.
+-- Applied AFTER 20260619_member_account_status.applied.sql (which creates
+-- public.member_account_status and public.current_member_status()).
+-- Do NOT move this into supabase/migrations/ and do NOT re-run it.
 --
 -- BUSINESS RULE (final):
 --   active    -> allowed everywhere
