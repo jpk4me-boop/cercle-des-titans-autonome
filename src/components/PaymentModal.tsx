@@ -6,13 +6,14 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2, Phone, User, Mail, CreditCard, Smartphone } from "lucide-react";
 import { toast } from "sonner";
-import { 
-  TontineCategory, 
-  PaymentMethod, 
-  PAYMENT_METHODS, 
-  initiatePayment, 
+import {
+  TontineCategory,
+  PaymentMethod,
+  PAYMENT_METHODS,
+  initiatePayment,
   generateReceipt,
-  formatAmount 
+  formatAmount,
+  getSiteMaintenanceFee
 } from "@/lib/paymentService";
 import PaymentResult from "./PaymentResult";
 
@@ -118,6 +119,7 @@ export default function PaymentModal({ isOpen, onClose, category }: PaymentModal
   };
 
   const selectedPaymentInfo = PAYMENT_METHODS[formData.paymentMethod];
+  const maintenanceFee = getSiteMaintenanceFee(category.name);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -132,10 +134,29 @@ export default function PaymentModal({ isOpen, onClose, category }: PaymentModal
             </DialogHeader>
 
             <div className="space-y-6 py-4">
-              {/* Amount Display */}
-              <div className="text-center p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <p className="text-sm text-muted-foreground mb-1">Montant à payer</p>
-                <p className="text-3xl font-bold text-primary">{formatAmount(category.amount)}</p>
+              {/* Amount breakdown — the cotisation is what this payment records;
+                  the site maintenance fee is shown for transparency only and is
+                  settled separately (it is NOT added to the recorded amount). */}
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Cotisation tontine</span>
+                  <span className="font-semibold text-primary">{formatAmount(category.amount)}</span>
+                </div>
+                {maintenanceFee !== null && (
+                  <>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Frais d'entretien du site</span>
+                      <span className="font-medium text-foreground">{formatAmount(maintenanceFee)}</span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-primary/20 pt-2 text-base">
+                      <span className="font-semibold text-foreground">Total à prévoir</span>
+                      <span className="font-bold text-primary">{formatAmount(category.amount + maintenanceFee)}</span>
+                    </div>
+                    <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
+                      Seule la cotisation tontine est enregistrée dans ce paiement. Les frais d'entretien du site se règlent séparément.
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Form Fields */}

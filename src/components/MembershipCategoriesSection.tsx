@@ -9,6 +9,7 @@ import { getSiteMaintenanceFee, formatAmount } from "@/lib/paymentService";
 interface Category {
   nameKey: string;
   amount: string;
+  amountValue: number;
   taglineKey: string;
   benefitKeys: string[];
   icon: React.ReactNode;
@@ -20,6 +21,7 @@ const categories: Category[] = [
   {
     nameKey: "bronze",
     amount: "5 000 FCFA",
+    amountValue: 5000,
     taglineKey: "bronze",
     benefitKeys: ["structuredTontine", "financialDiscipline", "communityIntegration", "basicOpportunities", "microFinancing"],
     icon: <Shield className="w-7 h-7" />,
@@ -28,6 +30,7 @@ const categories: Category[] = [
   {
     nameKey: "silver",
     amount: "10 000 FCFA",
+    amountValue: 10000,
     taglineKey: "silver",
     benefitKeys: ["enhancedTontine", "improvedBonus", "priorityAccess", "activeNetwork", "projectFinancing"],
     icon: <Medal className="w-7 h-7" />,
@@ -36,6 +39,7 @@ const categories: Category[] = [
   {
     nameKey: "gold",
     amount: "25 000 FCFA",
+    amountValue: 25000,
     taglineKey: "gold",
     benefitKeys: ["higherGains", "reinforcedBonus", "fundingEligibility", "communityRecognition"],
     icon: <Award className="w-7 h-7" />,
@@ -44,6 +48,7 @@ const categories: Category[] = [
   {
     nameKey: "diamond",
     amount: "50 000 FCFA",
+    amountValue: 50000,
     taglineKey: "diamond",
     benefitKeys: ["highImpact", "highBonus", "fundingPriority", "strategicPosition"],
     icon: <Diamond className="w-7 h-7" />,
@@ -52,6 +57,7 @@ const categories: Category[] = [
   {
     nameKey: "platinum",
     amount: "100 000 FCFA",
+    amountValue: 100000,
     taglineKey: "platinum",
     benefitKeys: ["privilegedAccess", "premiumBonus", "strategicSupport", "enhancedVisibility"],
     icon: <Star className="w-7 h-7" />,
@@ -60,6 +66,7 @@ const categories: Category[] = [
   {
     nameKey: "prestige",
     amount: "200 000 FCFA",
+    amountValue: 200000,
     taglineKey: "prestige",
     benefitKeys: ["maxFundAccess", "exclusiveBonus", "eliteNetwork", "priorityTreatment"],
     icon: <Crown className="w-7 h-7" />,
@@ -118,11 +125,17 @@ const CategoryCard = ({ category, index }: { category: Category; index: number }
 
           {/* Site maintenance fee — sober, clearly a fee (not a gain), distinct from the contribution */}
           {maintenanceFee !== null && (
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-gold/20 bg-gold/5 px-3 py-1 text-xs">
-              <Wrench className="w-3 h-3 text-gold/70 shrink-0" />
-              <span className="font-semibold text-foreground/90">+{formatAmount(maintenanceFee)}</span>
-              <span className="text-muted-foreground">{t('category.siteMaintenanceFee')}</span>
-            </div>
+            <>
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-gold/20 bg-gold/5 px-3 py-1 text-xs">
+                <Wrench className="w-3 h-3 text-gold/70 shrink-0" />
+                <span className="font-semibold text-foreground/90">+{formatAmount(maintenanceFee)}</span>
+                <span className="text-muted-foreground">{t('category.siteMaintenanceFee')}</span>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {t('category.totalToPlan')} :{" "}
+                <span className="font-semibold text-foreground/90">{formatAmount(category.amountValue + maintenanceFee)}</span>
+              </p>
+            </>
           )}
         </div>
 

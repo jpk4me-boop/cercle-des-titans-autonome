@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { formatAmount } from "@/lib/paymentService";
+import { formatAmount, getSiteMaintenanceFee } from "@/lib/paymentService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -316,6 +316,12 @@ export default function MemberTontinePanel() {
       setDeclaring(false);
     }
   };
+
+  // Display-only site maintenance fee for the contribution being declared.
+  // Informational: it is NOT added to the declared amount and never sent to the backend.
+  const declareFee = payContribution
+    ? getSiteMaintenanceFee(categoryNameById[payContribution.category_id] ?? "")
+    : null;
 
   if (!user) return null;
 
@@ -691,6 +697,25 @@ export default function MemberTontinePanel() {
                 className="bg-background border-border"
               />
             </div>
+            {declareFee !== null && payContribution && (
+              <div className="rounded-lg border border-amber-400/15 bg-black/20 p-3 text-xs space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Cotisation tontine (attendu)</span>
+                  <span className="text-foreground">{formatAmount(payContribution.expected_amount)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Frais d'entretien du site</span>
+                  <span className="text-foreground">{formatAmount(declareFee)}</span>
+                </div>
+                <div className="flex justify-between border-t border-amber-400/15 pt-1">
+                  <span className="font-medium text-amber-200">Total à prévoir</span>
+                  <span className="font-semibold text-amber-200">{formatAmount(payContribution.expected_amount + declareFee)}</span>
+                </div>
+                <p className="pt-1 text-muted-foreground">
+                  Le montant déclaré concerne la cotisation tontine. Les frais d'entretien du site se règlent séparément et ne sont pas inclus dans ce paiement.
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Référence (facultatif)</label>
               <Input

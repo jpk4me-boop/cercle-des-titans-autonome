@@ -132,7 +132,7 @@ const GainsSimulator = ({
           </div>
           {maintenanceFee !== null && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Frais d'entretien du site :</span>
+              <span className="text-muted-foreground">Frais d'entretien du site (indicatif) :</span>
               <span className="font-medium text-foreground">+{formatCurrency(maintenanceFee)}</span>
             </div>
           )}
@@ -151,7 +151,7 @@ const GainsSimulator = ({
 
       {/* Note */}
       <p className="text-xs text-muted-foreground mt-4 text-center">
-        * Cette simulation est purement indicative. Une tontine n'est pas un placement : elle redistribue les cotisations des membres. Les montants réels dépendent de la participation régulière de chacun.
+        * Cette simulation est purement indicative. Une tontine n'est pas un placement : elle redistribue les cotisations des membres. Les montants réels dépendent de la participation régulière de chacun. Les frais d'entretien du site sont affichés à titre informatif et ne sont pas inclus dans le calcul du solde net.
       </p>
     </div>;
 };

@@ -247,6 +247,8 @@ const translations = {
   },
   'membership.contactUs': { fr: 'Nous contacter', en: 'Contact Us' },
   'category.siteMaintenanceFee': { fr: 'Frais d\'entretien du site', en: 'Site maintenance fee' },
+  'category.contribution': { fr: 'Cotisation tontine', en: 'Tontine contribution' },
+  'category.totalToPlan': { fr: 'Total à prévoir', en: 'Total to plan for' },
 
   // Category names and taglines
   'category.bronze.name': { fr: 'Bronze', en: 'Bronze' },

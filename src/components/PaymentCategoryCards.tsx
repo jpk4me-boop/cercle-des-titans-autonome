@@ -80,14 +80,24 @@ export default function PaymentCategoryCards() {
                   </p>
                 </div>
 
-                {/* Site maintenance fee — discreet mention, clearly a fee (not a gain) */}
-                {getSiteMaintenanceFee(category.name) !== null && (
-                  <div className="flex items-center justify-center gap-1.5 mb-4 text-xs text-muted-foreground">
-                    <Wrench className="w-3 h-3 text-gold/70 shrink-0" />
-                    <span className="font-semibold text-foreground/90">+{formatAmount(getSiteMaintenanceFee(category.name)!)}</span>
-                    <span>{t('category.siteMaintenanceFee')}</span>
-                  </div>
-                )}
+                {/* Site maintenance fee + total to plan for — display only, clearly a fee (not a gain) */}
+                {(() => {
+                  const fee = getSiteMaintenanceFee(category.name);
+                  if (fee === null) return null;
+                  return (
+                    <div className="mb-4 space-y-1 text-xs">
+                      <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
+                        <Wrench className="w-3 h-3 text-gold/70 shrink-0" />
+                        <span className="font-semibold text-foreground/90">+{formatAmount(fee)}</span>
+                        <span>{t('category.siteMaintenanceFee')}</span>
+                      </div>
+                      <p className="text-center text-muted-foreground">
+                        {t('category.totalToPlan')} :{" "}
+                        <span className="font-semibold text-foreground/90">{formatAmount(category.amount + fee)}</span>
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 <Button
                   onClick={() => handlePayClick(category)}

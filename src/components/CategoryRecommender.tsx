@@ -67,12 +67,12 @@ const questions: Question[] = [
 // Official tiers (weekly amounts) — kept in sync with CategoryDetail / CategoriesComparison.
 // Gain = weekly amount × 12-week cycle. Diamond (50 000) ranks below Platinium (100 000).
 const categories = {
-  bronze: { name: 'Bronze', slug: 'bronze', color: 'text-amber-700', amount: '5 000 FCFA/semaine', gain: '60 000 FCFA' },
-  silver: { name: 'Silver', slug: 'silver', color: 'text-slate-400', amount: '10 000 FCFA/semaine', gain: '120 000 FCFA' },
-  gold: { name: 'Gold', slug: 'gold', color: 'text-yellow-500', amount: '25 000 FCFA/semaine', gain: '300 000 FCFA' },
-  diamond: { name: 'Diamond', slug: 'diamond', color: 'text-blue-400', amount: '50 000 FCFA/semaine', gain: '600 000 FCFA' },
-  platinum: { name: 'Platinium', slug: 'platinum', color: 'text-cyan-400', amount: '100 000 FCFA/semaine', gain: '1 200 000 FCFA' },
-  prestige: { name: 'Prestige', slug: 'prestige', color: 'text-purple-500', amount: '200 000 FCFA/semaine', gain: '2 400 000 FCFA' },
+  bronze: { name: 'Bronze', slug: 'bronze', color: 'text-amber-700', amount: '5 000 FCFA/semaine', amountValue: 5000, gain: '60 000 FCFA' },
+  silver: { name: 'Silver', slug: 'silver', color: 'text-slate-400', amount: '10 000 FCFA/semaine', amountValue: 10000, gain: '120 000 FCFA' },
+  gold: { name: 'Gold', slug: 'gold', color: 'text-yellow-500', amount: '25 000 FCFA/semaine', amountValue: 25000, gain: '300 000 FCFA' },
+  diamond: { name: 'Diamond', slug: 'diamond', color: 'text-blue-400', amount: '50 000 FCFA/semaine', amountValue: 50000, gain: '600 000 FCFA' },
+  platinum: { name: 'Platinium', slug: 'platinum', color: 'text-cyan-400', amount: '100 000 FCFA/semaine', amountValue: 100000, gain: '1 200 000 FCFA' },
+  prestige: { name: 'Prestige', slug: 'prestige', color: 'text-purple-500', amount: '200 000 FCFA/semaine', amountValue: 200000, gain: '2 400 000 FCFA' },
 };
 
 export default function CategoryRecommender() {
@@ -173,12 +173,18 @@ export default function CategoryRecommender() {
               <p className="text-lg font-semibold text-foreground">Montant du cycle : {rec.gain}</p>
             </div>
 
-            {/* Site maintenance fee — sober mention, clearly a fee (not a gain) */}
+            {/* Site maintenance fee + total to plan for — display only, clearly a fee (not a gain) */}
             {getSiteMaintenanceFee(recommendation) !== null && (
-              <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs">
-                <Wrench className="w-3 h-3 text-primary/70 shrink-0" />
-                <span className="font-semibold text-foreground/90">+{formatAmount(getSiteMaintenanceFee(recommendation)!)}</span>
-                <span className="text-muted-foreground">Frais d'entretien du site</span>
+              <div className="mt-4 space-y-2">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs">
+                  <Wrench className="w-3 h-3 text-primary/70 shrink-0" />
+                  <span className="font-semibold text-foreground/90">+{formatAmount(getSiteMaintenanceFee(recommendation)!)}</span>
+                  <span className="text-muted-foreground">Frais d'entretien du site</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Total à prévoir :{" "}
+                  <span className="font-semibold text-foreground/90">{formatAmount(rec.amountValue + getSiteMaintenanceFee(recommendation)!)}</span>
+                </p>
               </div>
             )}
           </div>
