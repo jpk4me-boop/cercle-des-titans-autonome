@@ -132,7 +132,7 @@ const GainsSimulator = ({
           </div>
           {maintenanceFee !== null && (
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Frais d'entretien du site (indicatif) :</span>
+              <span className="text-muted-foreground">Frais d'entretien (indicatif) :</span>
               <span className="font-medium text-foreground">+{formatCurrency(maintenanceFee)}</span>
             </div>
           )}

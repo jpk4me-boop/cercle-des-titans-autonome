@@ -126,7 +126,7 @@ const CategoryCard = ({ category, index }: { category: Category; index: number }
           {/* Site maintenance fee — sober, clearly a fee (not a gain), distinct from the contribution */}
           {maintenanceFee !== null && (
             <>
-              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-gold/20 bg-gold/5 px-3 py-1 text-xs">
+              <div className="mt-3 inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-lg border border-gold/20 bg-gold/5 px-3 py-1 text-xs">
                 <Wrench className="w-3 h-3 text-gold/70 shrink-0" />
                 <span className="font-semibold text-foreground/90">+{formatAmount(maintenanceFee)}</span>
                 <span className="text-muted-foreground">{t('category.siteMaintenanceFee')}</span>

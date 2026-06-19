@@ -176,7 +176,7 @@ export default function CategoryRecommender() {
             {/* Site maintenance fee + total to plan for — display only, clearly a fee (not a gain) */}
             {getSiteMaintenanceFee(recommendation) !== null && (
               <div className="mt-4 space-y-2">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs">
+                <div className="inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1 text-xs">
                   <Wrench className="w-3 h-3 text-primary/70 shrink-0" />
                   <span className="font-semibold text-foreground/90">+{formatAmount(getSiteMaintenanceFee(recommendation)!)}</span>
                   <span className="text-muted-foreground">Frais d'entretien du site</span>

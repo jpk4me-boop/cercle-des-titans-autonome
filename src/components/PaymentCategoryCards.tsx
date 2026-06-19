@@ -86,7 +86,7 @@ export default function PaymentCategoryCards() {
                   if (fee === null) return null;
                   return (
                     <div className="mb-4 space-y-1 text-xs">
-                      <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
+                      <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-muted-foreground">
                         <Wrench className="w-3 h-3 text-gold/70 shrink-0" />
                         <span className="font-semibold text-foreground/90">+{formatAmount(fee)}</span>
                         <span>{t('category.siteMaintenanceFee')}</span>
