@@ -35,6 +35,7 @@ import SuperAdminBadge from "@/components/SuperAdminBadge";
 import FinancingRequestsTab from "@/components/admin/FinancingRequestsTab";
 import CyclesTab from "@/components/admin/CyclesTab";
 import ContributionsTab from "@/components/admin/ContributionsTab";
+import WeeklyContributionsOverview from "@/components/admin/WeeklyContributionsOverview";
 
 interface Transaction {
   id: string;
@@ -267,6 +268,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="contributions" className="flex items-center gap-2">
               <Coins className="h-4 w-4" />
               Cotisations
+            </TabsTrigger>
+            <TabsTrigger value="weekly" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              État hebdomadaire
             </TabsTrigger>
           </TabsList>
 
@@ -506,6 +511,11 @@ export default function AdminDashboard() {
           {/* Contributions Tab */}
           <TabsContent value="contributions">
             <ContributionsTab readOnly={isReadOnly} />
+          </TabsContent>
+
+          {/* Weekly contributions overview Tab */}
+          <TabsContent value="weekly">
+            <WeeklyContributionsOverview readOnly={isReadOnly} />
           </TabsContent>
         </Tabs>
       </div>
