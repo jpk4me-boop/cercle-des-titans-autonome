@@ -207,9 +207,14 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
   };
 
   const getStatusBadge = (status: string) => {
-    if (status === "active") return <Badge className="bg-green-600">Actif</Badge>;
-    if (status === "closed") return <Badge variant="secondary">Clôturé</Badge>;
-    if (status === "planned") return <Badge variant="outline">Planifié</Badge>;
+    if (status === "active")
+      return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Actif</Badge>;
+    if (status === "closed")
+      return <Badge className="bg-zinc-500/20 text-zinc-300 border-zinc-500/30">Clôturé</Badge>;
+    if (status === "planned")
+      return <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30">Planifié</Badge>;
+    if (status === "draft")
+      return <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">Brouillon</Badge>;
     return <Badge variant="outline">{status}</Badge>;
   };
 
@@ -257,7 +262,7 @@ export default function CyclesTab({ readOnly = false }: CyclesTabProps) {
               Nouveau cycle de tontine
             </CardTitle>
             <CardDescription>
-              Créer un cycle mensuel ou périodique pour organiser les cotisations.
+              Créer un cycle hebdomadaire pour organiser les cotisations.
             </CardDescription>
           </CardHeader>
 

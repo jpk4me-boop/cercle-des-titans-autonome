@@ -252,7 +252,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-muted/50 p-1">
+          <TabsList className="flex h-auto flex-wrap justify-start gap-1 bg-muted/50 p-1">
             <TabsTrigger value="transactions" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
               Transactions
