@@ -85,13 +85,22 @@ export default function PaymentModal({ isOpen, onClose, category }: PaymentModal
         paymentMethod: formData.paymentMethod,
       });
 
-      // Generate receipt
-      const receiptResult = await generateReceipt(transactionResult.id);
+      // Receipt generation must NOT block the result screen: try it, degrade gracefully.
+      let receiptUrl: string | undefined;
+      try {
+        const receiptResult = await generateReceipt(transactionResult.id);
+        receiptUrl = receiptResult.receiptUrl;
+      } catch (receiptError) {
+        console.error("Receipt generation failed:", receiptError);
+        toast.warning(
+          "Paiement enregistré. Le reçu n'a pas pu être généré, réessayez depuis la page de vérification."
+        );
+      }
 
       setResult({
         reference: transactionResult.reference,
         status: transactionResult.status,
-        receiptUrl: receiptResult.receiptUrl,
+        receiptUrl,
         transactionId: transactionResult.transactionId,
       });
 
