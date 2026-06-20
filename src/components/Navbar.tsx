@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import LanguageToggle from "@/components/LanguageToggle";
+import InstallAppButton from "@/components/InstallAppButton";
 import SuperAdminBadge from "@/components/SuperAdminBadge";
 import phoenixLogo from "@/assets/logo-phoenix.jpg";
 import {
@@ -169,6 +170,7 @@ const Navbar = () => {
 
         <div className="hidden sm:flex items-center gap-3">
           <LanguageToggle />
+          <InstallAppButton className="hidden md:inline-flex" />
           <SuperAdminBadge show={isSuperAdmin} className="hidden md:inline-flex" />
           {isAdmin && (
             <Link to="/admin">
@@ -352,6 +354,7 @@ const Navbar = () => {
         </ul>
 
         <div className="p-6 pt-0 space-y-3">
+          <InstallAppButton fullWidth />
           {isSuperAdmin && (
             <SuperAdminBadge show={isSuperAdmin} className="w-full justify-center" />
           )}
