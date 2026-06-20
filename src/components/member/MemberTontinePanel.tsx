@@ -42,6 +42,7 @@ import {
   memberUnselectCategory,
 } from "@/services/tontineService";
 import { fetchMyMemberStatus, type MemberStatusValue } from "@/services/memberStatusService";
+import TontinePaymentReceipt from "@/components/member/TontinePaymentReceipt";
 import type {
   ContributionPayment,
   PaymentMethod,
@@ -159,6 +160,8 @@ export default function MemberTontinePanel() {
   const [payReference, setPayReference] = useState<string>("");
   const [payProofUrl, setPayProofUrl] = useState<string>("");
   const [declaring, setDeclaring] = useState(false);
+  // Receipt dialog state (validated/paid payments only)
+  const [receiptPayment, setReceiptPayment] = useState<ContributionPayment | null>(null);
 
   const categoryNameById = useMemo(() => {
     const map: Record<string, string> = {};
@@ -332,6 +335,13 @@ export default function MemberTontinePanel() {
     : null;
 
   if (!user) return null;
+
+  // Member display name from auth metadata (no extra profile query). Falls back to email.
+  const memberName =
+    (user.user_metadata?.full_name as string | undefined) ||
+    (user.user_metadata?.name as string | undefined) ||
+    user.email ||
+    "Membre";
 
   return (
     <div className="space-y-6">
@@ -661,11 +671,24 @@ export default function MemberTontinePanel() {
                       <p className="text-xs text-red-400">Motif&nbsp;: {p.admin_note}</p>
                     )}
                   </div>
-                  {p.payment_reference && (
-                    <span className="font-mono text-xs text-muted-foreground">
-                      Réf&nbsp;: {p.payment_reference}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-3 sm:flex-col sm:items-end">
+                    {p.payment_reference && (
+                      <span className="font-mono text-xs text-muted-foreground">
+                        Réf&nbsp;: {p.payment_reference}
+                      </span>
+                    )}
+                    {p.status === "paid" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setReceiptPayment(p)}
+                        className="shrink-0 border-amber-400/30 text-amber-200 hover:bg-amber-400/10 hover:text-amber-100"
+                      >
+                        <ReceiptText className="h-4 w-4 mr-2" />
+                        Voir le reçu
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -760,6 +783,21 @@ export default function MemberTontinePanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Tontine payment receipt (validated/paid payments) */}
+      <TontinePaymentReceipt
+        payment={receiptPayment}
+        memberName={memberName}
+        categoryName={
+          receiptPayment ? (categoryNameById[receiptPayment.category_id] ?? "Catégorie") : ""
+        }
+        methodName={
+          receiptPayment?.payment_method_id
+            ? (methodNameById[receiptPayment.payment_method_id] ?? null)
+            : null
+        }
+        onClose={() => setReceiptPayment(null)}
+      />
     </div>
   );
 }
