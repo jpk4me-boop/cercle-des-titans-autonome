@@ -50,7 +50,6 @@ const formatAmount = (amount: number): string => {
 const generatePDFContent = async (transaction: any, qrCodeDataUrl: string): Promise<Uint8Array> => {
   const ref = transaction.reference;
   const fullName = transaction.full_name;
-  const phone = transaction.phone;
   const category = transaction.category;
   const amount = formatAmount(transaction.amount);
   const paymentMethod = transaction.payment_method;
@@ -103,10 +102,6 @@ const generatePDFContent = async (transaction: any, qrCodeDataUrl: string): Prom
     <div class="row">
       <span class="label">Nom complet</span>
       <span class="value">${fullName}</span>
-    </div>
-    <div class="row">
-      <span class="label">Téléphone</span>
-      <span class="value">${phone}</span>
     </div>
   </div>
   
@@ -200,26 +195,24 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Security check: Only allow receipt generation for transactions created within last 10 minutes
-    // This prevents abuse while allowing legitimate receipt generation after payment
-    const transactionAge = Date.now() - new Date(transaction.created_at).getTime();
-    const TEN_MINUTES = 10 * 60 * 1000;
-    
-    // If transaction already has a receipt, allow regeneration only if recent
-    if (transaction.receipt_url && transactionAge > TEN_MINUTES) {
-      console.log("Receipt already exists for older transaction, returning existing URL");
+    // One-shot strict: if a receipt already exists, ALWAYS return it and NEVER
+    // regenerate or overwrite it. Prevents storage abuse and duplicate files.
+    if (transaction.receipt_url || transaction.receipt_storage_path) {
+      console.log("Receipt already exists, returning existing URL (one-shot)");
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           receiptUrl: transaction.receipt_url,
-          reference: transaction.reference 
+          reference: transaction.reference,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // For new receipts, only allow for recent transactions
-    if (!transaction.receipt_url && transactionAge > TEN_MINUTES) {
+    // No receipt yet: only allow first-time generation for recent transactions.
+    const transactionAge = Date.now() - new Date(transaction.created_at).getTime();
+    const TEN_MINUTES = 10 * 60 * 1000;
+    if (transactionAge > TEN_MINUTES) {
       console.error("Attempted receipt generation for old transaction without existing receipt");
       return new Response(
         JSON.stringify({ error: "Génération de reçu non autorisée pour cette transaction" }),
@@ -244,7 +237,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from("receipts")
       .upload(fileName, pdfContent, {
         contentType: "text/html",
-        upsert: true,
+        upsert: false,
       });
 
     if (uploadError) {
