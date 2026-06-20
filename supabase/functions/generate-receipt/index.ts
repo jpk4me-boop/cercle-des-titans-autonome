@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // CORS configuration. Set ALLOWED_ORIGINS="https://votredomaine.com,http://localhost:8080" in Supabase secrets.
 const DEFAULT_ALLOWED_ORIGINS = [
-  "https://cercledstitans.com",
+  "https://cercledestitans.com",
+  "https://www.cercledestitans.com",
   "http://localhost:5173",
   "http://localhost:8080",
 ];
@@ -221,7 +222,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Generate QR code URL (verification link)
-    const siteUrl = (Deno.env.get("SITE_URL") || "https://cercledstitans.com").replace(/\/$/, "");
+    const siteUrl = (Deno.env.get("SITE_URL") || "https://www.cercledestitans.com").replace(/\/$/, "");
     const verificationUrl = `${siteUrl}/verify-receipt?ref=${transaction.reference}`;
     
     // Simple QR code using a public API
