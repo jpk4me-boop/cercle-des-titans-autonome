@@ -81,11 +81,12 @@ const MemberProfile = () => {
         const userIsAdmin = !!adminData;
         setIsAdmin(userIsAdmin);
 
-        // Fetch profile by id (this is the profile table id, not user_id)
+        // Fetch profile by user_id (the route param is the member's user_id,
+        // matching how MemberDirectory builds the /members/:id link)
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', id)
+          .eq('user_id', id)
           .single();
 
         if (profileError) throw profileError;
