@@ -55,7 +55,7 @@ const TestimonialAvatar = ({
 
   return (
     <div
-      className={`relative w-12 h-12 shrink-0 overflow-hidden rounded-full bg-gradient-to-br ${gradientClass} flex items-center justify-center text-background font-display font-bold ring-2 ring-white/10 group-hover:ring-gold/30 group-hover:scale-105 transition-all duration-300`}
+      className={`relative w-20 h-20 md:w-24 md:h-24 shrink-0 overflow-hidden rounded-full bg-gradient-to-br ${gradientClass} flex items-center justify-center text-background font-display font-bold text-xl md:text-2xl ring-2 ring-gold/25 shadow-lg shadow-gold/10 group-hover:ring-gold/40 group-hover:scale-105 transition-all duration-300`}
     >
       {/* Initials sit underneath; the portrait covers them when it loads. */}
       {initials}
@@ -161,7 +161,7 @@ const TestimonialsSection = () => {
                   </p>
 
                   {/* Author */}
-                  <div className="flex items-center gap-3 pt-5 border-t border-white/5">
+                  <div className="flex items-center gap-4 pt-5 border-t border-white/5">
                     <TestimonialAvatar
                       name={testimonial.name}
                       initials={testimonial.avatar}
