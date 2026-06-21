@@ -1,116 +1,9 @@
+import { useState } from "react";
 import { Star, Quote, Loader2, BadgeCheck } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AnimatedSection, FloatingElement } from "@/components/AnimatedElements";
 import { useWPTestimonials, stripHtml } from "@/hooks/useWordPress";
-
-interface Testimonial {
-  name: string;
-  role: string;
-  content: string;
-  rating: number;
-  avatar: string;
-}
-
-// Fallback testimonials when WordPress is not available.
-// Avatars are illustrative (gradient initials), names partially anonymized — see disclaimer.
-const fallbackTestimonials: Testimonial[] = [
-  {
-    name: "Aminata Diallo",
-    role: "Entrepreneure · Dakar",
-    content:
-      "Grâce à l'appui collectif, j'ai pu concrétiser l'ouverture de ma boutique. Chaque cotisation est tracée et je vois clairement où va mon argent.",
-    rating: 5,
-    avatar: "AD",
-  },
-  {
-    name: "Kofi Mensah",
-    role: "Commerçant · Abidjan",
-    content:
-      "Membre depuis deux ans, j'ai réussi à épargner régulièrement et à réinvestir dans mon commerce. Le suivi des paiements est transparent et fiable.",
-    rating: 5,
-    avatar: "KM",
-  },
-  {
-    name: "Fatou Ndiaye",
-    role: "Consultante RH · Dakar",
-    content:
-      "Ce qui m'a convaincue, c'est la discipline d'épargne et l'entraide réelle entre membres. On avance ensemble, sans promesses irréalistes.",
-    rating: 5,
-    avatar: "FN",
-  },
-  {
-    name: "Marie Kouadio",
-    role: "Infirmière · Abidjan",
-    content:
-      "J'ai pu mettre de côté pour un projet familial important. Les règles sont claires dès le départ et l'équipe répond rapidement à mes questions.",
-    rating: 5,
-    avatar: "MK",
-  },
-  {
-    name: "Ibrahima Touré",
-    role: "Artisan menuisier · Bamako",
-    content:
-      "L'appui communautaire m'a permis d'acheter du matériel pour mon atelier. J'ai apprécié de pouvoir étaler mes échéances selon mes revenus.",
-    rating: 5,
-    avatar: "IT",
-  },
-  {
-    name: "Aïcha Bensalah",
-    role: "Gérante de salon · Casablanca",
-    content:
-      "Le cercle m'aide à gérer ma trésorerie pendant les périodes creuses. Tout est documenté, ce qui me donne confiance sur le long terme.",
-    rating: 4,
-    avatar: "AB",
-  },
-  {
-    name: "Samuel Nkemba",
-    role: "Développeur web · Douala",
-    content:
-      "J'avais du mal à épargner seul. La cotisation régulière m'a aidé à tenir mes objectifs, et le tableau de bord rend chaque opération vérifiable.",
-    rating: 5,
-    avatar: "SN",
-  },
-  {
-    name: "Rokhaya Sow",
-    role: "Couturière · Thiès",
-    content:
-      "J'ai pu acheter une nouvelle machine à coudre grâce à cette solution d'entraide encadrée. Pas de frais cachés, juste un accompagnement humain et organisé.",
-    rating: 5,
-    avatar: "RS",
-  },
-  {
-    name: "Jean-Baptiste Koffi",
-    role: "Enseignant · Lomé",
-    content:
-      "Chaque année, je prépare sereinement la rentrée scolaire de mes enfants. L'épargne collective apporte de la régularité à mon budget.",
-    rating: 4,
-    avatar: "JK",
-  },
-  {
-    name: "Nadia El Amrani",
-    role: "Pharmacienne · Rabat",
-    content:
-      "Je me suis constitué un fonds d'urgence en quelques mois. La transparence des comptes et le sérieux de la gestion font toute la différence.",
-    rating: 5,
-    avatar: "NE",
-  },
-  {
-    name: "Mamadou Baldé",
-    role: "Chauffeur VTC · Conakry",
-    content:
-      "L'épargne organisée m'a permis d'anticiper l'entretien de mon véhicule en toute sérénité. Un système simple, honnête et bien suivi.",
-    rating: 5,
-    avatar: "MB",
-  },
-  {
-    name: "Grace Achieng",
-    role: "Restauratrice · Nairobi",
-    content:
-      "Avec l'aide de la communauté, j'ai pu agrandir mon restaurant. J'aime savoir exactement combien j'ai cotisé et à quelle échéance.",
-    rating: 5,
-    avatar: "GA",
-  },
-];
+import { testimonials as fallbackTestimonials, type Testimonial } from "@/data/testimonials";
 
 // Subtle gradient variants to give each illustrative avatar its own identity.
 const avatarGradients = [
@@ -128,6 +21,56 @@ const getInitials = (name: string): string => {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+};
+
+// Convert a display name to a URL-safe slug: strip accents, lowercase,
+// collapse any non-alphanumeric run into a single hyphen.
+// e.g. "Aïcha Bensalah" -> "aicha-bensalah", "Jean-Baptiste Koffi" -> "jean-baptiste-koffi".
+const slugify = (name: string): string =>
+  name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+// AI portrait path for a testimonial, by naming convention.
+// Images live in public/testimonials/ and are served from /testimonials/{slug}.webp.
+const getTestimonialAvatar = (name: string): string =>
+  `/testimonials/${slugify(name)}.webp`;
+
+// Premium avatar: shows the AI portrait when present, otherwise gracefully
+// falls back to the gradient initials badge (same look as before).
+const TestimonialAvatar = ({
+  name,
+  initials,
+  gradientClass,
+}: {
+  name: string;
+  initials: string;
+  gradientClass: string;
+}) => {
+  const [showImage, setShowImage] = useState(true);
+
+  return (
+    <div
+      className={`relative w-12 h-12 shrink-0 overflow-hidden rounded-full bg-gradient-to-br ${gradientClass} flex items-center justify-center text-background font-display font-bold ring-2 ring-white/10 group-hover:ring-gold/30 group-hover:scale-105 transition-all duration-300`}
+    >
+      {/* Initials sit underneath; the portrait covers them when it loads. */}
+      {initials}
+      {showImage && (
+        <img
+          src={getTestimonialAvatar(name)}
+          alt={name}
+          loading="lazy"
+          decoding="async"
+          onError={() => setShowImage(false)}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      )}
+    </div>
+  );
 };
 
 const TestimonialsSection = () => {
@@ -219,13 +162,11 @@ const TestimonialsSection = () => {
 
                   {/* Author */}
                   <div className="flex items-center gap-3 pt-5 border-t border-white/5">
-                    <div
-                      className={`relative w-12 h-12 shrink-0 rounded-full bg-gradient-to-br ${
-                        avatarGradients[index % avatarGradients.length]
-                      } flex items-center justify-center text-background font-display font-bold ring-2 ring-white/10 group-hover:ring-gold/30 group-hover:scale-105 transition-all duration-300`}
-                    >
-                      {testimonial.avatar}
-                    </div>
+                    <TestimonialAvatar
+                      name={testimonial.name}
+                      initials={testimonial.avatar}
+                      gradientClass={avatarGradients[index % avatarGradients.length]}
+                    />
                     <div className="min-w-0">
                       <h4 className="flex items-center gap-1.5 font-display text-base text-foreground group-hover:text-gold transition-colors duration-300 truncate">
                         {testimonial.name}
