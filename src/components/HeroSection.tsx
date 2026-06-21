@@ -137,7 +137,7 @@ const HeroSection = () => {
             style={{ animationDelay: "0.7s" }}
           >
             <MagneticButton strength={0.2} className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto text-base font-semibold group relative overflow-hidden" asChild>
+              <Button size="lg" className="w-full sm:w-auto text-base font-semibold group relative overflow-hidden shadow-lg shadow-gold/20 hover:shadow-gold/40 transition-shadow" asChild>
                 <Link to="/#contact">
                   <span className="relative z-10 flex items-center">
                     {t('hero.cta')}
