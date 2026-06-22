@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,10 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { ArrowLeft, Loader2, Save, User, Settings, Globe, Bell } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, User, Settings, Globe, Bell, Camera } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// Garde-fous d'upload alignés sur le bucket Storage `avatars`.
+const AVATAR_BUCKET = 'avatars';
+const AVATAR_MAX_SIZE = 2 * 1024 * 1024; // 2 Mo
+const AVATAR_ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 interface Profile {
   first_name: string | null;
@@ -20,6 +26,7 @@ interface Profile {
   city: string | null;
   birth_date: string | null;
   profession: string | null;
+  avatar_url: string | null;
   email_notifications: boolean;
   reminder_notifications: boolean;
   marketing_notifications: boolean;
@@ -32,6 +39,8 @@ const ProfileEdit = () => {
   const { language, setLanguage } = useLanguage();
   const [loadingData, setLoadingData] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState('profile');
   const [errors, setErrors] = useState<Partial<Record<keyof Profile, string>>>({});
   const [profile, setProfile] = useState<Profile>({
@@ -43,6 +52,7 @@ const ProfileEdit = () => {
     city: '',
     birth_date: '',
     profession: '',
+    avatar_url: '',
     email_notifications: true,
     reminder_notifications: true,
     marketing_notifications: false
@@ -75,6 +85,7 @@ const ProfileEdit = () => {
             city: data.city || '',
             birth_date: data.birth_date || '',
             profession: data.profession || '',
+            avatar_url: data.avatar_url || '',
             email_notifications: data.email_notifications ?? true,
             reminder_notifications: data.reminder_notifications ?? true,
             marketing_notifications: data.marketing_notifications ?? false
@@ -102,6 +113,84 @@ const ProfileEdit = () => {
       return next;
     });
   };
+
+  // Upload de la photo de profil : stockage dans le bucket `avatars` sous le
+  // chemin `{auth.uid()}/{fichier}`, récupération de l'URL publique, puis
+  // sauvegarde immédiate dans profiles.avatar_url (indépendant du formulaire).
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Réinitialise l'input pour autoriser la re-sélection du même fichier.
+    e.target.value = '';
+    if (!file || !user) return;
+
+    if (!AVATAR_ACCEPTED_TYPES.includes(file.type)) {
+      toast({
+        variant: 'destructive',
+        title: 'Format non supporté',
+        description: 'Veuillez choisir une image JPEG, PNG ou WebP.'
+      });
+      return;
+    }
+
+    if (file.size > AVATAR_MAX_SIZE) {
+      toast({
+        variant: 'destructive',
+        title: 'Fichier trop volumineux',
+        description: "L'image ne doit pas dépasser 2 Mo."
+      });
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      // Chemin obligatoire : premier segment = auth.uid() (cf. policies Storage).
+      // Le timestamp évite tout problème de cache CDN après remplacement.
+      const filePath = `${user.id}/${Date.now()}.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(AVATAR_BUCKET)
+        .upload(filePath, file, {
+          contentType: file.type,
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage
+        .from(AVATAR_BUCKET)
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicData.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+      toast({
+        title: 'Photo mise à jour',
+        description: 'Votre photo de profil a été enregistrée.'
+      });
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: "Impossible de mettre à jour la photo de profil."
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  // Initiales utilisées comme fallback quand aucune photo n'est définie.
+  const getInitials = (): string =>
+    `${profile.first_name?.[0] ?? ''}${profile.last_name?.[0] ?? ''}`.trim().toUpperCase();
 
   // All visible profile fields are mandatory. Returns true when the profile is
   // valid; otherwise populates `errors` with a clear message per empty field.
@@ -160,6 +249,7 @@ const ProfileEdit = () => {
           city: profile.city || null,
           birth_date: profile.birth_date || null,
           profession: profile.profession || null,
+          avatar_url: profile.avatar_url || null,
           email_notifications: profile.email_notifications,
           reminder_notifications: profile.reminder_notifications,
           marketing_notifications: profile.marketing_notifications
@@ -236,6 +326,58 @@ const ProfileEdit = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Photo de profil */}
+                <div className="flex flex-col sm:flex-row items-center gap-5 pb-2">
+                  <div className="relative group">
+                    <Avatar className="w-24 h-24 ring-2 ring-border ring-offset-2 ring-offset-card">
+                      <AvatarImage src={profile.avatar_url || undefined} alt="Photo de profil" />
+                      <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
+                        {getInitials() || <User className="w-8 h-8" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      aria-label="Modifier la photo de profil"
+                      className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md ring-2 ring-card transition-transform hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {uploadingAvatar ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Camera className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="text-center sm:text-left space-y-2">
+                    <div>
+                      <p className="font-medium text-foreground">Photo de profil</p>
+                      <p className="text-sm text-muted-foreground">JPEG, PNG ou WebP — 2 Mo maximum.</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                    >
+                      {uploadingAvatar ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Camera className="w-4 h-4 mr-2" />
+                      )}
+                      {profile.avatar_url ? 'Changer la photo' : 'Ajouter une photo'}
+                    </Button>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="first_name">Prénom <span className="text-destructive">*</span></Label>
