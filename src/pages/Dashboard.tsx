@@ -25,7 +25,9 @@ import {
   Sparkles,
   ArrowRight,
   MessageSquare,
-  Users
+  Users,
+  Camera,
+  X
 } from 'lucide-react';
 import MemberTontinePanel from '@/components/member/MemberTontinePanel';
 import { fetchMemberContributions } from '@/services/tontineService';
@@ -40,6 +42,7 @@ interface Profile {
   city: string | null;
   profession: string | null;
   recommended_category: string | null;
+  avatar_url: string | null;
 }
 
 const categoryInfo: Record<string, { name: string; color: string; amount: string }> = {
@@ -60,6 +63,8 @@ const Dashboard = () => {
   const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSavingCategory, setIsSavingCategory] = useState(false);
+  // Bannière "photo manquante" : masquable pour la session en cours, sans bloquer l'accès.
+  const [isAvatarBannerDismissed, setIsAvatarBannerDismissed] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -146,6 +151,9 @@ const Dashboard = () => {
   );
   const totalPaid = contributions.reduce((sum, c) => sum + Number(c.paid_amount), 0);
 
+  // Affiche la bannière uniquement si le profil est chargé, sans photo, et non masquée.
+  const showAvatarBanner = profile !== null && !profile.avatar_url && !isAvatarBannerDismissed;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -174,6 +182,40 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Bannière premium : invite à ajouter une photo de profil sans bloquer l'accès */}
+        {showAvatarBanner && (
+          <div className="relative mb-8 overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-card to-card p-5 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4 pr-8 sm:pr-0">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-1 ring-primary/30">
+                  <Camera className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Ajoutez une photo de profil</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Ajoutez une photo de profil pour finaliser votre compte membre.
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => navigate('/profile/edit')}
+                className="w-full shrink-0 sm:w-auto"
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                Ajouter ma photo
+              </Button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAvatarBannerDismissed(true)}
+              aria-label="Masquer ce rappel"
+              className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground sm:hidden"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-2xl font-display font-bold text-foreground mb-2">
