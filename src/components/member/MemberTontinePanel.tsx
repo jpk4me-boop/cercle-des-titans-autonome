@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { formatAmount, getSiteMaintenanceFee } from "@/lib/paymentService";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { AlertTriangle, ArrowRight, CheckCircle2, Clock, Coins, CreditCard, Layers, Loader2, ReceiptText, RefreshCw, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowRight, Camera, CheckCircle2, Clock, Coins, CreditCard, Layers, Loader2, ReceiptText, RefreshCw, XCircle } from "lucide-react";
 import { endOfWeek, format, startOfWeek } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -138,6 +140,12 @@ const cycleStatusBadge = (cycle: TontineCycle | null) => {
 
 export default function MemberTontinePanel() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Soft profile-photo gate: track the member's avatar to encourage (not force)
+  // adding a photo before unlocking sensitive tontine actions.
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const [categories, setCategories] = useState<TontineCategory[]>([]);
   const [memberCategoryIds, setMemberCategoryIds] = useState<Set<string>>(new Set());
@@ -191,7 +199,7 @@ export default function MemberTontinePanel() {
     if (!user) return;
     setLoading(true);
     try {
-      const [catData, memberCats, contribData, methodData, paymentData, cycleData, statusData] =
+      const [catData, memberCats, contribData, methodData, paymentData, cycleData, statusData, profileRes] =
         await Promise.all([
           fetchActiveCategories(),
           fetchMemberCategories(user.id),
@@ -200,6 +208,7 @@ export default function MemberTontinePanel() {
           fetchMemberPayments(user.id),
           fetchActiveOrPlannedCycle(),
           fetchMyMemberStatus(user.id),
+          supabase.from("profiles").select("avatar_url").eq("user_id", user.id).maybeSingle(),
         ]);
       setCategories(catData);
       setMemberCategoryIds(new Set(memberCats.map((m) => m.category_id)));
@@ -208,6 +217,8 @@ export default function MemberTontinePanel() {
       setPayments(paymentData);
       setCycle(cycleData);
       setMemberStatusValue(statusData);
+      setAvatarUrl(profileRes.data?.avatar_url ?? null);
+      setProfileLoaded(true);
     } catch (error) {
       console.error("Erreur chargement tontine:", error);
       toast.error(
@@ -241,6 +252,11 @@ export default function MemberTontinePanel() {
   }, [user]);
 
   const toggleCategory = async (category: TontineCategory, isMember: boolean) => {
+    // Joining a category requires a profile photo; leaving is always allowed.
+    if (!isMember && needsAvatar) {
+      toast.error("Ajoutez une photo de profil pour rejoindre une catégorie.");
+      return;
+    }
     setSavingCategoryId(category.id);
     try {
       if (isMember) {
@@ -262,6 +278,10 @@ export default function MemberTontinePanel() {
   };
 
   const openDeclare = (contribution: TontineContribution) => {
+    if (needsAvatar) {
+      toast.error("Ajoutez une photo de profil pour déclarer un paiement.");
+      return;
+    }
     setPayContribution(contribution);
     setPayMethodId("");
     const remaining = Math.max(contribution.expected_amount - contribution.paid_amount, 0);
@@ -276,6 +296,11 @@ export default function MemberTontinePanel() {
   // Account restriction (paused/suspended/banned). The DB already blocks these
   // actions; the UI just reflects it and disables the sensitive buttons.
   const isRestricted = memberStatusValue !== "active";
+
+  // Soft block: the member has no profile photo yet. We only gate the sensitive
+  // actions (joining a category, declaring a payment); all tontine information
+  // stays visible. Wait for the profile fetch before judging.
+  const needsAvatar = profileLoaded && !avatarUrl;
 
   const scrollToRef = (ref: { current: HTMLDivElement | null }) =>
     ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -352,6 +377,32 @@ export default function MemberTontinePanel() {
         </div>
       )}
 
+      {/* Soft profile-photo gate — encourages a photo without hiding any info */}
+      {needsAvatar && (
+        <div className="overflow-hidden rounded-xl border border-amber-400/30 bg-gradient-to-r from-amber-400/10 via-card to-card p-5 shadow-[0_0_32px_rgba(245,158,11,0.08)]">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-400/15 ring-1 ring-amber-400/30">
+                <Camera className="h-6 w-6 text-amber-300" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Photo de profil requise</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Ajoutez une photo de profil pour accéder aux actions de tontine.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => navigate("/profile/edit")}
+              className="w-full shrink-0 gap-2 sm:w-auto"
+            >
+              <Camera className="h-4 w-4" />
+              Ajouter ma photo
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Available cycle — entry point to the tontine flow (premium dark/gold) */}
       <Card className="overflow-hidden border-amber-400/20 bg-gradient-to-br from-black/60 via-card to-card shadow-[0_0_32px_rgba(245,158,11,0.08)]">
         <CardHeader>
@@ -404,7 +455,7 @@ export default function MemberTontinePanel() {
               {cycle && (
                 <div className="flex flex-col gap-2 sm:items-end">
                   {hasJoined ? (
-                    <Button onClick={handleDeclareCta} disabled={isRestricted} className="gap-2">
+                    <Button onClick={handleDeclareCta} disabled={isRestricted || needsAvatar} className="gap-2">
                       <CreditCard className="h-4 w-4" />
                       Déclarer un paiement
                     </Button>
@@ -465,7 +516,7 @@ export default function MemberTontinePanel() {
                       </p>
                     </div>
                     {canDeclare ? (
-                      <Button size="sm" onClick={() => openDeclare(c)} disabled={isRestricted}>
+                      <Button size="sm" onClick={() => openDeclare(c)} disabled={isRestricted || needsAvatar}>
                         Déclarer le paiement
                       </Button>
                     ) : (
@@ -533,7 +584,10 @@ export default function MemberTontinePanel() {
                     <Button
                       size="sm"
                       variant={isMember ? "secondary" : "outline"}
-                      disabled={savingCategoryId === category.id || (isRestricted && !isMember)}
+                      disabled={
+                        savingCategoryId === category.id ||
+                        ((isRestricted || needsAvatar) && !isMember)
+                      }
                       onClick={() => toggleCategory(category, isMember)}
                     >
                       {savingCategoryId === category.id
@@ -597,7 +651,7 @@ export default function MemberTontinePanel() {
                         <td className="py-3 px-2">{contributionStatusBadge(c.status)}</td>
                         <td className="py-3 px-2">
                           {canDeclare ? (
-                            <Button size="sm" variant="outline" onClick={() => openDeclare(c)} disabled={isRestricted}>
+                            <Button size="sm" variant="outline" onClick={() => openDeclare(c)} disabled={isRestricted || needsAvatar}>
                               Déclarer
                             </Button>
                           ) : (
