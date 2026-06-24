@@ -221,31 +221,29 @@ export const useMessaging = () => {
     if (!user) return null;
     
     try {
-      // Create the conversation
-      const { data: conversation, error: convError } = await supabase
-        .from('conversations')
-        .insert({ title })
-        .select()
-        .single();
+      // Création atomique côté serveur via RPC SECURITY DEFINER.
+      // On évite l'insert direct + read-back (.select() => RETURNING) sur
+      // conversations : la policy SELECT exige d'être déjà participant, ce qui
+      // renvoyait un 403 puisque le participant n'est inséré qu'après. La RPC
+      // crée la conversation et inscrit les participants dans la même
+      // transaction, puis renvoie la ligne conversation.
+      // Cast minimal : la fonction n'est pas encore dans les types générés.
+      const { data: conversation, error: rpcError } = await (supabase.rpc as any)(
+        'create_conversation',
+        {
+          _participant_ids: participantIds,
+          _title: title ?? null,
+        }
+      );
 
-      if (convError) throw convError;
-
-      // Add current user as participant
-      const { error: selfError } = await supabase
-        .from('conversation_participants')
-        .insert({ 
-          conversation_id: conversation.id, 
-          user_id: user.id 
-        });
-
-      if (selfError) throw selfError;
+      if (rpcError) throw rpcError;
 
       toast({
         title: "Conversation créée",
         description: "Vous pouvez maintenant envoyer des messages"
       });
 
-      return conversation;
+      return conversation as Conversation;
     } catch (error) {
       console.error('Error creating conversation:', error);
       toast({
