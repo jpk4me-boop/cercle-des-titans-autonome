@@ -55,7 +55,7 @@ const TestimonialAvatar = ({
 
   return (
     <div
-      className={`relative w-20 h-20 md:w-24 md:h-24 shrink-0 overflow-hidden rounded-full bg-gradient-to-br ${gradientClass} flex items-center justify-center text-background font-display font-bold text-xl md:text-2xl ring-2 ring-gold/25 shadow-lg shadow-gold/10 group-hover:ring-gold/40 group-hover:scale-105 transition-all duration-300`}
+      className={`relative w-28 h-28 md:w-32 md:h-32 shrink-0 overflow-hidden rounded-full bg-gradient-to-br ${gradientClass} flex items-center justify-center text-background font-display font-bold text-2xl md:text-3xl ring-2 ring-gold/40 ring-offset-2 ring-offset-background shadow-lg shadow-gold/20 group-hover:ring-gold/60 group-hover:scale-105 transition-all duration-300`}
     >
       {/* Initials sit underneath; the portrait covers them when it loads. */}
       {initials}

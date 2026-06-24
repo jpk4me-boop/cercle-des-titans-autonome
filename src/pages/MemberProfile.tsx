@@ -254,9 +254,9 @@ const MemberProfile = () => {
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              <Avatar className="w-24 h-24 md:w-32 md:h-32">
-                <AvatarImage src={profile.avatar_url || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary text-2xl md:text-3xl font-bold">
+              <Avatar className="w-32 h-32 md:w-40 md:h-40 rounded-2xl ring-2 ring-gold/50 ring-offset-4 ring-offset-card shadow-[0_8px_30px_rgba(212,175,55,0.18)]">
+                <AvatarImage src={profile.avatar_url || undefined} className="rounded-2xl" />
+                <AvatarFallback className="rounded-2xl bg-gradient-to-br from-gold/20 to-primary/10 text-gold text-4xl md:text-5xl font-display font-bold">
                   {getInitials(profile)}
                 </AvatarFallback>
               </Avatar>

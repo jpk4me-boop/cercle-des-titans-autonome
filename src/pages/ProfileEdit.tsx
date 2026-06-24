@@ -11,10 +11,16 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ArrowLeft, Loader2, Save, User, Settings, Globe, Bell, Camera } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import AvatarCropModal from '@/components/AvatarCropModal';
+import type { CroppedImage } from '@/lib/imageCrop';
 
 // Garde-fous d'upload alignés sur le bucket Storage `avatars`.
 const AVATAR_BUCKET = 'avatars';
+// Limite appliquée APRÈS recadrage/compression (le fichier d'origine peut être
+// plus lourd : la modale le compresse sous ce seuil avant l'upload).
 const AVATAR_MAX_SIZE = 2 * 1024 * 1024; // 2 Mo
+// Garde-fou mémoire sur le fichier brut sélectionné (avant compression).
+const AVATAR_MAX_INPUT_SIZE = 20 * 1024 * 1024; // 20 Mo
 const AVATAR_ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 interface Profile {
@@ -41,6 +47,9 @@ const ProfileEdit = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Fichier brut en attente de recadrage + ouverture de la modale de crop.
+  const [cropFile, setCropFile] = useState<File | null>(null);
+  const [cropOpen, setCropOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [errors, setErrors] = useState<Partial<Record<keyof Profile, string>>>({});
   const [profile, setProfile] = useState<Profile>({
@@ -114,10 +123,9 @@ const ProfileEdit = () => {
     });
   };
 
-  // Upload de la photo de profil : stockage dans le bucket `avatars` sous le
-  // chemin `{auth.uid()}/{fichier}`, récupération de l'URL publique, puis
-  // sauvegarde immédiate dans profiles.avatar_url (indépendant du formulaire).
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Étape 1 : sélection du fichier. On valide le type puis on ouvre la modale
+  // de recadrage (le poids final est garanti < 2 Mo par la compression canvas).
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     // Réinitialise l'input pour autoriser la re-sélection du même fichier.
     e.target.value = '';
@@ -132,26 +140,40 @@ const ProfileEdit = () => {
       return;
     }
 
-    if (file.size > AVATAR_MAX_SIZE) {
+    if (file.size > AVATAR_MAX_INPUT_SIZE) {
       toast({
         variant: 'destructive',
         title: 'Fichier trop volumineux',
-        description: "L'image ne doit pas dépasser 2 Mo."
+        description: "L'image d'origine ne doit pas dépasser 20 Mo."
       });
       return;
     }
 
+    setCropFile(file);
+    setCropOpen(true);
+  };
+
+  const closeCropModal = () => {
+    setCropOpen(false);
+    setCropFile(null);
+  };
+
+  // Étape 2 : upload de l'image recadrée et compressée. Stockage dans le bucket
+  // `avatars` sous `{auth.uid()}/{fichier}`, récupération de l'URL publique,
+  // puis sauvegarde immédiate dans profiles.avatar_url (indépendant du formulaire).
+  const handleCropConfirm = async (result: CroppedImage) => {
+    if (!user) return;
+
     setUploadingAvatar(true);
     try {
-      const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       // Chemin obligatoire : premier segment = auth.uid() (cf. policies Storage).
       // Le timestamp évite tout problème de cache CDN après remplacement.
-      const filePath = `${user.id}/${Date.now()}.${extension}`;
+      const filePath = `${user.id}/${Date.now()}.${result.extension}`;
 
       const { error: uploadError } = await supabase.storage
         .from(AVATAR_BUCKET)
-        .upload(filePath, file, {
-          contentType: file.type,
+        .upload(filePath, result.blob, {
+          contentType: result.type,
           cacheControl: '3600',
           upsert: false
         });
@@ -172,6 +194,7 @@ const ProfileEdit = () => {
       if (updateError) throw updateError;
 
       setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+      closeCropModal();
       toast({
         title: 'Photo mise à jour',
         description: 'Votre photo de profil a été enregistrée.'
@@ -326,13 +349,13 @@ const ProfileEdit = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Photo de profil */}
-                <div className="flex flex-col sm:flex-row items-center gap-5 pb-2">
+                {/* Photo de profil — rendu premium "carte membre" */}
+                <div className="flex flex-col sm:flex-row items-center gap-6 pb-2">
                   <div className="relative group">
-                    <Avatar className="w-24 h-24 ring-2 ring-border ring-offset-2 ring-offset-card">
-                      <AvatarImage src={profile.avatar_url || undefined} alt="Photo de profil" />
-                      <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
-                        {getInitials() || <User className="w-8 h-8" />}
+                    <Avatar className="w-40 h-40 md:w-48 md:h-48 rounded-2xl ring-2 ring-gold/50 ring-offset-4 ring-offset-card shadow-[0_8px_30px_rgba(212,175,55,0.18)]">
+                      <AvatarImage src={profile.avatar_url || undefined} alt="Photo de profil" className="rounded-2xl" />
+                      <AvatarFallback className="rounded-2xl bg-gradient-to-br from-gold/20 to-primary/10 text-gold text-5xl md:text-6xl font-display font-bold">
+                        {getInitials() || <User className="w-12 h-12 md:w-14 md:h-14" />}
                       </AvatarFallback>
                     </Avatar>
                     <button
@@ -340,19 +363,19 @@ const ProfileEdit = () => {
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploadingAvatar}
                       aria-label="Modifier la photo de profil"
-                      className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md ring-2 ring-card transition-transform hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="absolute -bottom-2 -right-2 w-11 h-11 rounded-full bg-gold text-background flex items-center justify-center shadow-lg ring-2 ring-card transition-transform hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {uploadingAvatar ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
-                        <Camera className="w-4 h-4" />
+                        <Camera className="w-5 h-5" />
                       )}
                     </button>
                   </div>
                   <div className="text-center sm:text-left space-y-2">
                     <div>
                       <p className="font-medium text-foreground">Photo de profil</p>
-                      <p className="text-sm text-muted-foreground">JPEG, PNG ou WebP — 2 Mo maximum.</p>
+                      <p className="text-sm text-muted-foreground">JPEG, PNG ou WebP — recadrage avant enregistrement.</p>
                     </div>
                     <Button
                       type="button"
@@ -635,6 +658,16 @@ const ProfileEdit = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Modale de recadrage 1:1 (zoom + cadrage) avant upload */}
+      <AvatarCropModal
+        file={cropFile}
+        open={cropOpen}
+        maxBytes={AVATAR_MAX_SIZE}
+        processing={uploadingAvatar}
+        onCancel={closeCropModal}
+        onConfirm={handleCropConfirm}
+      />
     </div>
   );
 };

@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import {
@@ -279,6 +280,16 @@ const Dashboard = () => {
                 </Button>
               </div>
               
+              {/* Avatar membre — rendu premium "carte membre" */}
+              <div className="flex justify-center mb-6">
+                <Avatar className="w-28 h-28 rounded-2xl ring-2 ring-gold/50 ring-offset-4 ring-offset-card shadow-[0_8px_30px_rgba(212,175,55,0.18)]">
+                  <AvatarImage src={profile?.avatar_url || undefined} alt="Photo de profil" className="rounded-2xl" />
+                  <AvatarFallback className="rounded-2xl bg-gradient-to-br from-gold/20 to-primary/10 text-gold text-3xl font-display font-bold">
+                    {`${profile?.first_name?.[0] ?? ''}${profile?.last_name?.[0] ?? ''}`.toUpperCase() || <User className="w-10 h-10" />}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+
               <div className="space-y-4">
                 <div>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Nom complet</p>

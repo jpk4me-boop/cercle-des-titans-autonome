@@ -611,9 +611,9 @@ const MemberDirectory = () => {
                 className="bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors cursor-pointer"
               >
                 <div className="flex items-start gap-4">
-                  <Avatar className="w-12 h-12">
-                    <AvatarImage src={member.avatar_url || undefined} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                  <Avatar className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-2xl ring-2 ring-gold/40 ring-offset-2 ring-offset-card shadow-md">
+                    <AvatarImage src={member.avatar_url || undefined} className="rounded-2xl" />
+                    <AvatarFallback className="rounded-2xl bg-gradient-to-br from-gold/20 to-primary/10 text-gold text-xl sm:text-2xl font-display font-bold">
                       {getInitials(member)}
                     </AvatarFallback>
                   </Avatar>
