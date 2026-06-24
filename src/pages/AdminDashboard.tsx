@@ -27,7 +27,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, RefreshCw, Download, Users, CreditCard, TrendingUp, Clock, Filter, X, FileText, Coins } from "lucide-react";
+import { ArrowLeft, RefreshCw, Download, Users, CreditCard, TrendingUp, Clock, Filter, X, FileText, Coins, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -36,6 +36,7 @@ import FinancingRequestsTab from "@/components/admin/FinancingRequestsTab";
 import CyclesTab from "@/components/admin/CyclesTab";
 import ContributionsTab from "@/components/admin/ContributionsTab";
 import WeeklyContributionsOverview from "@/components/admin/WeeklyContributionsOverview";
+import AnalyticsTab from "@/components/admin/AnalyticsTab";
 
 interface Transaction {
   id: string;
@@ -272,6 +273,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="weekly" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               État hebdomadaire
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Statistiques
             </TabsTrigger>
           </TabsList>
 
@@ -516,6 +521,11 @@ export default function AdminDashboard() {
           {/* Weekly contributions overview Tab */}
           <TabsContent value="weekly">
             <WeeklyContributionsOverview readOnly={isReadOnly} />
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <AnalyticsTab readOnly={isReadOnly} />
           </TabsContent>
         </Tabs>
       </div>
