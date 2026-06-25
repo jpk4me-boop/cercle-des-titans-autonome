@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import heroImageWebp from "@/assets/hero-team-titans.webp";
 import { FloatingElement, MagneticButton, ParallaxLayer } from "@/components/AnimatedElements";
 import { useMouseParallax } from "@/hooks/useParallax";
+import { trackEvent } from "@/lib/analyticsTracker";
 
 const HeroSection = () => {
   const { t } = useLanguage();
@@ -138,7 +139,7 @@ const HeroSection = () => {
           >
             <MagneticButton strength={0.2} className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto text-base font-semibold group relative overflow-hidden shadow-lg shadow-gold/20 hover:shadow-gold/40 transition-shadow" asChild>
-                <Link to="/#contact">
+                <Link to="/#contact" onClick={() => void trackEvent("click", { label: "hero_primary_cta" })}>
                   <span className="relative z-10 flex items-center">
                     {t('hero.cta')}
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -149,7 +150,7 @@ const HeroSection = () => {
             </MagneticButton>
             <MagneticButton strength={0.2} className="w-full sm:w-auto">
               <Button variant="outline" size="lg" className="w-full sm:w-auto text-base font-medium group hover:border-gold/50 hover:bg-gold/5 transition-all duration-300" asChild>
-                <Link to="/#comment-ca-marche">
+                <Link to="/#comment-ca-marche" onClick={() => void trackEvent("click", { label: "hero_secondary_cta" })}>
                   <span className="group-hover:text-gold transition-colors">{t('hero.ctaSecondary')}</span>
                 </Link>
               </Button>

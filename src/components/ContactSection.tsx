@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Send, MapPin, Phone, Mail } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AnimatedSection, FloatingElement, MagneticButton, ParallaxLayer } from "@/components/AnimatedElements";
+import { trackEvent } from "@/lib/analyticsTracker";
 
 // Counts real words (whitespace-separated, empty tokens ignored).
 const countWords = (value: string): number =>
@@ -51,6 +52,8 @@ const ContactSection = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Clic « envoyer » (label fixe, aucun contenu de formulaire transmis).
+    void trackEvent("click", { label: "contact_submit_click" });
     if (!validate()) return;
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1000));

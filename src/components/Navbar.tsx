@@ -5,6 +5,7 @@ import { Menu, X, User, ChevronDown, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analyticsTracker";
 import LanguageToggle from "@/components/LanguageToggle";
 import InstallAppButton from "@/components/InstallAppButton";
 import SuperAdminBadge from "@/components/SuperAdminBadge";
@@ -181,7 +182,10 @@ const Navbar = () => {
             </Link>
           )}
           {!loading && (
-            <Link to={user ? "/dashboard" : "/auth"}>
+            <Link
+              to={user ? "/dashboard" : "/auth"}
+              onClick={() => void trackEvent("click", { label: user ? "navbar_member_area" : "navbar_login" })}
+            >
               <Button variant="default" size="sm">
                 {user ? (
                   <>
@@ -366,7 +370,13 @@ const Navbar = () => {
               </Button>
             </Link>
           )}
-          <Link to={user ? "/dashboard" : "/auth"} onClick={closeMenu}>
+          <Link
+            to={user ? "/dashboard" : "/auth"}
+            onClick={() => {
+              closeMenu();
+              void trackEvent("click", { label: user ? "navbar_member_area" : "navbar_login" });
+            }}
+          >
             <Button variant="default" className="w-full">
               {user ? (
                 <>

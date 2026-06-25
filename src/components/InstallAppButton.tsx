@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Download, Share, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analyticsTracker";
 
 // Minimal typing for the non-standard event (not in the TS DOM lib).
 interface BeforeInstallPromptEvent extends Event {
@@ -56,6 +57,7 @@ export default function InstallAppButton({ className, fullWidth }: InstallAppBut
   if (!deferred && !isIos()) return null;
 
   const handleClick = async () => {
+    void trackEvent("click", { label: "navbar_install_app" });
     if (deferred) {
       await deferred.prompt();
       const { outcome } = await deferred.userChoice;

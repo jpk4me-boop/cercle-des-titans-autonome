@@ -11,6 +11,7 @@ import {
   Share2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analyticsTracker";
 
 // Section Admin → Marketing.
 // Pour l'instant : carte « QR Code du site ». Le QR est généré entièrement
@@ -69,6 +70,7 @@ export default function MarketingTab() {
   };
 
   const handleShareWhatsApp = () => {
+    void trackEvent("click", { label: "whatsapp_share_qr" });
     const text = `Scannez ce QR code pour découvrir Cercle des Titans. ${SITE_URL}`;
     window.open(
       `https://wa.me/?text=${encodeURIComponent(text)}`,

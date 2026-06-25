@@ -312,6 +312,7 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
   // (sous-phases 4C-B / 4C-C) → on garde visitors/pageViews ici uniquement.
   let pageViews: Metric = pending("Pages vues à venir");
   let visitors: Metric = pending();
+  let clicks: Metric = pending();
   let topPages: Breakdown = { status: "pending", rows: [] };
   try {
     const { data, error } = await (supabase.rpc as any)("get_analytics_overview", {
@@ -328,6 +329,12 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
       visitors = {
         status: "available",
         value: Number(row.unique_visitors) || 0,
+        hint: "30 derniers jours",
+      };
+      // Phase 4C-B : clics importants (CTA). conversions reste à venir (4C-C).
+      clicks = {
+        status: "available",
+        value: Number(row.clicks) || 0,
         hint: "30 derniers jours",
       };
     }
@@ -352,7 +359,6 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
   }
 
   // --- TODO tracking : à brancher sur `analytics_events` une fois validé ---
-  const clicks = pending();
   // Le taux de conversion dépend des visiteurs (conversions / visiteurs) :
   // tant que les visiteurs ne sont pas suivis, il reste indisponible.
   const conversionRate = pending("Nécessite le suivi des visiteurs");

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getSiteMaintenanceFee, formatAmount } from "@/lib/paymentService";
+import { trackEvent } from "@/lib/analyticsTracker";
 
 interface Category {
   nameKey: string;
@@ -154,7 +155,10 @@ const CategoryCard = ({ category, index }: { category: Category; index: number }
         {/* CTA Buttons */}
         <div className="flex flex-col gap-3 mt-auto">
           <Button
-            onClick={() => navigate(`/auth?category=${encodeURIComponent(categoryName)}&mode=signup`)}
+            onClick={() => {
+              void trackEvent("click", { label: "category_select" });
+              navigate(`/auth?category=${encodeURIComponent(categoryName)}&mode=signup`);
+            }}
             className={`w-full font-semibold py-6 transition-all duration-300 ${
               category.isPrestige 
                 ? "bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-background shadow-lg shadow-gold/30" 
@@ -165,6 +169,7 @@ const CategoryCard = ({ category, index }: { category: Category; index: number }
           </Button>
           <Link
             to={`/categorie/${category.nameKey}`}
+            onClick={() => void trackEvent("click", { label: "categories_view" })}
             className="text-sm text-center text-muted-foreground hover:text-gold transition-colors flex items-center justify-center gap-1"
           >
             {t('membership.learnMore')}

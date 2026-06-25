@@ -31,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, FileText, CheckCircle } from "lucide-react";
+import { trackEvent } from "@/lib/analyticsTracker";
 
 // Counts real words (whitespace-separated, empty tokens ignored).
 const countWords = (value: string): number =>
@@ -333,9 +334,10 @@ const FinancingRequestForm = ({ trigger }: FinancingRequestFormProps) => {
                   >
                     Annuler
                   </Button>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={isSubmitting}
+                    onClick={() => void trackEvent("click", { label: "financing_submit_click" })}
                     className="flex-1 bg-gold hover:bg-gold/90 text-forest font-semibold"
                   >
                     {isSubmitting ? (
