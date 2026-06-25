@@ -27,7 +27,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, RefreshCw, Download, Users, CreditCard, TrendingUp, Clock, Filter, X, FileText, Coins, BarChart3 } from "lucide-react";
+import { ArrowLeft, RefreshCw, Download, Users, CreditCard, TrendingUp, Clock, Filter, X, FileText, Coins, BarChart3, Megaphone } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ import CyclesTab from "@/components/admin/CyclesTab";
 import ContributionsTab from "@/components/admin/ContributionsTab";
 import WeeklyContributionsOverview from "@/components/admin/WeeklyContributionsOverview";
 import AnalyticsTab from "@/components/admin/AnalyticsTab";
+import MarketingTab from "@/components/admin/MarketingTab";
 
 interface Transaction {
   id: string;
@@ -253,30 +254,37 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex h-auto flex-wrap justify-start gap-1 bg-muted/50 p-1">
-            <TabsTrigger value="transactions" className="flex items-center gap-2">
+          {/* Liste d'onglets : scroll horizontal sur mobile (évite le débordement
+              hors écran / l'onglet Marketing masqué) ; alignée à gauche en desktop
+              sans scroll si la place suffit. */}
+          <TabsList className="flex h-auto w-full flex-nowrap justify-start gap-1 overflow-x-auto bg-muted/50 p-1">
+            <TabsTrigger value="transactions" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
               <CreditCard className="h-4 w-4" />
               Transactions
             </TabsTrigger>
-            <TabsTrigger value="financing" className="flex items-center gap-2">
+            <TabsTrigger value="financing" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
               <FileText className="h-4 w-4" />
               Demandes de financement
             </TabsTrigger>
-            <TabsTrigger value="cycles" className="flex items-center gap-2">
+            <TabsTrigger value="cycles" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
               <Clock className="h-4 w-4" />
               Cycles des tontines
             </TabsTrigger>
-            <TabsTrigger value="contributions" className="flex items-center gap-2">
+            <TabsTrigger value="contributions" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
               <Coins className="h-4 w-4" />
               Cotisations
             </TabsTrigger>
-            <TabsTrigger value="weekly" className="flex items-center gap-2">
+            <TabsTrigger value="weekly" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
               <Users className="h-4 w-4" />
               État hebdomadaire
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <TabsTrigger value="analytics" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
               <BarChart3 className="h-4 w-4" />
               Statistiques
+            </TabsTrigger>
+            <TabsTrigger value="marketing" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+              <Megaphone className="h-4 w-4" />
+              Marketing
             </TabsTrigger>
           </TabsList>
 
@@ -526,6 +534,11 @@ export default function AdminDashboard() {
           {/* Analytics Tab */}
           <TabsContent value="analytics">
             <AnalyticsTab readOnly={isReadOnly} />
+          </TabsContent>
+
+          {/* Marketing Tab */}
+          <TabsContent value="marketing">
+            <MarketingTab />
           </TabsContent>
         </Tabs>
       </div>
