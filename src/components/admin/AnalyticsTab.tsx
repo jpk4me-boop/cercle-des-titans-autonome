@@ -309,7 +309,7 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
           title="Sources / Réseaux sociaux"
           icon={Share2}
           breakdown={summary.sources}
-          caption="Sessions par source · 30 j"
+          caption="Sessions réellement détectées · 30 j"
           emptyHint="L'origine du trafic (réseaux sociaux, recherche, liens directs) s'affichera après l'activation du tracking."
         />
       </div>

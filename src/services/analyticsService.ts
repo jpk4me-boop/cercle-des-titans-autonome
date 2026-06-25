@@ -345,14 +345,16 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
       // Phase 4C-C : taux = conversions FORMULAIRE / visiteurs uniques, plafonné
       // à 100 % (un visiteur peut soumettre plusieurs fois). La carte
       // « Conversions » reste, elle, liée aux paiements aboutis (inchangée).
-      conversionRate = {
-        status: "available",
-        value:
-          uniqueVisitors > 0
-            ? Math.min(100, (formConversions / uniqueVisitors) * 100)
-            : 0,
-        hint: "Formulaires / visiteurs",
-      };
+      // Sans visiteur réel, le ratio n'a pas de sens (0/0) → on reste « pending »
+      // plutôt que d'afficher un « 0,0 % » trompeur.
+      conversionRate =
+        uniqueVisitors > 0
+          ? {
+              status: "available",
+              value: Math.min(100, (formConversions / uniqueVisitors) * 100),
+              hint: "Formulaires / visiteurs",
+            }
+          : pending("Nécessite au moins un visiteur réel");
     }
   } catch {
     // Synthèse analytics indisponible : on conserve l'état « pending ».
