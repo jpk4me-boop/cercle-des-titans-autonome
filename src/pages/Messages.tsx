@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMessaging, Conversation } from '@/hooks/useMessaging';
 import ConversationList from '@/components/messaging/ConversationList';
 import MessageThread from '@/components/messaging/MessageThread';
+import AdminNewConversationDialog from '@/components/messaging/AdminNewConversationDialog';
 import Navbar from '@/components/Navbar';
 
 const Messages = () => {
@@ -18,12 +19,15 @@ const Messages = () => {
     messages,
     loading,
     sendingMessage,
+    isAdmin,
     setCurrentConversation,
     fetchConversations,
-    sendMessage
+    sendMessage,
+    adminStartConversation
   } = useMessaging();
-  
+
   const [showMobileThread, setShowMobileThread] = useState(false);
+  const [newOfficialOpen, setNewOfficialOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -44,6 +48,23 @@ const Messages = () => {
   const handleSendMessage = async (content: string) => {
     if (!currentConversation) return false;
     return await sendMessage(currentConversation.id, content);
+  };
+
+  // Admin uniquement : démarre un fil officiel via la RPC sécurisée
+  // adminStartConversation. Retourne la conversation au dialog (qui se ferme
+  // si la création réussit).
+  const handleStartOfficial = async (
+    memberId: string,
+    content: string,
+    title?: string
+  ) => {
+    const conversation = await adminStartConversation(memberId, content, title);
+    if (conversation) {
+      await fetchConversations();
+      setCurrentConversation({ ...conversation, participants: [] });
+      setShowMobileThread(true);
+    }
+    return conversation;
   };
 
   if (authLoading) {
@@ -88,7 +109,9 @@ const Messages = () => {
                   Messages
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Vos conversations privées
+                  {isAdmin
+                    ? "Messagerie officielle de l'administration"
+                    : "Vos messages avec l'administration"}
                 </p>
               </div>
             </div>
@@ -105,6 +128,9 @@ const Messages = () => {
                   loading={loading}
                   onSelect={handleSelectConversation}
                   onRefresh={fetchConversations}
+                  isAdmin={isAdmin}
+                  canCreateConversation={isAdmin}
+                  onNewConversation={() => setNewOfficialOpen(true)}
                 />
               </div>
 
@@ -125,10 +151,14 @@ const Messages = () => {
                       <MessageSquare className="w-10 h-10 text-muted-foreground" />
                     </div>
                     <h3 className="text-lg font-medium text-foreground mb-2">
-                      Sélectionnez une conversation
+                      {isAdmin
+                        ? 'Aucune conversation sélectionnée'
+                        : 'Sélectionnez une conversation'}
                     </h3>
                     <p className="text-muted-foreground text-sm max-w-xs">
-                      Choisissez une conversation existante ou créez-en une nouvelle pour commencer à échanger.
+                      {isAdmin
+                        ? 'Choisissez une conversation, ou envoyez un nouveau message officiel à un membre.'
+                        : 'Choisissez une conversation avec l\'administration pour lire et répondre.'}
                     </p>
                   </div>
                 )}
@@ -137,6 +167,14 @@ const Messages = () => {
           </div>
         </div>
       </div>
+
+      {isAdmin && (
+        <AdminNewConversationDialog
+          open={newOfficialOpen}
+          onOpenChange={setNewOfficialOpen}
+          onCreate={handleStartOfficial}
+        />
+      )}
     </>
   );
 };

@@ -16,6 +16,8 @@ interface ConversationListProps {
   // conversation : ils ne peuvent que répondre à une conversation officielle.
   canCreateConversation?: boolean;
   onNewConversation?: () => void;
+  // Adapte les libellés/empty state au rôle (admin vs membre).
+  isAdmin?: boolean;
 }
 
 const ConversationList = ({
@@ -25,7 +27,8 @@ const ConversationList = ({
   onSelect,
   onRefresh,
   canCreateConversation = false,
-  onNewConversation
+  onNewConversation,
+  isAdmin = false
 }: ConversationListProps) => {
   const { user } = useAuth();
 
@@ -82,7 +85,7 @@ const ConversationList = ({
             variant="outline"
           >
             <Plus className="w-4 h-4" />
-            Nouvelle conversation
+            Nouveau message officiel
           </Button>
         </div>
       )}
@@ -94,10 +97,14 @@ const ConversationList = ({
               <MessageSquare className="w-8 h-8 text-muted-foreground" />
             </div>
             <p className="text-muted-foreground text-sm">
-              Aucune conversation
+              {isAdmin
+                ? 'Envoyez un message officiel à un membre'
+                : 'Aucun message officiel pour le moment'}
             </p>
             <p className="text-muted-foreground text-xs mt-1">
-              Créez une nouvelle conversation pour commencer
+              {isAdmin
+                ? 'Utilisez « Nouveau message officiel » pour démarrer.'
+                : "L'administration vous contactera ici."}
             </p>
           </div>
         ) : (
