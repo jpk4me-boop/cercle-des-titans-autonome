@@ -334,13 +334,13 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
       visitors = {
         status: "available",
         value: uniqueVisitors,
-        hint: "30 derniers jours",
+        hint: "Sessions uniques · 30 j",
       };
       // Phase 4C-B : clics importants (CTA).
       clicks = {
         status: "available",
         value: Number(row.clicks) || 0,
-        hint: "30 derniers jours",
+        hint: "Clics CTA · 30 j",
       };
       // Phase 4C-C : taux = conversions FORMULAIRE / visiteurs uniques, plafonné
       // à 100 % (un visiteur peut soumettre plusieurs fois). La carte

@@ -75,11 +75,11 @@ const KpiCard = ({ config }: { config: KpiConfig }) => {
     <Card className="relative overflow-hidden border-border bg-card transition-colors hover:border-gold/30">
       {/* Liseré or décoratif (luxe sombre) */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
+      <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium leading-tight text-muted-foreground">
           {title}
         </CardTitle>
-        <Icon className={`h-4 w-4 ${isPending ? "text-muted-foreground/50" : "text-gold"}`} />
+        <Icon className={`h-4 w-4 shrink-0 ${isPending ? "text-muted-foreground/50" : "text-gold"}`} />
       </CardHeader>
       <CardContent>
         {isPending ? (
@@ -112,21 +112,29 @@ const BreakdownCard = ({
   icon: Icon,
   breakdown,
   emptyHint,
+  caption,
 }: {
   title: string;
   icon: typeof Globe;
   breakdown: Breakdown;
   emptyHint: string;
+  /** Légende courte sous le titre (sens de la donnée). */
+  caption?: string;
 }) => {
   const isPending = breakdown.status === "pending" || breakdown.rows.length === 0;
   const max = Math.max(1, ...breakdown.rows.map((r) => r.value));
 
   return (
     <Card className="border-border bg-card">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-gold" />
-          <CardTitle className="text-base">{title}</CardTitle>
+      <CardHeader className="flex flex-row items-start justify-between gap-2 space-y-0">
+        <div className="flex min-w-0 items-start gap-2">
+          <Icon className="h-4 w-4 shrink-0 text-gold" />
+          <div className="min-w-0">
+            <CardTitle className="text-base leading-tight">{title}</CardTitle>
+            {caption && (
+              <p className="mt-0.5 text-xs text-muted-foreground">{caption}</p>
+            )}
+          </div>
         </div>
         {isPending && <PendingBadge />}
       </CardHeader>
@@ -287,18 +295,21 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
           title="Pages les plus vues"
           icon={FileText}
           breakdown={summary.topPages}
+          caption="Vues par page · 30 j"
           emptyHint="Les pages les plus consultées apparaîtront ici dès que des visites seront enregistrées."
         />
         <BreakdownCard
           title="Pays"
           icon={Globe}
           breakdown={summary.countries}
-          emptyHint="La répartition géographique apparaîtra ici dès que le suivi des visiteurs sera activé."
+          caption="Géographie des visiteurs"
+          emptyHint="À venir — sans collecte d'IP."
         />
         <BreakdownCard
           title="Sources / Réseaux sociaux"
           icon={Share2}
           breakdown={summary.sources}
+          caption="Sessions par source · 30 j"
           emptyHint="L'origine du trafic (réseaux sociaux, recherche, liens directs) s'affichera après l'activation du tracking."
         />
       </div>
