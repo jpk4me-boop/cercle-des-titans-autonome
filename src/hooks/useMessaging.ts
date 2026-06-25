@@ -198,13 +198,21 @@ export const useMessaging = () => {
 
       setMessages(messagesWithProfiles);
 
-      // Mark messages as read
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('conversation_id', conversationId)
-        .neq('sender_id', user.id)
-        .eq('is_read', false);
+      // Marque comme lus les messages reçus via la RPC sécurisée
+      // (SECURITY DEFINER) : la policy RLS UPDATE de messages n'autorise pas un
+      // membre à modifier les messages dont il n'est pas l'auteur.
+      await (supabase.rpc as any)('mark_conversation_messages_read', {
+        _conversation_id: conversationId,
+      });
+
+      // Mise à jour optimiste du badge : les messages reçus venant d'être
+      // marqués lus en base, on remet le compteur local à 0 pour que la liste
+      // (ConversationList) reflète l'état sans rechargement ni refetch global.
+      setConversations(prev =>
+        prev.map(c =>
+          c.id === conversationId ? { ...c, unread_count: 0 } : c
+        )
+      );
 
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -328,12 +336,13 @@ export const useMessaging = () => {
             sender_profile: profile || undefined 
           }]);
 
-          // Mark as read if not from current user
+          // Marque comme lus les messages reçus via la RPC sécurisée
+          // (même raison RLS que dans fetchMessages). La conversation courante
+          // étant ouverte, on marque l'ensemble de ses messages reçus.
           if (newMessage.sender_id !== user.id) {
-            await supabase
-              .from('messages')
-              .update({ is_read: true })
-              .eq('id', newMessage.id);
+            await (supabase.rpc as any)('mark_conversation_messages_read', {
+              _conversation_id: currentConversation.id,
+            });
           }
         }
       )
