@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { usePresenceHeartbeat } from "@/hooks/usePresenceHeartbeat";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { HelmetProvider } from "react-helmet-async";
 import { Loader2 } from "lucide-react";
@@ -38,6 +39,13 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
+// Présence en ligne (Phase 4B) : monté une seule fois sous AuthProvider.
+// Ne rend rien ; déclenche le heartbeat anonyme/membre.
+const PresenceHeartbeat = () => {
+  usePresenceHeartbeat();
+  return null;
+};
+
 // Loading fallback component
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -52,6 +60,7 @@ const App = () => (
         <LanguageProvider>
           <AuthProvider>
             <TooltipProvider>
+              <PresenceHeartbeat />
               <Toaster />
               <Sonner />
               <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>

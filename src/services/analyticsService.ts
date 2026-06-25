@@ -274,10 +274,36 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     activeCycles: countMetric(activeCyclesRes, "En cours"),
   };
 
+  // --- Présence en ligne (Phase 4B, heartbeat — pas de Realtime) ---
+  // Fenêtre serveur par défaut : 5 minutes. Dégradation propre en « pending »
+  // si la RPC échoue (non-admin, RPC absente avant application de la migration).
+  let onlineMembers: Metric = pending("Présence à venir");
+  let onlineVisitors: Metric = pending("Présence à venir");
+  try {
+    const { data, error } = await (supabase.rpc as any)("get_presence_counts", {
+      _window_minutes: 5,
+    });
+    if (error) throw error;
+    // La RPC renvoie un tableau d'une ligne { online_members, online_visitors }.
+    const row = Array.isArray(data) ? data[0] : data;
+    if (row) {
+      onlineMembers = {
+        status: "available",
+        value: Number(row.online_members) || 0,
+        hint: "5 dernières minutes",
+      };
+      onlineVisitors = {
+        status: "available",
+        value: Number(row.online_visitors) || 0,
+        hint: "5 dernières minutes",
+      };
+    }
+  } catch {
+    // Compteurs de présence indisponibles : on conserve l'état « pending ».
+  }
+
   // --- TODO tracking : à brancher sur `analytics_events` une fois validé ---
   const visitors = pending();
-  const onlineVisitors = pending("Temps réel à venir");
-  const onlineMembers = pending("Présence à venir");
   const clicks = pending();
   // Le taux de conversion dépend des visiteurs (conversions / visiteurs) :
   // tant que les visiteurs ne sont pas suivis, il reste indisponible.
