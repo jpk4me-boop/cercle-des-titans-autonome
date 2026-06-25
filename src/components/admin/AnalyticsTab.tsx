@@ -4,11 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Activity,
+  AlertTriangle,
+  Ban,
   BarChart3,
+  CheckCircle2,
+  Clock,
+  CreditCard,
   Globe,
+  Layers,
   Lock,
+  MessagesSquare,
   MousePointerClick,
+  PauseCircle,
   RefreshCw,
+  Send,
   Share2,
   Target,
   TrendingUp,
@@ -208,6 +217,21 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
     { key: "conversionRate", title: "Taux de conversion", icon: BarChart3, metric: summary.conversionRate, format: (v) => `${v.toFixed(1)} %` },
   ];
 
+  // Statistiques opérationnelles : données internes réelles (communauté,
+  // messagerie, tontines). Réutilise KpiCard et le même type Metric.
+  const operationalKpis: KpiConfig[] = [
+    { key: "membersActive", title: "Membres actifs", icon: UserCheck, metric: summary.operational.membersActive, tone: "gold" },
+    { key: "membersPaused", title: "Membres en pause", icon: PauseCircle, metric: summary.operational.membersPaused },
+    { key: "membersSuspended", title: "Membres suspendus", icon: AlertTriangle, metric: summary.operational.membersSuspended },
+    { key: "membersBanned", title: "Membres bannis", icon: Ban, metric: summary.operational.membersBanned },
+    { key: "officialConversations", title: "Conversations officielles", icon: MessagesSquare, metric: summary.operational.officialConversations },
+    { key: "messagesSent", title: "Messages envoyés", icon: Send, metric: summary.operational.messagesSent },
+    { key: "contributionsPending", title: "Cotisations en attente", icon: Clock, metric: summary.operational.contributionsPending },
+    { key: "contributionsValidated", title: "Cotisations validées", icon: CheckCircle2, metric: summary.operational.contributionsValidated, tone: "gold" },
+    { key: "recentPayments", title: "Paiements récents", icon: CreditCard, metric: summary.operational.recentPayments },
+    { key: "activeCycles", title: "Cycles actifs", icon: Layers, metric: summary.operational.activeCycles, tone: "gold" },
+  ];
+
   return (
     <div className="space-y-6">
       {/* En-tête de section */}
@@ -233,6 +257,25 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
         {kpis.map((kpi) => (
           <KpiCard key={kpi.key} config={kpi} />
         ))}
+      </div>
+
+      {/* Statistiques opérationnelles — données internes réelles */}
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+            <Activity className="h-5 w-5 text-gold" />
+            Statistiques opérationnelles
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Communauté, messagerie officielle et tontines — données internes
+            issues de la base.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {operationalKpis.map((kpi) => (
+            <KpiCard key={kpi.key} config={kpi} />
+          ))}
+        </div>
       </div>
 
       {/* Répartitions */}

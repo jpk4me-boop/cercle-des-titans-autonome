@@ -38,12 +38,32 @@ export interface Breakdown {
   rows: BreakdownRow[];
 }
 
+/**
+ * Statistiques opérationnelles internes (communauté, messagerie, tontines).
+ * Toutes dérivées de tables existantes — aucune dépend du tracking visiteurs.
+ */
+export interface OperationalMetrics {
+  membersActive: Metric;
+  membersPaused: Metric;
+  membersSuspended: Metric;
+  membersBanned: Metric;
+  officialConversations: Metric;
+  messagesSent: Metric;
+  contributionsPending: Metric;
+  contributionsValidated: Metric;
+  recentPayments: Metric;
+  activeCycles: Metric;
+}
+
 export interface AnalyticsSummary {
   // --- Métriques réelles (tables existantes) ---
   members: Metric;
   newMembersThisMonth: Metric;
   conversions: Metric;
   conversionAmount: Metric;
+
+  // --- Statistiques opérationnelles réelles (données internes) ---
+  operational: OperationalMetrics;
 
   // --- Métriques en attente de tracking ---
   visitors: Metric;
@@ -67,6 +87,31 @@ const pending = (hint = "Tracking non encore branché"): Metric => ({
 const startOfMonthIso = (): string => {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+};
+
+/** Date ISO il y a `days` jours (fenêtre « récent »). */
+const daysAgoIso = (days: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString();
+};
+
+/**
+ * Compte générique (head-only, sans charger les lignes) sur une table non
+ * encore présente dans les types Supabase générés. Le cast `as any` suit le
+ * même motif que tontineService / memberStatusService. Lecture seule.
+ */
+const countWhere = async (
+  table: string,
+  build?: (q: any) => any,
+): Promise<number> => {
+  let query: any = (supabase as any)
+    .from(table)
+    .select("*", { count: "exact", head: true });
+  if (build) query = build(query);
+  const { count, error } = await query;
+  if (error) throw error;
+  return count ?? 0;
 };
 
 /** Compte les lignes d'une table (lecture seule, sans charger les données). */
@@ -156,6 +201,79 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
       ? { status: "available", value: conversionsRes.value.amount, hint: "Montant cumulé" }
       : pending("Source paiements indisponible");
 
+  // --- Statistiques opérationnelles (données internes réelles) ---
+  // Chaque source est isolée : un échec (RLS, table absente) dégrade SA seule
+  // métrique en « pending » sans faire planter le reste de la page.
+  const [
+    totalMembersRes,
+    pausedRes,
+    suspendedRes,
+    bannedRes,
+    conversationsRes,
+    messagesRes,
+    contribPendingRes,
+    contribPaidRes,
+    recentPaymentsRes,
+    activeCyclesRes,
+  ] = await Promise.allSettled([
+    countWhere("profiles"),
+    countWhere("member_account_status", (q) => q.eq("status", "paused")),
+    countWhere("member_account_status", (q) => q.eq("status", "suspended")),
+    countWhere("member_account_status", (q) => q.eq("status", "banned")),
+    countWhere("conversations"),
+    countWhere("messages"),
+    countWhere("tontine_contributions", (q) => q.eq("status", "pending")),
+    countWhere("tontine_contributions", (q) => q.eq("status", "paid")),
+    countWhere("contribution_payments", (q) =>
+      q.gte("created_at", daysAgoIso(7)),
+    ),
+    countWhere("tontine_cycles", (q) => q.eq("status", "active")),
+  ]);
+
+  const countMetric = (
+    res: PromiseSettledResult<number>,
+    hint: string,
+  ): Metric =>
+    res.status === "fulfilled"
+      ? { status: "available", value: res.value, hint }
+      : pending("Source indisponible");
+
+  // Membres actifs = total − (pausés + suspendus + bannis). Les membres sans
+  // ligne dans member_account_status sont actifs par défaut, d'où la déduction
+  // plutôt qu'un comptage direct du statut 'active'.
+  const allMemberStatusOk =
+    totalMembersRes.status === "fulfilled" &&
+    pausedRes.status === "fulfilled" &&
+    suspendedRes.status === "fulfilled" &&
+    bannedRes.status === "fulfilled";
+
+  const membersActive: Metric = allMemberStatusOk
+    ? {
+        status: "available",
+        value: Math.max(
+          0,
+          totalMembersRes.value -
+            pausedRes.value -
+            suspendedRes.value -
+            bannedRes.value,
+        ),
+        hint: "Comptes actifs",
+      }
+    : pending("Source membres indisponible");
+
+  const operational: OperationalMetrics = {
+    membersActive,
+    membersPaused: countMetric(pausedRes, "En pause"),
+    membersSuspended: countMetric(suspendedRes, "Suspendus"),
+    membersBanned: countMetric(bannedRes, "Bannis"),
+    officialConversations: countMetric(conversationsRes, "Avec l'administration"),
+    messagesSent: countMetric(messagesRes, "Total échangés"),
+    contributionsPending: countMetric(contribPendingRes, "À régler"),
+    contributionsValidated: countMetric(contribPaidRes, "Réglées"),
+    recentPayments: countMetric(recentPaymentsRes, "7 derniers jours"),
+    activeCycles: countMetric(activeCyclesRes, "En cours"),
+  };
+
   // --- TODO tracking : à brancher sur `analytics_events` une fois validé ---
   const visitors = pending();
   const onlineVisitors = pending("Temps réel à venir");
@@ -172,6 +290,7 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     newMembersThisMonth,
     conversions,
     conversionAmount,
+    operational,
     visitors,
     onlineVisitors,
     onlineMembers,
