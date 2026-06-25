@@ -16,9 +16,11 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.88.0";
 
 const DEFAULT_ALLOWED_ORIGINS = [
-  "https://cercledstitans.com",
+  "https://cercledestitans.com",
+  "https://www.cercledestitans.com",
   "http://localhost:5173",
   "http://localhost:8080",
+  "http://localhost:8081",
 ];
 
 const getAllowedOrigins = () => {
