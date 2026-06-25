@@ -117,10 +117,10 @@ export default function TermsOfUse() {
               {t('terms.agreement.content')}
             </p>
             <a 
-              href="mailto:legal@cercledstitans.com" 
+              href="mailto:legal@cercledestitans.com" 
               className="inline-flex items-center gap-2 text-gold hover:text-gold-light transition-colors"
             >
-              legal@cercledstitans.com
+              legal@cercledestitans.com
             </a>
           </div>
         </div>

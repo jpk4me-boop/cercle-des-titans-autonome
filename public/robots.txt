@@ -1,5 +1,5 @@
 # Robots.txt for Cercle des Titans
-# https://cercledstitans.com
+# https://cercledestitans.com
 
 # Allow all major search engines
 User-agent: Googlebot
@@ -33,4 +33,4 @@ Disallow: /api/
 Disallow: /_functions/
 
 # Sitemap location
-Sitemap: https://cercledstitans.com/sitemap.xml
+Sitemap: https://cercledestitans.com/sitemap.xml

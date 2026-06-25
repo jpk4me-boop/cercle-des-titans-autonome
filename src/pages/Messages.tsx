@@ -95,6 +95,7 @@ const Messages = () => {
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Retour"
               onClick={() => navigate('/dashboard')}
               className="shrink-0"
             >

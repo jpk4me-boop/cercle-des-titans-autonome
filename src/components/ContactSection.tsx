@@ -68,7 +68,7 @@ const ContactSection = () => {
   const contactInfo = [
     { icon: MapPin, label: t('contact.address'), value: "Douala, Cameroun" },
     { icon: Phone, label: t('contact.phone'), value: "+237 672 482 763", href: "tel:+237672482763" },
-    { icon: Mail, label: t('contact.email'), value: "contact@cercledstitans.com", href: "mailto:contact@cercledstitans.com" }
+    { icon: Mail, label: t('contact.email'), value: "contact@cercledestitans.com", href: "mailto:contact@cercledestitans.com" }
   ];
 
   return (

@@ -90,6 +90,7 @@ const MessageThread = ({
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Retour"
           onClick={onBack}
           className="md:hidden"
         >
@@ -175,6 +176,7 @@ const MessageThread = ({
             type="submit"
             disabled={!input.trim() || sendingMessage}
             size="icon"
+            aria-label="Envoyer le message"
             className="rounded-xl w-12 h-12"
           >
             {sendingMessage ? (

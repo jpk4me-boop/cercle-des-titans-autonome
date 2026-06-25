@@ -24,10 +24,10 @@ export default function Footer() {
   ];
 
   const socialLinks = [
-    { icon: Facebook, href: "https://facebook.com/cercledstitans", label: "Facebook" },
-    { icon: Instagram, href: "https://instagram.com/cercledstitans", label: "Instagram" },
-    { icon: Linkedin, href: "https://linkedin.com/company/cercledstitans", label: "LinkedIn" },
-    { icon: Twitter, href: "https://twitter.com/cercledstitans", label: "Twitter" },
+    { icon: Facebook, href: "https://facebook.com/cercledestitans", label: "Facebook" },
+    { icon: Instagram, href: "https://instagram.com/cercledestitans", label: "Instagram" },
+    { icon: Linkedin, href: "https://linkedin.com/company/cercledestitans", label: "LinkedIn" },
+    { icon: Twitter, href: "https://twitter.com/cercledestitans", label: "Twitter" },
   ];
 
   return (
@@ -54,7 +54,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-muted-foreground text-sm"><MapPin className="h-4 w-4 text-gold" /><span>Douala, Cameroun</span></li>
               <li className="flex items-center gap-2 text-muted-foreground text-sm"><Phone className="h-4 w-4 text-gold" /><a href="tel:+237672482763" className="hover:text-gold">+237 672 482 763</a></li>
-              <li className="flex items-center gap-2 text-muted-foreground text-sm"><Mail className="h-4 w-4 text-gold" /><a href="mailto:contact@cercledstitans.com" className="hover:text-gold">contact@cercledstitans.com</a></li>
+              <li className="flex items-center gap-2 text-muted-foreground text-sm"><Mail className="h-4 w-4 text-gold" /><a href="mailto:contact@cercledestitans.com" className="hover:text-gold">contact@cercledestitans.com</a></li>
             </ul>
           </div>
           <div>

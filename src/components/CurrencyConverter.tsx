@@ -153,6 +153,7 @@ const CurrencyConverter = () => {
             <Button
               variant="outline"
               size="icon"
+              aria-label="Inverser les devises"
               onClick={swapCurrencies}
               className="rounded-full border-gold/30 hover:bg-gold/10 hover:border-gold/50 transition-all duration-300 hover:rotate-180"
             >

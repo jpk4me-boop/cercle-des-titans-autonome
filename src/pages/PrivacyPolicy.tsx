@@ -117,10 +117,10 @@ export default function PrivacyPolicy() {
               {t('privacy.contact.content')}
             </p>
             <a 
-              href="mailto:privacy@cercledstitans.com" 
+              href="mailto:privacy@cercledestitans.com" 
               className="inline-flex items-center gap-2 text-gold hover:text-gold-light transition-colors"
             >
-              privacy@cercledstitans.com
+              privacy@cercledestitans.com
             </a>
           </div>
         </div>
