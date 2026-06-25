@@ -44,28 +44,60 @@ export const useMessaging = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Détermine si l'utilisateur courant est admin/super_admin (boîte commune).
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['admin', 'super_admin']);
+      if (!cancelled) {
+        setIsAdmin(!error && !!data && data.length > 0);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // Fetch all conversations for the current user
   const fetchConversations = useCallback(async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
-      // Get conversations where user is a participant
-      const { data: participations, error: participationsError } = await supabase
-        .from('conversation_participants')
-        .select('conversation_id')
-        .eq('user_id', user.id);
+      // Boîte commune : un admin/super_admin voit TOUTES les conversations ;
+      // un membre ne voit que celles auxquelles il participe. La RLS applique
+      // déjà cette règle ; on adapte juste la requête de liste des ids.
+      let conversationIds: string[] = [];
+      if (isAdmin) {
+        const { data: allConvs, error: allConvsError } = await supabase
+          .from('conversations')
+          .select('id');
+        if (allConvsError) throw allConvsError;
+        conversationIds = (allConvs || []).map(c => c.id);
+      } else {
+        const { data: participations, error: participationsError } = await supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', user.id);
+        if (participationsError) throw participationsError;
+        conversationIds = (participations || []).map(p => p.conversation_id);
+      }
 
-      if (participationsError) throw participationsError;
-      
-      if (!participations || participations.length === 0) {
+      if (conversationIds.length === 0) {
         setConversations([]);
         setLoading(false);
         return;
       }
-
-      const conversationIds = participations.map(p => p.conversation_id);
 
       // Get conversations
       const { data: convData, error: convError } = await supabase
@@ -136,7 +168,7 @@ export const useMessaging = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, toast]);
+  }, [user, toast, isAdmin]);
 
   // Fetch messages for a specific conversation
   const fetchMessages = useCallback(async (conversationId: string) => {
@@ -192,16 +224,27 @@ export const useMessaging = () => {
     
     setSendingMessage(true);
     try {
-      const { error } = await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: user.id,
-          content: content.trim()
+      if (isAdmin) {
+        // Admin : insertion directe (autorisée par la RLS « boîte commune »).
+        const { error } = await supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            sender_id: user.id,
+            content: content.trim()
+          });
+        if (error) throw error;
+      } else {
+        // Membre : passe obligatoirement par la RPC sécurisée
+        // membre → administration. La RPC vérifie côté serveur que la
+        // conversation est officielle (contient un admin).
+        const { error } = await (supabase.rpc as any)('member_reply_to_admin', {
+          _conversation_id: conversationId,
+          _content: content.trim(),
         });
+        if (error) throw error;
+      }
 
-      if (error) throw error;
-      
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
@@ -214,46 +257,47 @@ export const useMessaging = () => {
     } finally {
       setSendingMessage(false);
     }
-  }, [user, toast]);
+  }, [user, toast, isAdmin]);
 
-  // Create a new conversation
-  const createConversation = useCallback(async (participantIds: string[], title?: string) => {
-    if (!user) return null;
-    
-    try {
-      // Création atomique côté serveur via RPC SECURITY DEFINER.
-      // On évite l'insert direct + read-back (.select() => RETURNING) sur
-      // conversations : la policy SELECT exige d'être déjà participant, ce qui
-      // renvoyait un 403 puisque le participant n'est inséré qu'après. La RPC
-      // crée la conversation et inscrit les participants dans la même
-      // transaction, puis renvoie la ligne conversation.
-      // Cast minimal : la fonction n'est pas encore dans les types générés.
-      const { data: conversation, error: rpcError } = await (supabase.rpc as any)(
-        'create_conversation',
-        {
-          _participant_ids: participantIds,
-          _title: title ?? null,
-        }
-      );
+  // Démarrer une conversation depuis l'administration (admin → membre).
+  // Réservé aux admin/super_admin : la RPC admin_start_conversation (SECURITY
+  // DEFINER) et la RLS rejettent tout appel par un membre. Remplace l'ancienne
+  // RPC create_conversation(uuid[], text), supprimée car elle acceptait des
+  // participants arbitraires (échanges membre ↔ membre).
+  const adminStartConversation = useCallback(
+    async (memberId: string, content?: string, title?: string) => {
+      if (!user) return null;
 
-      if (rpcError) throw rpcError;
+      try {
+        const { data: conversation, error: rpcError } = await (supabase.rpc as any)(
+          'admin_start_conversation',
+          {
+            _member_id: memberId,
+            _content: content ?? null,
+            _title: title ?? null,
+          }
+        );
 
-      toast({
-        title: "Conversation créée",
-        description: "Vous pouvez maintenant envoyer des messages"
-      });
+        if (rpcError) throw rpcError;
 
-      return conversation as Conversation;
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de créer la conversation"
-      });
-      return null;
-    }
-  }, [user, toast]);
+        toast({
+          title: "Conversation créée",
+          description: "Le membre peut désormais être contacté."
+        });
+
+        return conversation as Conversation;
+      } catch (error) {
+        console.error('Error creating conversation:', error);
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de créer la conversation"
+        });
+        return null;
+      }
+    },
+    [user, toast]
+  );
 
   // Real-time subscription
   useEffect(() => {
@@ -315,10 +359,11 @@ export const useMessaging = () => {
     messages,
     loading,
     sendingMessage,
+    isAdmin,
     setCurrentConversation,
     fetchConversations,
     fetchMessages,
     sendMessage,
-    createConversation
+    adminStartConversation
   };
 };

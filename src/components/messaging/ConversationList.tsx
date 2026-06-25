@@ -11,8 +11,11 @@ interface ConversationListProps {
   currentConversation: Conversation | null;
   loading: boolean;
   onSelect: (conversation: Conversation) => void;
-  onNewConversation: () => void;
   onRefresh: () => void;
+  // Création réservée à l'administration. Les membres ne créent jamais de
+  // conversation : ils ne peuvent que répondre à une conversation officielle.
+  canCreateConversation?: boolean;
+  onNewConversation?: () => void;
 }
 
 const ConversationList = ({
@@ -20,8 +23,9 @@ const ConversationList = ({
   currentConversation,
   loading,
   onSelect,
-  onNewConversation,
-  onRefresh
+  onRefresh,
+  canCreateConversation = false,
+  onNewConversation
 }: ConversationListProps) => {
   const { user } = useAuth();
 
@@ -70,17 +74,19 @@ const ConversationList = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border">
-        <Button 
-          onClick={onNewConversation} 
-          className="w-full gap-2"
-          variant="outline"
-        >
-          <Plus className="w-4 h-4" />
-          Nouvelle conversation
-        </Button>
-      </div>
-      
+      {canCreateConversation && onNewConversation && (
+        <div className="p-4 border-b border-border">
+          <Button
+            onClick={onNewConversation}
+            className="w-full gap-2"
+            variant="outline"
+          >
+            <Plus className="w-4 h-4" />
+            Nouvelle conversation
+          </Button>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto">
         {conversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 text-center">

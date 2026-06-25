@@ -20,8 +20,7 @@ const Messages = () => {
     sendingMessage,
     setCurrentConversation,
     fetchConversations,
-    sendMessage,
-    createConversation
+    sendMessage
   } = useMessaging();
   
   const [showMobileThread, setShowMobileThread] = useState(false);
@@ -45,25 +44,6 @@ const Messages = () => {
   const handleSendMessage = async (content: string) => {
     if (!currentConversation) return false;
     return await sendMessage(currentConversation.id, content);
-  };
-
-  const handleNewConversation = async () => {
-    const conversation = await createConversation([], 'Nouvelle conversation');
-    if (conversation) {
-      await fetchConversations();
-      // Find the full conversation with participants from the refreshed list
-      const fullConversation = conversations.find(c => c.id === conversation.id);
-      if (fullConversation) {
-        setCurrentConversation(fullConversation);
-      } else {
-        // Create a minimal conversation object with required fields
-        setCurrentConversation({
-          ...conversation,
-          participants: [{ user_id: user?.id || '' }]
-        });
-      }
-      setShowMobileThread(true);
-    }
   };
 
   if (authLoading) {
@@ -124,7 +104,6 @@ const Messages = () => {
                   currentConversation={currentConversation}
                   loading={loading}
                   onSelect={handleSelectConversation}
-                  onNewConversation={handleNewConversation}
                   onRefresh={fetchConversations}
                 />
               </div>
