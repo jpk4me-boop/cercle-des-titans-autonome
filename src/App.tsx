@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { usePresenceHeartbeat } from "@/hooks/usePresenceHeartbeat";
+import { usePageViewTracker } from "@/hooks/usePageViewTracker";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { HelmetProvider } from "react-helmet-async";
 import { Loader2 } from "lucide-react";
@@ -46,6 +47,13 @@ const PresenceHeartbeat = () => {
   return null;
 };
 
+// Pages vues (Phase 4C-A) : monté DANS le BrowserRouter (useLocation).
+// Ne rend rien ; enregistre une page vue anonyme à chaque changement de route.
+const PageViewTracker = () => {
+  usePageViewTracker();
+  return null;
+};
+
 // Loading fallback component
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -64,6 +72,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <PageViewTracker />
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/" element={<Index />} />

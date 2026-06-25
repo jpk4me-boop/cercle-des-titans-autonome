@@ -65,6 +65,10 @@ export interface AnalyticsSummary {
   // --- Statistiques opérationnelles réelles (données internes) ---
   operational: OperationalMetrics;
 
+  // --- Analytics visiteurs (Phase 4C-A : pages vues / visiteurs uniques) ---
+  pageViews: Metric;
+  topPages: Breakdown;
+
   // --- Métriques en attente de tracking ---
   visitors: Metric;
   onlineVisitors: Metric;
@@ -302,8 +306,52 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     // Compteurs de présence indisponibles : on conserve l'état « pending ».
   }
 
+  // --- Analytics visiteurs (Phase 4C-A) : pages vues + visiteurs uniques ---
+  // Dégradation propre en « pending » si la RPC échoue (non-admin, RPC absente
+  // avant application de la migration). clicks/conversions restent à venir
+  // (sous-phases 4C-B / 4C-C) → on garde visitors/pageViews ici uniquement.
+  let pageViews: Metric = pending("Pages vues à venir");
+  let visitors: Metric = pending();
+  let topPages: Breakdown = { status: "pending", rows: [] };
+  try {
+    const { data, error } = await (supabase.rpc as any)("get_analytics_overview", {
+      _days: 30,
+    });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (row) {
+      pageViews = {
+        status: "available",
+        value: Number(row.page_views) || 0,
+        hint: "30 derniers jours",
+      };
+      visitors = {
+        status: "available",
+        value: Number(row.unique_visitors) || 0,
+        hint: "30 derniers jours",
+      };
+    }
+  } catch {
+    // Synthèse analytics indisponible : on conserve l'état « pending ».
+  }
+
+  try {
+    const { data, error } = await (supabase.rpc as any)("get_analytics_top_pages", {
+      _days: 30,
+      _limit: 5,
+    });
+    if (error) throw error;
+    const rows = (Array.isArray(data) ? data : [])
+      .map((r: any) => ({ label: String(r.label), value: Number(r.value) || 0 }))
+      .filter((r: BreakdownRow) => r.label.length > 0);
+    if (rows.length > 0) {
+      topPages = { status: "available", rows };
+    }
+  } catch {
+    // Top pages indisponible : on conserve l'état « pending ».
+  }
+
   // --- TODO tracking : à brancher sur `analytics_events` une fois validé ---
-  const visitors = pending();
   const clicks = pending();
   // Le taux de conversion dépend des visiteurs (conversions / visiteurs) :
   // tant que les visiteurs ne sont pas suivis, il reste indisponible.
@@ -317,6 +365,8 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     conversions,
     conversionAmount,
     operational,
+    pageViews,
+    topPages,
     visitors,
     onlineVisitors,
     onlineMembers,

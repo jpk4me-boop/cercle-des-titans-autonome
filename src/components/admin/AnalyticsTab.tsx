@@ -10,6 +10,8 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
+  Eye,
+  FileText,
   Globe,
   Layers,
   Lock,
@@ -203,6 +205,7 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
     { key: "members", title: "Membres", icon: Users, metric: summary.members, tone: "gold" },
     { key: "newMembers", title: "Nouveaux membres", icon: UserCheck, metric: summary.newMembersThisMonth },
     { key: "onlineMembers", title: "Membres en ligne", icon: Wifi, metric: summary.onlineMembers },
+    { key: "pageViews", title: "Pages vues", icon: Eye, metric: summary.pageViews, tone: "gold" },
     { key: "visitors", title: "Visiteurs", icon: Globe, metric: summary.visitors },
     { key: "onlineVisitors", title: "Visiteurs en ligne", icon: Activity, metric: summary.onlineVisitors },
     { key: "clicks", title: "Clics", icon: MousePointerClick, metric: summary.clicks },
@@ -280,6 +283,12 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
 
       {/* Répartitions */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <BreakdownCard
+          title="Pages les plus vues"
+          icon={FileText}
+          breakdown={summary.topPages}
+          emptyHint="Les pages les plus consultées apparaîtront ici dès que des visites seront enregistrées."
+        />
         <BreakdownCard
           title="Pays"
           icon={Globe}
