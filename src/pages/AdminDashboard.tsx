@@ -27,7 +27,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, RefreshCw, Download, Users, CreditCard, TrendingUp, Clock, Filter, X, FileText, Coins, BarChart3, Megaphone } from "lucide-react";
+import { ArrowLeft, RefreshCw, Download, Users, CreditCard, TrendingUp, Clock, Filter, X, FileText, Coins, BarChart3, Megaphone, GraduationCap } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -38,6 +38,7 @@ import ContributionsTab from "@/components/admin/ContributionsTab";
 import WeeklyContributionsOverview from "@/components/admin/WeeklyContributionsOverview";
 import AnalyticsTab from "@/components/admin/AnalyticsTab";
 import MarketingTab from "@/components/admin/MarketingTab";
+import BourseWaitlistTab from "@/components/admin/BourseWaitlistTab";
 
 interface Transaction {
   id: string;
@@ -285,6 +286,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="marketing" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
               <Megaphone className="h-4 w-4" />
               Marketing
+            </TabsTrigger>
+            <TabsTrigger value="bourse" className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+              <GraduationCap className="h-4 w-4" />
+              Bourse Rentrée
             </TabsTrigger>
           </TabsList>
 
@@ -539,6 +544,11 @@ export default function AdminDashboard() {
           {/* Marketing Tab */}
           <TabsContent value="marketing">
             <MarketingTab />
+          </TabsContent>
+
+          {/* Bourse Rentrée — liste d'attente */}
+          <TabsContent value="bourse">
+            <BourseWaitlistTab readOnly={isReadOnly} />
           </TabsContent>
         </Tabs>
       </div>

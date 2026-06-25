@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BourseWaitlistForm from "@/components/bourse/BourseWaitlistForm";
 import {
   ArrowRight,
   BookOpen,
@@ -28,7 +29,6 @@ import {
   Hourglass,
   Home,
   Info,
-  Mail,
   PiggyBank,
   Send,
   ShieldCheck,
@@ -106,29 +106,6 @@ const derivePlan = (plan: Plan) => {
 const BONUS_DISCLAIMER =
   "Bourse scolaire de 25 % offerte aux participants ayant validé les 12 cotisations " +
   "du cycle, dans la limite des places disponibles et selon les conditions du programme.";
-
-// --- CTA liste d'attente : mailto vers le contact existant (aucune table) ---
-const WAITLIST_EMAIL = "contact@cercledestitans.com";
-const buildWaitlistMailto = (planName?: string): string => {
-  const subject = "Liste d'attente — Bourse Rentrée Titans 2026";
-  const body = [
-    "Bonjour,",
-    "",
-    "Je souhaite être informé(e) du lancement du programme « Bourse Rentrée Titans 2026 »",
-    "et rejoindre la liste d'attente.",
-    planName ? `\nFormule qui m'intéresse : ${planName}.` : "",
-    "",
-    "Nom et prénom :",
-    "Téléphone (WhatsApp) :",
-    "",
-    "Merci.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-  return `mailto:${WAITLIST_EMAIL}?subject=${encodeURIComponent(
-    subject,
-  )}&body=${encodeURIComponent(body)}`;
-};
 
 const programmeSteps = [
   {
@@ -258,7 +235,7 @@ const PlanCard = ({ plan }: { plan: Plan }) => {
         </p>
       </div>
 
-      <a href={buildWaitlistMailto(plan.name)} className="mt-5">
+      <a href="#liste-attente" className="mt-5">
         <Button
           variant={plan.highlight ? "default" : "outline"}
           className={`w-full rounded-full ${
@@ -434,7 +411,7 @@ const BourseRentree = () => {
               </p>
 
               <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <a href={buildWaitlistMailto()}>
+                <a href="#liste-attente">
                   <Button
                     size="lg"
                     className="rounded-full px-8 py-6 text-base font-semibold shadow-lg"
@@ -608,44 +585,26 @@ const BourseRentree = () => {
             </div>
           </section>
 
-          {/* CTA final */}
-          <section className="px-6 py-16">
-            <div className="mx-auto max-w-2xl text-center">
-              <Sparkles className="mx-auto mb-5 h-10 w-10 text-gold" />
-              <h2 className="font-display text-3xl text-foreground md:text-4xl">
-                Soyez informé(e) du lancement
-              </h2>
-              <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-                Les inscriptions ne sont pas encore ouvertes. Laissez-nous un message
-                pour rejoindre la liste d'attente et réserver votre intérêt.
-              </p>
-
-              <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <a href={buildWaitlistMailto()}>
-                  <Button
-                    size="lg"
-                    className="rounded-full px-8 py-6 text-base font-semibold shadow-lg"
-                  >
-                    <Send className="mr-2 h-5 w-5" />
-                    Rejoindre la liste d'attente
-                  </Button>
-                </a>
-                <a href={`mailto:${WAITLIST_EMAIL}`}>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="rounded-full border-gold/40 px-8 py-6 text-base text-gold hover:bg-gold/10"
-                  >
-                    <Mail className="mr-2 h-5 w-5" />
-                    Être informé du lancement
-                  </Button>
-                </a>
+          {/* Liste d'attente — formulaire réel */}
+          <section id="liste-attente" className="scroll-mt-24 px-6 py-16">
+            <div className="mx-auto max-w-3xl">
+              <div className="mb-8 text-center">
+                <Sparkles className="mx-auto mb-5 h-10 w-10 text-gold" />
+                <h2 className="font-display text-3xl text-foreground md:text-4xl">
+                  Rejoindre la liste d'attente
+                </h2>
+                <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+                  Les inscriptions ne sont pas encore ouvertes. Laissez vos
+                  coordonnées pour être informé(e) en priorité de l'ouverture
+                  officielle.
+                </p>
+                <p className="mt-3 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <ArrowRight className="h-4 w-4 text-gold" />
+                  Aucune inscription officielle ni paiement à cette étape.
+                </p>
               </div>
 
-              <p className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <ArrowRight className="h-4 w-4 text-gold" />
-                Aucune inscription ni paiement à cette étape.
-              </p>
+              <BourseWaitlistForm />
             </div>
           </section>
         </main>
