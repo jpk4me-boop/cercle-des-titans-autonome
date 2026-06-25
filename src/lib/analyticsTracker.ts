@@ -63,6 +63,93 @@ const getSessionId = (): string | null => {
   }
 };
 
+// --- Détection / normalisation de la source d'acquisition --------------------
+// On ne stocke QUE la valeur normalisée (whitelist ci-dessous). JAMAIS l'URL
+// referrer complète, le hostname brut ni la query string.
+
+const SOURCE_KEY = "analytics_source";
+
+type AnalyticsSource =
+  | "direct"
+  | "whatsapp"
+  | "facebook"
+  | "instagram"
+  | "tiktok"
+  | "youtube"
+  | "linkedin"
+  | "google"
+  | "referral"
+  | "unknown";
+
+const VALID_SOURCES: readonly AnalyticsSource[] = [
+  "direct",
+  "whatsapp",
+  "facebook",
+  "instagram",
+  "tiktok",
+  "youtube",
+  "linkedin",
+  "google",
+  "referral",
+  "unknown",
+];
+
+/** Garde de type : la valeur appartient-elle à la whitelist des sources ? */
+const isValidSource = (value: unknown): value is AnalyticsSource =>
+  typeof value === "string" &&
+  (VALID_SOURCES as readonly string[]).includes(value);
+
+/** Mappe un fragment (utm_source ou hostname) vers la whitelist, sinon null. */
+const matchNetwork = (value: string): AnalyticsSource | null => {
+  const v = value.toLowerCase();
+  if (v.includes("whatsapp") || v.includes("wa.me")) return "whatsapp";
+  if (v.includes("facebook") || v === "fb" || v.includes("fb.")) return "facebook";
+  if (v.includes("instagram") || v === "ig") return "instagram";
+  if (v.includes("tiktok")) return "tiktok";
+  if (v.includes("youtube") || v.includes("youtu.be")) return "youtube";
+  if (v.includes("linkedin") || v.includes("lnkd.in")) return "linkedin";
+  if (v.includes("google")) return "google";
+  return null;
+};
+
+/** Calcule la source normalisée à partir de utm_source puis du referrer. */
+const detectSource = (): AnalyticsSource => {
+  try {
+    // 1) utm_source : on lit UNIQUEMENT ce paramètre, pas la query string.
+    const utm = new URLSearchParams(window.location.search).get("utm_source");
+    if (utm) {
+      return matchNetwork(utm) ?? "unknown";
+    }
+
+    // 2) referrer : on n'exploite que le hostname, jamais l'URL complète.
+    const referrer = document.referrer;
+    if (!referrer) return "direct";
+
+    const host = new URL(referrer).hostname;
+    if (host === window.location.hostname) return "direct"; // navigation interne
+    return matchNetwork(host) ?? "referral";
+  } catch {
+    return "unknown";
+  }
+};
+
+/** Source d'acquisition figée pour la session (mémorisée en sessionStorage). */
+const getSource = (): AnalyticsSource => {
+  try {
+    const cached = sessionStorage.getItem(SOURCE_KEY);
+    // On n'utilise la valeur stockée que si elle appartient à la whitelist.
+    if (isValidSource(cached)) return cached;
+
+    // Absente ou invalide : on recalcule et on réécrit une source valide.
+    const source = detectSource();
+    sessionStorage.setItem(SOURCE_KEY, source);
+    return source;
+  } catch {
+    // sessionStorage indisponible : recalcul best-effort sans cache.
+    return detectSource();
+  }
+};
+
 export type AnalyticsEventType = "page_view" | "click" | "conversion";
 
 interface TrackOptions {
@@ -90,7 +177,7 @@ export const trackEvent = async (
       _event_type: type,
       _path: options.path ?? null,
       _label: options.label ?? null,
-      _source: null,
+      _source: getSource(),
     });
   } catch {
     // Analytics best-effort : on n'interrompt jamais le rendu.

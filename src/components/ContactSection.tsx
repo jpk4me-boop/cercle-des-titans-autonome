@@ -58,6 +58,8 @@ const ContactSection = () => {
     setIsSubmitting(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     toast({ title: t('contact.success.title'), description: t('contact.success.desc') });
+    // Conversion (label fixe, aucune donnée de formulaire transmise).
+    void trackEvent("conversion", { label: "contact_form_submit" });
     setFormData({ name: "", email: "", phone: "", message: "" });
     setErrors({});
     setIsSubmitting(false);

@@ -313,7 +313,9 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
   let pageViews: Metric = pending("Pages vues à venir");
   let visitors: Metric = pending();
   let clicks: Metric = pending();
+  let conversionRate: Metric = pending("Nécessite le suivi des visiteurs");
   let topPages: Breakdown = { status: "pending", rows: [] };
+  let sources: Breakdown = { status: "pending", rows: [] };
   try {
     const { data, error } = await (supabase.rpc as any)("get_analytics_overview", {
       _days: 30,
@@ -321,6 +323,9 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
     if (row) {
+      const uniqueVisitors = Number(row.unique_visitors) || 0;
+      const formConversions = Number(row.conversions) || 0;
+
       pageViews = {
         status: "available",
         value: Number(row.page_views) || 0,
@@ -328,14 +333,25 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
       };
       visitors = {
         status: "available",
-        value: Number(row.unique_visitors) || 0,
+        value: uniqueVisitors,
         hint: "30 derniers jours",
       };
-      // Phase 4C-B : clics importants (CTA). conversions reste à venir (4C-C).
+      // Phase 4C-B : clics importants (CTA).
       clicks = {
         status: "available",
         value: Number(row.clicks) || 0,
         hint: "30 derniers jours",
+      };
+      // Phase 4C-C : taux = conversions FORMULAIRE / visiteurs uniques, plafonné
+      // à 100 % (un visiteur peut soumettre plusieurs fois). La carte
+      // « Conversions » reste, elle, liée aux paiements aboutis (inchangée).
+      conversionRate = {
+        status: "available",
+        value:
+          uniqueVisitors > 0
+            ? Math.min(100, (formConversions / uniqueVisitors) * 100)
+            : 0,
+        hint: "Formulaires / visiteurs",
       };
     }
   } catch {
@@ -358,12 +374,25 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     // Top pages indisponible : on conserve l'état « pending ».
   }
 
-  // --- TODO tracking : à brancher sur `analytics_events` une fois validé ---
-  // Le taux de conversion dépend des visiteurs (conversions / visiteurs) :
-  // tant que les visiteurs ne sont pas suivis, il reste indisponible.
-  const conversionRate = pending("Nécessite le suivi des visiteurs");
+  // Phase 4C-C : sources / réseaux sociaux (sessions distinctes par source).
+  try {
+    const { data, error } = await (supabase.rpc as any)("get_analytics_top_sources", {
+      _days: 30,
+      _limit: 10,
+    });
+    if (error) throw error;
+    const rows = (Array.isArray(data) ? data : [])
+      .map((r: any) => ({ label: String(r.label), value: Number(r.value) || 0 }))
+      .filter((r: BreakdownRow) => r.label.length > 0);
+    if (rows.length > 0) {
+      sources = { status: "available", rows };
+    }
+  } catch {
+    // Sources indisponibles : on conserve l'état « pending ».
+  }
+
+  // --- TODO tracking : pays (reste « Bientôt ») ---
   const countries: Breakdown = { status: "pending", rows: [] };
-  const sources: Breakdown = { status: "pending", rows: [] };
 
   return {
     members,

@@ -123,6 +123,8 @@ const FinancingRequestForm = ({ trigger }: FinancingRequestFormProps) => {
       }
 
       setIsSuccess(true);
+      // Conversion (label fixe, aucune donnée de formulaire transmise).
+      void trackEvent("conversion", { label: "financing_request_submit" });
       toast({
         title: "Demande envoyée !",
         description: "Nous avons bien reçu votre demande d'appui. Notre équipe vous contactera sous 48h.",
