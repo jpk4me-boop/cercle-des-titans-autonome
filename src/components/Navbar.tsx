@@ -167,6 +167,14 @@ const Navbar = () => {
               Blog
             </Link>
           </li>
+          <li>
+            <Link
+              to="/bourse-rentree"
+              className="text-sm font-medium text-gold/90 transition-colors hover:text-gold"
+            >
+              Bourse Rentrée
+            </Link>
+          </li>
         </ul>
 
         <div className="hidden sm:flex items-center gap-3">
@@ -353,6 +361,15 @@ const Navbar = () => {
               className="block py-2 text-lg font-medium text-foreground transition-colors hover:text-gold"
             >
               Blog
+            </Link>
+          </li>
+          <li>
+            <Link
+              to="/bourse-rentree"
+              onClick={closeMenu}
+              className="block py-2 text-lg font-medium text-gold transition-colors hover:text-gold-light"
+            >
+              Bourse Rentrée
             </Link>
           </li>
         </ul>

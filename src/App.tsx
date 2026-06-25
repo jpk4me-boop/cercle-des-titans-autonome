@@ -31,6 +31,7 @@ const Messages = lazy(() => import("./pages/Messages"));
 const CategoryDetail = lazy(() => import("./pages/CategoryDetail"));
 const CategoriesComparison = lazy(() => import("./pages/CategoriesComparison"));
 const FondsFinancement = lazy(() => import("./pages/FondsFinancement"));
+const BourseRentree = lazy(() => import("./pages/BourseRentree"));
 const VerifyReceipt = lazy(() => import("./pages/VerifyReceipt"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const ContributionHistory = lazy(() => import("./pages/ContributionHistory"));
@@ -94,6 +95,7 @@ const App = () => (
                     <Route path="/categorie/:categoryName" element={<CategoryDetail />} />
                     <Route path="/categories/comparatif" element={<CategoriesComparison />} />
                     <Route path="/financement/fonds-de-financement" element={<FondsFinancement />} />
+                    <Route path="/bourse-rentree" element={<BourseRentree />} />
                     <Route path="/verify-receipt" element={<VerifyReceipt />} />
                     <Route path="/historique-cotisations" element={<ContributionHistory />} />
 

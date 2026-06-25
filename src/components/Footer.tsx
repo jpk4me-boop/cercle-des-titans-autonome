@@ -18,6 +18,7 @@ export default function Footer() {
     { label: t('nav.home'), to: "/#accueil" },
     { label: t('nav.tontine'), to: "/#tontine" },
     { label: t('nav.howItWorks'), to: "/#comment-ca-marche" },
+    { label: "Bourse Rentrée 2026", to: "/bourse-rentree" },
     { label: t('nav.testimonials'), to: "/#temoignages" },
     { label: "FAQ", to: "/#faq" },
     { label: t('footer.contact'), to: "/#contact" },
