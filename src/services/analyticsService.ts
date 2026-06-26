@@ -76,6 +76,14 @@ export interface AnalyticsSummary {
   clicks: Metric;
   conversionRate: Metric;
 
+  // --- Phase A : fenêtres visiteurs + KPI ciblés ---
+  visitorsToday: Metric;
+  visitors7d: Metric;
+  /** Clics WhatsApp « contact interne admin » (≠ conversions marketing). */
+  whatsappClicksAdmin: Metric;
+  bourseSignups: Metric;
+  activeTontineMembers: Metric;
+
   // --- Répartitions ---
   countries: Breakdown;
   sources: Breakdown;
@@ -171,6 +179,29 @@ const fetchConversions = async (): Promise<{ count: number; amount: number }> =>
 
   return { count, amount };
 };
+
+/**
+ * Visiteurs uniques (sessions distinctes) sur une fenêtre de `days` jours, via
+ * la RPC admin existante. Retourne `null` si la lecture échoue (→ « pending »).
+ */
+const fetchUniqueVisitors = async (days: number): Promise<number | null> => {
+  try {
+    const { data, error } = await (supabase.rpc as any)("get_analytics_overview", {
+      _days: days,
+    });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    return row ? Number(row.unique_visitors) || 0 : 0;
+  } catch {
+    return null;
+  }
+};
+
+/** Normalise le retour d'une RPC scalaire (`integer`) en nombre. */
+const scalarRpcValue = (data: unknown): number =>
+  typeof data === "number"
+    ? data
+    : Number(Array.isArray(data) ? (data as unknown[])[0] : data) || 0;
 
 /**
  * Construit le résumé analytics complet.
@@ -393,6 +424,68 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     // Sources indisponibles : on conserve l'état « pending ».
   }
 
+  // --- Phase A : fenêtres visiteurs (aujourd'hui / 7 j) ---
+  // Réutilise get_analytics_overview avec _days=1 et _days=7. Dégradation
+  // propre en « pending » si la RPC échoue (non-admin, RPC absente).
+  const [todayVisitors, weekVisitors] = await Promise.all([
+    fetchUniqueVisitors(1),
+    fetchUniqueVisitors(7),
+  ]);
+  const visitorsToday: Metric =
+    todayVisitors === null
+      ? pending("Tracking visiteurs à venir")
+      : { status: "available", value: todayVisitors, hint: "Dernières 24 h" };
+  const visitors7d: Metric =
+    weekVisitors === null
+      ? pending("Tracking visiteurs à venir")
+      : { status: "available", value: weekVisitors, hint: "7 derniers jours" };
+
+  // --- Phase A : clics WhatsApp « contact interne admin » (30 j) ---
+  let whatsappClicksAdmin: Metric = pending("Tracking clics à venir");
+  try {
+    const { data, error } = await (supabase.rpc as any)(
+      "get_analytics_whatsapp_clicks",
+      { _days: 30 },
+    );
+    if (error) throw error;
+    whatsappClicksAdmin = {
+      status: "available",
+      value: scalarRpcValue(data),
+      hint: "Contacts internes · 30 j",
+    };
+  } catch {
+    // RPC absente avant migration : on conserve l'état « pending ».
+  }
+
+  // --- Phase A : inscriptions Bourse Rentrée (liste d'attente, RLS admin) ---
+  let bourseSignups: Metric = pending("Source liste d'attente indisponible");
+  try {
+    const value = await countWhere("bourse_rentree_waitlist");
+    bourseSignups = {
+      status: "available",
+      value,
+      hint: "Total liste d'attente",
+    };
+  } catch {
+    // Lecture indisponible : on conserve l'état « pending ».
+  }
+
+  // --- Phase A : membres actifs tontine (user_id distincts, adhésion active) ---
+  let activeTontineMembers: Metric = pending("Source tontine indisponible");
+  try {
+    const { data, error } = await (supabase.rpc as any)(
+      "get_active_tontine_members_count",
+    );
+    if (error) throw error;
+    activeTontineMembers = {
+      status: "available",
+      value: scalarRpcValue(data),
+      hint: "Adhésions actives",
+    };
+  } catch {
+    // RPC absente avant migration : on conserve l'état « pending ».
+  }
+
   // --- TODO tracking : pays (reste « Bientôt ») ---
   const countries: Breakdown = { status: "pending", rows: [] };
 
@@ -409,6 +502,11 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     onlineMembers,
     clicks,
     conversionRate,
+    visitorsToday,
+    visitors7d,
+    whatsappClicksAdmin,
+    bourseSignups,
+    activeTontineMembers,
     countries,
     sources,
   };

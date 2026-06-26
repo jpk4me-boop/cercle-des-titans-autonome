@@ -47,6 +47,7 @@ import { Ban, Filter, Loader2, MessageCircle, MoreHorizontal, Pause, Phone, Play
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analyticsTracker";
 import { fetchAllCategories, fetchAllContributions } from "@/services/tontineService";
 import {
   adminSetMemberStatus,
@@ -142,7 +143,10 @@ const WhatsAppButton = ({ phone }: { phone: string | null | undefined }) => {
   return (
     <Button
       size="sm"
-      onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+      onClick={() => {
+        void trackEvent("click", { label: "whatsapp_tontine_member_admin" });
+        window.open(url, "_blank", "noopener,noreferrer");
+      }}
       title="Contacter sur WhatsApp"
       className="h-8 border border-emerald-300 bg-emerald-500 font-semibold text-white hover:bg-emerald-400"
     >

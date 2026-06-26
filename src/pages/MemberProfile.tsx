@@ -27,6 +27,7 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { fetchMemberContributions } from '@/services/tontineService';
+import { trackEvent } from '@/lib/analyticsTracker';
 import type { TontineContribution } from '@/types/tontine';
 
 // Contact WhatsApp direct depuis la fiche profil membre.
@@ -354,13 +355,16 @@ const MemberProfile = () => {
                   {buildWhatsAppUrl(profile.phone) ? (
                     <Button
                       size="sm"
-                      onClick={() =>
+                      onClick={() => {
+                        void trackEvent('click', {
+                          label: 'whatsapp_member_profile_admin',
+                        });
                         window.open(
                           buildWhatsAppUrl(profile.phone)!,
                           '_blank',
                           'noopener,noreferrer',
-                        )
-                      }
+                        );
+                      }}
                       title="Contacter sur WhatsApp"
                       className="h-8 shrink-0 border border-emerald-300 bg-emerald-500 font-semibold text-white hover:bg-emerald-400"
                     >

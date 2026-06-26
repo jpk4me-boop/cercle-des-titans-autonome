@@ -26,6 +26,7 @@ import {
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analyticsTracker";
 import {
   computeStats,
   fetchWaitlist,
@@ -293,7 +294,10 @@ export default function BourseWaitlistTab({
     return (
       <Button
         size="sm"
-        onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+        onClick={() => {
+          void trackEvent("click", { label: "whatsapp_bourse_waitlist_admin" });
+          window.open(url, "_blank", "noopener,noreferrer");
+        }}
         title="Contacter sur WhatsApp"
         className={`h-8 border border-emerald-300 bg-emerald-500 font-semibold text-white hover:bg-emerald-400 ${
           fullWidth ? "w-full" : ""
