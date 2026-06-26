@@ -621,3 +621,46 @@ export const getAnalyticsSummary = async (
   inFlight = promise;
   return promise;
 };
+
+// ---------------------------------------------------------------------------
+// Phase C1 — Série temporelle quotidienne (graphiques 7 / 30 jours).
+//
+// Indépendant de getAnalyticsSummary : aucune métrique/KPI existant n'est
+// modifié. Lecture seule via la RPC admin get_analytics_daily. Agrégats only.
+// ---------------------------------------------------------------------------
+
+/** Un point quotidien de la série analytics (agrégats, aucune PII). */
+export interface DailyPoint {
+  /** Date ISO « YYYY-MM-DD ». */
+  day: string;
+  uniqueVisitors: number;
+  pageViews: number;
+  whatsappPublicClicks: number;
+  bourseSignups: number;
+}
+
+/**
+ * Série quotidienne sur 7 ou 30 jours pour les graphiques admin.
+ * Best-effort : si la RPC est absente (avant migration) ou échoue, renvoie un
+ * tableau vide → l'UI affiche son état « pas encore assez de données ».
+ */
+export const getAnalyticsDaily = async (
+  days: 7 | 30,
+): Promise<DailyPoint[]> => {
+  try {
+    const { data, error } = await (supabase.rpc as any)("get_analytics_daily", {
+      _days: days,
+    });
+    if (error) throw error;
+    const rows = Array.isArray(data) ? data : [];
+    return rows.map((r: any) => ({
+      day: String(r.day),
+      uniqueVisitors: Number(r.unique_visitors) || 0,
+      pageViews: Number(r.page_views) || 0,
+      whatsappPublicClicks: Number(r.whatsapp_public_clicks) || 0,
+      bourseSignups: Number(r.bourse_signups) || 0,
+    }));
+  } catch {
+    return [];
+  }
+};

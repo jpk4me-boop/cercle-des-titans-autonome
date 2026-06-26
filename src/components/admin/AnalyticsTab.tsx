@@ -38,6 +38,7 @@ import {
   type Breakdown,
   type Metric,
 } from "@/services/analyticsService";
+import AnalyticsCharts from "@/components/admin/AnalyticsCharts";
 
 interface AnalyticsTabProps {
   readOnly?: boolean;
@@ -347,6 +348,9 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
           </div>
         );
       })}
+
+      {/* Évolution (Phase C1) — courbes 7/30 j + sources marketing */}
+      <AnalyticsCharts sources={summary.sources} />
 
       {/* Répartitions */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
