@@ -13,6 +13,7 @@ import {
   Briefcase,
   Loader2,
   Mail,
+  MessageCircle,
   Phone,
   Calendar,
   Home as HomeIcon,
@@ -27,6 +28,17 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { fetchMemberContributions } from '@/services/tontineService';
 import type { TontineContribution } from '@/types/tontine';
+
+// Contact WhatsApp direct depuis la fiche profil membre.
+const WHATSAPP_MESSAGE =
+  'Bonjour, nous vous contactons concernant votre profil membre Cercle des Titans.';
+
+/** Construit le lien wa.me en ne gardant que les chiffres du numéro. */
+const buildWhatsAppUrl = (phone: string | null | undefined): string | null => {
+  const digits = (phone ?? '').replace(/\D/g, '');
+  if (digits.length < 6) return null;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+};
 
 interface Profile {
   id: string;
@@ -328,17 +340,42 @@ const MemberProfile = () => {
                     </div>
                   </div>
                 )}
-                {profile.phone && (
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Phone className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Téléphone</p>
-                      <p className="text-sm font-medium">{profile.phone}</p>
-                    </div>
+                {/* Téléphone + contact WhatsApp (toujours affiché pour admin/profil perso) */}
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Phone className="w-4 h-4 text-primary" />
                   </div>
-                )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-muted-foreground">Téléphone</p>
+                    <p className="text-sm font-medium">
+                      {profile.phone || 'Non renseigné'}
+                    </p>
+                  </div>
+                  {buildWhatsAppUrl(profile.phone) ? (
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        window.open(
+                          buildWhatsAppUrl(profile.phone)!,
+                          '_blank',
+                          'noopener,noreferrer',
+                        )
+                      }
+                      title="Contacter sur WhatsApp"
+                      className="h-8 shrink-0 border border-emerald-300 bg-emerald-500 font-semibold text-white hover:bg-emerald-400"
+                    >
+                      <MessageCircle className="mr-1.5 h-4 w-4" />
+                      WhatsApp
+                    </Button>
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className="shrink-0 border-slate-500/50 bg-slate-800/70 text-slate-300"
+                    >
+                      Téléphone absent
+                    </Badge>
+                  )}
+                </div>
                 {profile.address && (
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
