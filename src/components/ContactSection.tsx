@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Send, MapPin, Phone, Mail } from "lucide-react";
+import { Send, MapPin, Phone, Mail, MessageCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { AnimatedSection, FloatingElement, MagneticButton, ParallaxLayer } from "@/components/AnimatedElements";
 import { trackEvent } from "@/lib/analyticsTracker";
+import { buildPublicWhatsAppUrl } from "@/lib/whatsapp";
 
 // Counts real words (whitespace-separated, empty tokens ignored).
 const countWords = (value: string): number =>
@@ -114,6 +115,17 @@ const ContactSection = () => {
                   </div>
                 ))}
               </div>
+
+              <a
+                href={buildPublicWhatsAppUrl("Bonjour, je contacte le support du Cercle des Titans.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => void trackEvent("click", { label: "whatsapp_public_contact" })}
+                className="mt-8 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-emerald-500/20 transition-colors hover:bg-emerald-400"
+              >
+                <MessageCircle className="h-5 w-5" />
+                Écrire sur WhatsApp
+              </a>
             </div>
           </AnimatedSection>
 

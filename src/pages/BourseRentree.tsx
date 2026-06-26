@@ -29,6 +29,7 @@ import {
   Hourglass,
   Home,
   Info,
+  MessageCircle,
   PiggyBank,
   Send,
   ShieldCheck,
@@ -36,6 +37,8 @@ import {
   Target,
   Wallet,
 } from "lucide-react";
+import { trackEvent } from "@/lib/analyticsTracker";
+import { buildPublicWhatsAppUrl } from "@/lib/whatsapp";
 
 /**
  * Bourse Rentrée Titans 2026 — page publique premium.
@@ -428,6 +431,20 @@ const BourseRentree = () => {
                   >
                     <Target className="mr-2 h-5 w-5" />
                     Simuler ma bourse
+                  </Button>
+                </a>
+                <a
+                  href={buildPublicWhatsAppUrl("Bonjour, j'ai une question sur la Bourse Rentrée Titans 2026.")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => void trackEvent("click", { label: "whatsapp_public_bourse_rentree" })}
+                >
+                  <Button
+                    size="lg"
+                    className="rounded-full border border-emerald-300 bg-emerald-500 px-8 py-6 text-base font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
+                  >
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    Poser une question sur WhatsApp
                   </Button>
                 </a>
               </div>

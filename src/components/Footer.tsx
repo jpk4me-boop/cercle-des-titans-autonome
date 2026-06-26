@@ -1,6 +1,8 @@
-import { Facebook, Instagram, Linkedin, Twitter, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Twitter, Mail, Phone, MapPin, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { trackEvent } from "@/lib/analyticsTracker";
+import { buildPublicWhatsAppUrl } from "@/lib/whatsapp";
 
 const Logo = () => (
   <svg viewBox="0 0 40 40" className="w-8 h-8" fill="none">
@@ -57,6 +59,16 @@ export default function Footer() {
               <li className="flex items-center gap-2 text-muted-foreground text-sm"><Phone className="h-4 w-4 text-gold" /><a href="tel:+237672482763" className="hover:text-gold">+237 672 482 763</a></li>
               <li className="flex items-center gap-2 text-muted-foreground text-sm"><Mail className="h-4 w-4 text-gold" /><a href="mailto:contact@cercledestitans.com" className="hover:text-gold">contact@cercledestitans.com</a></li>
             </ul>
+            <a
+              href={buildPublicWhatsAppUrl("Bonjour, je souhaite contacter le Cercle des Titans.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => void trackEvent("click", { label: "whatsapp_public_footer" })}
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-400"
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </a>
           </div>
           <div>
             <h4 className="font-display text-lg font-semibold text-gold mb-4">{t('footer.followUs')}</h4>

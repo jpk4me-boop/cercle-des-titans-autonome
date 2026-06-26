@@ -1,4 +1,4 @@
-import { Check, ArrowRight, Sparkles } from "lucide-react";
+import { Check, ArrowRight, Sparkles, MessageCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -6,6 +6,7 @@ import heroImageWebp from "@/assets/hero-team-titans.webp";
 import { FloatingElement, MagneticButton, ParallaxLayer } from "@/components/AnimatedElements";
 import { useMouseParallax } from "@/hooks/useParallax";
 import { trackEvent } from "@/lib/analyticsTracker";
+import { buildPublicWhatsAppUrl } from "@/lib/whatsapp";
 
 const HeroSection = () => {
   const { t } = useLanguage();
@@ -153,6 +154,19 @@ const HeroSection = () => {
                 <Link to="/#comment-ca-marche" onClick={() => void trackEvent("click", { label: "hero_secondary_cta" })}>
                   <span className="group-hover:text-gold transition-colors">{t('hero.ctaSecondary')}</span>
                 </Link>
+              </Button>
+            </MagneticButton>
+            <MagneticButton strength={0.2} className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto border border-emerald-300 bg-emerald-500 text-base font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-400" asChild>
+                <a
+                  href={buildPublicWhatsAppUrl("Bonjour, je souhaite avoir des informations sur le Cercle des Titans.")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => void trackEvent("click", { label: "whatsapp_public_home" })}
+                >
+                  <MessageCircle className="w-5 h-5 mr-2" />
+                  Écrire sur WhatsApp
+                </a>
               </Button>
             </MagneticButton>
           </div>
