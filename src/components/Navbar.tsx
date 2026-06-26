@@ -219,14 +219,14 @@ const Navbar = () => {
       {/* Mobile menu overlay */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[55] lg:hidden"
           onClick={closeMenu}
         />
       )}
 
       {/* Mobile menu panel */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-card z-50 transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-card z-[60] transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -370,14 +370,22 @@ const Navbar = () => {
           </li>
         </ul>
 
-        <div className="p-6 pt-0 space-y-3">
+        {/* Bloc CTA du bas — séparé, espacé, pleine largeur. Le padding bas
+            important (pb-28) évite tout chevauchement avec le bouton flottant. */}
+        <div className="mt-2 flex flex-col gap-4 border-t border-border/60 p-6 pb-28">
           <InstallAppButton fullWidth />
           {isSuperAdmin && (
-            <SuperAdminBadge show={isSuperAdmin} className="w-full justify-center" />
+            <SuperAdminBadge
+              show={isSuperAdmin}
+              className="min-h-[48px] w-full justify-center rounded-xl"
+            />
           )}
           {isAdmin && (
-            <Link to="/admin" onClick={closeMenu}>
-              <Button variant="outline" className="w-full border-gold/50 text-gold hover:bg-gold/10">
+            <Link to="/admin" onClick={closeMenu} className="block w-full">
+              <Button
+                variant="outline"
+                className="min-h-[48px] w-full rounded-xl border-gold/50 text-gold hover:bg-gold/10"
+              >
                 <Shield className="w-4 h-4 mr-2" />
                 {t('nav.admin')}
               </Button>
@@ -389,8 +397,9 @@ const Navbar = () => {
               closeMenu();
               void trackEvent("click", { label: user ? "navbar_member_area" : "navbar_login" });
             }}
+            className="block w-full"
           >
-            <Button variant="default" className="w-full">
+            <Button variant="default" className="min-h-[48px] w-full rounded-xl">
               {user ? (
                 <>
                   <User className="w-4 h-4 mr-2" />
