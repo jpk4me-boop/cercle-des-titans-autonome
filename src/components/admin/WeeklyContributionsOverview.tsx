@@ -459,7 +459,9 @@ export default function WeeklyContributionsOverview({
                 : "Aucune cotisation enregistrée."}
             </p>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+              {/* Desktop : tableau complet */}
+              <div className="hidden overflow-x-auto lg:block">
               <Table>
                 <TableHeader>
                   <TableRow className="border-border">
@@ -508,7 +510,71 @@ export default function WeeklyContributionsOverview({
                   ))}
                 </TableBody>
               </Table>
-            </div>
+              </div>
+
+              {/* Mobile / tablette : cartes lisibles */}
+              <div className="space-y-3 lg:hidden">
+                {filtered.map((c) => (
+                  <div
+                    key={c.id}
+                    className="rounded-xl border border-amber-400/20 bg-background/40 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-medium text-foreground">
+                          {memberName(c.user_id)}
+                        </div>
+                        <div className="mt-0.5 break-all text-xs text-muted-foreground">
+                          {memberContact(c.user_id)}
+                        </div>
+                      </div>
+                      <div className="shrink-0">{statusBadge(c.status)}</div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                      <div className="min-w-0">
+                        <div className="text-xs text-muted-foreground">Catégorie</div>
+                        <div className="truncate text-foreground">
+                          {categoryNameById[c.category_id] ?? "—"}
+                        </div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs text-muted-foreground">Cycle / Semaine</div>
+                        <div className="truncate text-foreground">
+                          {c.cycle_id ? cycleNameById[c.cycle_id] ?? "Cycle" : "—"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {formatWeek(c.due_date)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">Attendu</div>
+                        <div className="text-foreground">
+                          {formatAmount(c.expected_amount)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">Cotisé</div>
+                        <div className="text-foreground">
+                          {formatAmount(c.paid_amount)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Membre</span>
+                        {memberStatusBadge(memberStatus(c.user_id))}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <WhatsAppButton phone={memberById[c.user_id]?.phone} />
+                        {renderActions(c.user_id, memberName(c.user_id))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

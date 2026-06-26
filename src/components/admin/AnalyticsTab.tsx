@@ -212,20 +212,26 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
     );
   }
 
-  const kpis: KpiConfig[] = [
+  // KPI regroupés par section thématique (présentation uniquement — les
+  // métriques et leur calcul restent inchangés côté service).
+  const audienceKpis: KpiConfig[] = [
     { key: "members", title: "Membres", icon: Users, metric: summary.members, tone: "gold" },
     { key: "newMembers", title: "Nouveaux membres", icon: UserCheck, metric: summary.newMembersThisMonth },
     { key: "onlineMembers", title: "Membres en ligne", icon: Wifi, metric: summary.onlineMembers },
+    { key: "onlineVisitors", title: "Visiteurs en ligne", icon: Activity, metric: summary.onlineVisitors },
     { key: "visitorsToday", title: "Visiteurs aujourd'hui", icon: Clock, metric: summary.visitorsToday },
     { key: "visitors7d", title: "Visiteurs 7 jours", icon: CalendarDays, metric: summary.visitors7d },
+    { key: "visitors", title: "Visiteurs (30 j)", icon: Globe, metric: summary.visitors },
     { key: "pageViews", title: "Pages vues", icon: Eye, metric: summary.pageViews, tone: "gold" },
-    { key: "visitors", title: "Visiteurs", icon: Globe, metric: summary.visitors },
-    { key: "onlineVisitors", title: "Visiteurs en ligne", icon: Activity, metric: summary.onlineVisitors },
-    { key: "clicks", title: "Clics", icon: MousePointerClick, metric: summary.clicks },
+  ];
+
+  const marketingKpis: KpiConfig[] = [
+    { key: "clicks", title: "Clics CTA (tous)", icon: MousePointerClick, metric: summary.clicks },
     { key: "publicWhatsappClicks", title: "Clics WhatsApp publics", icon: Share2, metric: summary.publicWhatsappClicks },
     { key: "bourseSignups", title: "Inscriptions Bourse Rentrée", icon: GraduationCap, metric: summary.bourseSignups, tone: "gold" },
-    { key: "prospectsConverted", title: "Prospects convertis", icon: Target, metric: summary.prospectsConverted, tone: "gold" },
-    { key: "bourseConversionRate", title: "Taux conversion Bourse → membre", icon: BarChart3, metric: summary.bourseConversionRate, format: (v) => `${v.toFixed(1)} %` },
+  ];
+
+  const conversionKpis: KpiConfig[] = [
     { key: "conversions", title: "Conversions", icon: Target, metric: summary.conversions, tone: "gold" },
     {
       key: "conversionAmount",
@@ -234,7 +240,9 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
       metric: summary.conversionAmount,
       format: formatAmount,
     },
-    { key: "conversionRate", title: "Taux de conversion", icon: BarChart3, metric: summary.conversionRate, format: (v) => `${v.toFixed(1)} %` },
+    { key: "conversionRate", title: "Taux de conversion (formulaire)", icon: BarChart3, metric: summary.conversionRate, format: (v) => `${v.toFixed(1)} %` },
+    { key: "prospectsConverted", title: "Prospects convertis", icon: Target, metric: summary.prospectsConverted, tone: "gold" },
+    { key: "bourseConversionRate", title: "Taux conversion Bourse → membre", icon: BarChart3, metric: summary.bourseConversionRate, format: (v) => `${v.toFixed(1)} %` },
   ];
 
   // Statistiques opérationnelles : données internes réelles (communauté,
@@ -252,6 +260,45 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
     { key: "activeCycles", title: "Cycles actifs", icon: Layers, metric: summary.operational.activeCycles, tone: "gold" },
     { key: "activeTontineMembers", title: "Membres actifs tontine", icon: UserCheck, metric: summary.activeTontineMembers, tone: "gold" },
     { key: "whatsappClicksAdmin", title: "Contacts WhatsApp (admin)", icon: MessageCircle, metric: summary.whatsappClicksAdmin },
+  ];
+
+  // Sections affichées dans l'ordre, chacune avec son titre et sa grille.
+  const kpiSections: {
+    key: string;
+    title: string;
+    description: string;
+    icon: typeof Users;
+    items: KpiConfig[];
+  }[] = [
+    {
+      key: "audience",
+      title: "Audience",
+      description: "Visiteurs, pages vues et présence en ligne.",
+      icon: Globe,
+      items: audienceKpis,
+    },
+    {
+      key: "marketing",
+      title: "Acquisition & marketing",
+      description: "Clics CTA, contacts WhatsApp publics et inscriptions.",
+      icon: Share2,
+      items: marketingKpis,
+    },
+    {
+      key: "conversions",
+      title: "Conversions",
+      description: "Paiements aboutis et conversion des prospects (estimations).",
+      icon: Target,
+      items: conversionKpis,
+    },
+    {
+      key: "operational",
+      title: "Statistiques opérationnelles",
+      description:
+        "Communauté, messagerie officielle et tontines — données internes issues de la base.",
+      icon: Activity,
+      items: operationalKpis,
+    },
   ];
 
   return (
@@ -274,31 +321,26 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
         </Button>
       </div>
 
-      {/* Grille KPI — responsive mobile / tablette / desktop */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {kpis.map((kpi) => (
-          <KpiCard key={kpi.key} config={kpi} />
-        ))}
-      </div>
-
-      {/* Statistiques opérationnelles — données internes réelles */}
-      <div className="space-y-4">
-        <div className="space-y-1">
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-            <Activity className="h-5 w-5 text-gold" />
-            Statistiques opérationnelles
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Communauté, messagerie officielle et tontines — données internes
-            issues de la base.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {operationalKpis.map((kpi) => (
-            <KpiCard key={kpi.key} config={kpi} />
-          ))}
-        </div>
-      </div>
+      {/* KPI regroupés par section thématique */}
+      {kpiSections.map((section) => {
+        const SectionIcon = section.icon;
+        return (
+          <div key={section.key} className="space-y-4">
+            <div className="space-y-1">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                <SectionIcon className="h-5 w-5 text-gold" />
+                {section.title}
+              </h3>
+              <p className="text-sm text-muted-foreground">{section.description}</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {section.items.map((kpi) => (
+                <KpiCard key={kpi.key} config={kpi} />
+              ))}
+            </div>
+          </div>
+        );
+      })}
 
       {/* Répartitions */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
