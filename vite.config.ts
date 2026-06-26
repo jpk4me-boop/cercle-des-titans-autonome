@@ -5,7 +5,7 @@ import { imagetools } from "vite-imagetools";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ command, mode }) => ({
   server: {
     host: "::",
     port: 8080,
@@ -86,7 +86,10 @@ export default defineConfig(({ mode }) => ({
         return new URLSearchParams();
       },
     }),
-    VitePWA({
+    // Service worker PWA : uniquement pour les builds (`vite build`, prod incluse).
+    // Désactivé sur le serveur de dev (`vite`, command === 'serve') pour éviter les
+    // caches trompeurs pendant les tests. La production n'est pas affectée.
+    command !== 'serve' && VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['logo-phoenix.jpg', 'og-image.jpg', 'robots.txt'],
       manifest: {
