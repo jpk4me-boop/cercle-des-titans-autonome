@@ -115,6 +115,14 @@ export const submitWaitlist = async (
     if (error.code === "23505") {
       return { ok: true, duplicate: true };
     }
+    // Anti-spam (A2.2) : le trigger de rate limiting lève 'rate_limited'
+    // (ERRCODE P0001) → message propre, sans détail technique.
+    if ((error.message ?? "").toLowerCase().includes("rate_limited")) {
+      return {
+        ok: false,
+        message: "Trop de tentatives, réessayez dans quelques minutes.",
+      };
+    }
     // On logge pour le debug interne, jamais affiché au visiteur.
     console.error("submitWaitlist error:", error);
     return {
