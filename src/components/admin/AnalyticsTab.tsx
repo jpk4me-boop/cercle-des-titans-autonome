@@ -39,6 +39,7 @@ import {
   type Metric,
 } from "@/services/analyticsService";
 import AnalyticsCharts from "@/components/admin/AnalyticsCharts";
+import AnalyticsInsights from "@/components/admin/AnalyticsInsights";
 
 interface AnalyticsTabProps {
   readOnly?: boolean;
@@ -327,6 +328,9 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
           Actualiser
         </Button>
       </div>
+
+      {/* Lecture des tendances (Phase C2) — synthèse 7 j + recommandations */}
+      <AnalyticsInsights summary={summary} />
 
       {/* KPI regroupés par section thématique */}
       {kpiSections.map((section) => {
