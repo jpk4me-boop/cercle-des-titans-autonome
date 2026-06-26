@@ -84,6 +84,14 @@ export interface AnalyticsSummary {
   bourseSignups: Metric;
   activeTontineMembers: Metric;
 
+  // --- Phase B1 : marketing public + conversion prospect → membre ---
+  /** Clics WhatsApp PUBLICS (intentions visiteurs : partage / contact). */
+  publicWhatsappClicks: Metric;
+  /** Estimation agrégée : prospects Bourse Rentrée également membres. */
+  prospectsConverted: Metric;
+  /** Estimation : prospects convertis / total prospects (plafonné à 100 %). */
+  bourseConversionRate: Metric;
+
   // --- Répartitions ---
   countries: Breakdown;
   sources: Breakdown;
@@ -486,6 +494,53 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     // RPC absente avant migration : on conserve l'état « pending ».
   }
 
+  // --- Phase B1 : clics WhatsApp PUBLICS (intentions visiteurs, 30 j) ---
+  let publicWhatsappClicks: Metric = pending("Tracking clics à venir");
+  try {
+    const { data, error } = await (supabase.rpc as any)(
+      "get_analytics_public_whatsapp_clicks",
+      { _days: 30 },
+    );
+    if (error) throw error;
+    publicWhatsappClicks = {
+      status: "available",
+      value: scalarRpcValue(data),
+      hint: "Partages / contacts · 30 j",
+    };
+  } catch {
+    // RPC absente avant migration : on conserve l'état « pending ».
+  }
+
+  // --- Phase B1 : conversion prospect Bourse Rentrée → membre (estimation) ---
+  // Recoupement agrégé côté serveur (user_id / email / téléphone). La RPC ne
+  // renvoie que deux entiers — aucune donnée personnelle ne transite.
+  let prospectsConverted: Metric = pending("Source conversion indisponible");
+  let bourseConversionRate: Metric = pending("Source conversion indisponible");
+  try {
+    const { data, error } = await (supabase.rpc as any)(
+      "get_bourse_conversion_stats",
+    );
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    const prospects = Number(row?.prospects) || 0;
+    const converted = Number(row?.converted) || 0;
+    prospectsConverted = {
+      status: "available",
+      value: converted,
+      hint: "Estimation (email / téléphone)",
+    };
+    bourseConversionRate =
+      prospects > 0
+        ? {
+            status: "available",
+            value: Math.min(100, (converted / prospects) * 100),
+            hint: "Estimation · convertis / prospects",
+          }
+        : pending("Aucun prospect pour estimer");
+  } catch {
+    // RPC absente avant migration : on conserve l'état « pending ».
+  }
+
   // --- TODO tracking : pays (reste « Bientôt ») ---
   const countries: Breakdown = { status: "pending", rows: [] };
 
@@ -507,6 +562,9 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     whatsappClicksAdmin,
     bourseSignups,
     activeTontineMembers,
+    publicWhatsappClicks,
+    prospectsConverted,
+    bourseConversionRate,
     countries,
     sources,
   };

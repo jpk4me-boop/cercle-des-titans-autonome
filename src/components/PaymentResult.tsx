@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, Download, Share2, Mail, ExternalLink } from "lucide-react";
 import { formatAmount } from "@/lib/paymentService";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analyticsTracker";
 
 interface PaymentResultProps {
   reference: string;
@@ -43,6 +44,7 @@ export default function PaymentResult({
       `📱 Paiement: ${paymentMethod}\n\n` +
       `🔗 Vérifier le reçu: ${verifyUrl}`
     );
+    void trackEvent("click", { label: "whatsapp_public_share" });
     window.open(`https://wa.me/?text=${message}`, "_blank");
   };
 

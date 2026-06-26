@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { trackEvent } from "@/lib/analyticsTracker";
 
 interface SocialShareProps {
   url: string;
@@ -77,7 +78,10 @@ const SocialShare = ({ url, title, description }: SocialShareProps) => {
         variant="outline"
         size="icon"
         className="h-9 w-9 rounded-full border-border hover:border-[#25D366] hover:bg-[#25D366]/10 hover:text-[#25D366] transition-colors"
-        onClick={() => openShareWindow(shareLinks.whatsapp)}
+        onClick={() => {
+          void trackEvent("click", { label: "whatsapp_public_share" });
+          openShareWindow(shareLinks.whatsapp);
+        }}
         aria-label="Share on WhatsApp"
       >
         <MessageCircle className="w-4 h-4" />

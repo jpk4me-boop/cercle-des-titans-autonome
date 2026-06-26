@@ -222,7 +222,10 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
     { key: "visitors", title: "Visiteurs", icon: Globe, metric: summary.visitors },
     { key: "onlineVisitors", title: "Visiteurs en ligne", icon: Activity, metric: summary.onlineVisitors },
     { key: "clicks", title: "Clics", icon: MousePointerClick, metric: summary.clicks },
+    { key: "publicWhatsappClicks", title: "Clics WhatsApp publics", icon: Share2, metric: summary.publicWhatsappClicks },
     { key: "bourseSignups", title: "Inscriptions Bourse Rentrée", icon: GraduationCap, metric: summary.bourseSignups, tone: "gold" },
+    { key: "prospectsConverted", title: "Prospects convertis", icon: Target, metric: summary.prospectsConverted, tone: "gold" },
+    { key: "bourseConversionRate", title: "Taux conversion Bourse → membre", icon: BarChart3, metric: summary.bourseConversionRate, format: (v) => `${v.toFixed(1)} %` },
     { key: "conversions", title: "Conversions", icon: Target, metric: summary.conversions, tone: "gold" },
     {
       key: "conversionAmount",
