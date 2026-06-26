@@ -212,12 +212,12 @@ const scalarRpcValue = (data: unknown): number =>
     : Number(Array.isArray(data) ? (data as unknown[])[0] : data) || 0;
 
 /**
- * Construit le résumé analytics complet.
+ * Construit le résumé analytics complet (calcul réel, sans cache).
  *
  * Les métriques réelles sont calculées en parallèle. Toute source qui échoue
  * est dégradée proprement en « pending » plutôt que de faire planter la page.
  */
-export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
+const computeSummary = async (): Promise<AnalyticsSummary> => {
   const [membersRes, newMembersRes, conversionsRes] = await Promise.allSettled([
     countRows("profiles"),
     countRows("profiles", (q) => q.gte("created_at", startOfMonthIso())),
@@ -568,4 +568,56 @@ export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
     countries,
     sources,
   };
+};
+
+// ---------------------------------------------------------------------------
+// Cache court (TTL 45 s) pour l'onglet admin « Statistiques ».
+//
+// Objectif : éviter une rafale de ~15 requêtes/RPC à chaque retour sur l'onglet
+// (remontage du composant). Le bouton « Actualiser » force le recalcul.
+// Front-only : aucune donnée n'est persistée, aucun appel Supabase additionnel.
+// ---------------------------------------------------------------------------
+const ANALYTICS_CACHE_TTL_MS = 45_000;
+
+let analyticsCache: { at: number; data: AnalyticsSummary } | null = null;
+let inFlight: Promise<AnalyticsSummary> | null = null;
+
+/**
+ * Résumé analytics admin avec cache mémoire court (45 s).
+ *
+ * - `force: true` ignore le cache et relance les requêtes (bouton Actualiser) ;
+ * - sans `force`, un cache encore frais est renvoyé tel quel ;
+ * - une requête déjà en cours est réutilisée (déduplication des rafales).
+ *
+ * Les fallbacks « Bientôt » (status `pending`) restent gérés par `computeSummary`.
+ */
+export const getAnalyticsSummary = async (
+  options: { force?: boolean } = {},
+): Promise<AnalyticsSummary> => {
+  const now = Date.now();
+
+  if (
+    !options.force &&
+    analyticsCache &&
+    now - analyticsCache.at < ANALYTICS_CACHE_TTL_MS
+  ) {
+    return analyticsCache.data;
+  }
+
+  // Déduplication : hors « force », on réutilise une requête déjà en vol.
+  if (!options.force && inFlight) {
+    return inFlight;
+  }
+
+  const promise = computeSummary()
+    .then((data) => {
+      analyticsCache = { at: Date.now(), data };
+      return data;
+    })
+    .finally(() => {
+      inFlight = null;
+    });
+
+  inFlight = promise;
+  return promise;
 };

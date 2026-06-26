@@ -179,10 +179,10 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadSummary = async () => {
+  const loadSummary = async (force = false) => {
     setLoading(true);
     try {
-      const data = await getAnalyticsSummary();
+      const data = await getAnalyticsSummary({ force });
       setSummary(data);
     } catch (error) {
       console.error("Erreur lors du chargement des statistiques:", error);
@@ -268,7 +268,7 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
             {readOnly && " (lecture seule)"}
           </p>
         </div>
-        <Button onClick={loadSummary} disabled={loading} size="sm" variant="outline">
+        <Button onClick={() => loadSummary(true)} disabled={loading} size="sm" variant="outline">
           <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           Actualiser
         </Button>
