@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, ChevronDown, Shield } from "lucide-react";
+import { Menu, X, User, ChevronDown, Shield, Gift } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,14 +74,14 @@ const Navbar = () => {
       scrolled ? 'bg-background/95 backdrop-blur-md border-b border-border/50 shadow-lg' : 'bg-transparent'
     }`}>
       <nav className="container mx-auto flex items-center justify-between py-4 px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-3 group">
+        <Link to="/" className="flex items-center gap-3 group shrink-0">
           <Logo />
           <span className="font-display text-lg sm:text-xl font-bold text-gold group-hover:text-gold-light transition-colors whitespace-nowrap">
             Cercle des Titans
           </span>
         </Link>
 
-        <ul className="hidden lg:flex items-center gap-8">
+        <ul className="hidden lg:flex items-center gap-6 xl:gap-7 ml-6 xl:ml-10">
           <li>
             <Link
               to="/#accueil"
@@ -91,20 +91,22 @@ const Navbar = () => {
             </Link>
           </li>
           <li>
-            <Link
-              to="/about"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-gold"
-            >
-              {t('nav.about')}
-            </Link>
-          </li>
-          <li>
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-gold focus:outline-none">
                 {t('nav.tontine')}
                 <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-card border border-border">
+                <DropdownMenuItem asChild>
+                  <Link to="/about" className="cursor-pointer">
+                    {t('nav.about')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/#comment-ca-marche" className="cursor-pointer">
+                    {t('nav.howItWorks')}
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/#tontine" className="cursor-pointer">
                     {t('nav.presentation')}
@@ -145,14 +147,6 @@ const Navbar = () => {
           </li>
           <li>
             <Link
-              to="/#comment-ca-marche"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-gold"
-            >
-              {t('nav.howItWorks')}
-            </Link>
-          </li>
-          <li>
-            <Link
               to="/#temoignages"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-gold"
             >
@@ -170,8 +164,9 @@ const Navbar = () => {
           <li>
             <Link
               to="/bourse-rentree"
-              className="text-sm font-medium text-gold/90 transition-colors hover:text-gold"
+              className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white border border-gold/40 shadow-[0_0_14px_rgba(220,38,38,0.45)] transition-all hover:bg-red-500 hover:border-gold/60 hover:shadow-[0_0_20px_rgba(220,38,38,0.65)]"
             >
+              <Gift className="h-4 w-4 text-gold-light" />
               Bourse Rentrée
             </Link>
           </li>
@@ -257,15 +252,6 @@ const Navbar = () => {
             </Link>
           </li>
           <li>
-            <Link
-              to="/about"
-              onClick={closeMenu}
-              className="block py-2 text-lg font-medium text-foreground transition-colors hover:text-gold"
-            >
-              {t('nav.about')}
-            </Link>
-          </li>
-          <li>
             <button
               onClick={toggleTontine}
               className="flex items-center justify-between w-full py-2 text-lg font-medium text-foreground transition-colors hover:text-gold"
@@ -275,6 +261,24 @@ const Navbar = () => {
             </button>
             {isTontineOpen && (
               <ul className="pl-4 mt-2 space-y-2 border-l border-border">
+                <li>
+                  <Link
+                    to="/about"
+                    onClick={closeMenu}
+                    className="block py-2 text-base text-muted-foreground transition-colors hover:text-gold"
+                  >
+                    {t('nav.about')}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/#comment-ca-marche"
+                    onClick={closeMenu}
+                    className="block py-2 text-base text-muted-foreground transition-colors hover:text-gold"
+                  >
+                    {t('nav.howItWorks')}
+                  </Link>
+                </li>
                 <li>
                   <Link
                     to="/#tontine"
@@ -338,15 +342,6 @@ const Navbar = () => {
           </li>
           <li>
             <Link
-              to="/#comment-ca-marche"
-              onClick={closeMenu}
-              className="block py-2 text-lg font-medium text-foreground transition-colors hover:text-gold"
-            >
-              {t('nav.howItWorks')}
-            </Link>
-          </li>
-          <li>
-            <Link
               to="/#temoignages"
               onClick={closeMenu}
               className="block py-2 text-lg font-medium text-foreground transition-colors hover:text-gold"
@@ -367,8 +362,9 @@ const Navbar = () => {
             <Link
               to="/bourse-rentree"
               onClick={closeMenu}
-              className="block py-2 text-lg font-medium text-gold transition-colors hover:text-gold-light"
+              className="flex items-center justify-center gap-2 rounded-full bg-red-600 px-4 py-3 text-base font-semibold text-white border border-gold/40 shadow-[0_0_14px_rgba(220,38,38,0.45)] transition-all hover:bg-red-500 hover:border-gold/60 hover:shadow-[0_0_20px_rgba(220,38,38,0.65)]"
             >
+              <Gift className="h-5 w-5 text-gold-light" />
               Bourse Rentrée
             </Link>
           </li>
