@@ -43,7 +43,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Ban, Filter, Loader2, MoreHorizontal, Pause, Play, RefreshCw, Search, ShieldOff, Users, X } from "lucide-react";
+import { Ban, Filter, Loader2, MessageCircle, MoreHorizontal, Pause, Phone, Play, RefreshCw, Search, ShieldOff, Users, X } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
@@ -112,6 +112,44 @@ const MEMBER_STATUS_META: Record<MemberStatusValue, { label: string; className: 
 const memberStatusBadge = (status: MemberStatusValue) => {
   const meta = MEMBER_STATUS_META[status] ?? MEMBER_STATUS_META.active;
   return <Badge className={meta.className}>{meta.label}</Badge>;
+};
+
+// Contact WhatsApp rapide d'un membre inscrit à la tontine.
+const WHATSAPP_MESSAGE =
+  "Bonjour, nous vous contactons concernant votre tontine Cercle des Titans.";
+
+/** Construit le lien wa.me en ne gardant que les chiffres du numéro. */
+const buildWhatsAppUrl = (phone: string | null | undefined): string | null => {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  if (digits.length < 6) return null;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+};
+
+/** Bouton WhatsApp vert premium, avec repère visible si le numéro est absent. */
+const WhatsAppButton = ({ phone }: { phone: string | null | undefined }) => {
+  const url = buildWhatsAppUrl(phone);
+  if (!url) {
+    return (
+      <span
+        title="Numéro de téléphone absent ou invalide"
+        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-slate-500/50 bg-slate-800/70 px-3 text-xs font-medium text-slate-300"
+      >
+        <Phone className="h-3.5 w-3.5" />
+        Téléphone absent
+      </span>
+    );
+  }
+  return (
+    <Button
+      size="sm"
+      onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+      title="Contacter sur WhatsApp"
+      className="h-8 border border-emerald-300 bg-emerald-500 font-semibold text-white hover:bg-emerald-400"
+    >
+      <MessageCircle className="mr-1.5 h-4 w-4" />
+      WhatsApp
+    </Button>
+  );
 };
 
 export default function WeeklyContributionsOverview({
@@ -457,7 +495,10 @@ export default function WeeklyContributionsOverview({
                       <TableCell>{statusBadge(c.status)}</TableCell>
                       <TableCell>{memberStatusBadge(memberStatus(c.user_id))}</TableCell>
                       <TableCell className="text-right">
-                        {renderActions(c.user_id, memberName(c.user_id))}
+                        <div className="flex items-center justify-end gap-2">
+                          <WhatsAppButton phone={memberById[c.user_id]?.phone} />
+                          {renderActions(c.user_id, memberName(c.user_id))}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
