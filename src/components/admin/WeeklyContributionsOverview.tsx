@@ -328,7 +328,7 @@ export default function WeeklyContributionsOverview({
           size="sm"
           variant="outline"
           disabled={readOnly}
-          className="border-amber-400/30 text-amber-200"
+          className="border-gold/30 text-gold"
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
@@ -357,11 +357,11 @@ export default function WeeklyContributionsOverview({
 
   return (
     <div className="space-y-6">
-      <Card className="overflow-hidden border-amber-400/20 bg-gradient-to-br from-black/60 via-card to-card shadow-[0_0_32px_rgba(245,158,11,0.08)]">
+      <Card className="overflow-hidden border-gold/20 bg-gradient-to-br from-black/60 via-card to-card shadow-[0_0_32px_rgba(212,175,55,0.08)]">
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-amber-300" />
+              <Users className="h-5 w-5 text-gold" />
               État hebdomadaire des cotisations
             </CardTitle>
             <CardDescription>
@@ -372,7 +372,7 @@ export default function WeeklyContributionsOverview({
             variant="outline"
             onClick={loadAll}
             disabled={loading}
-            className="shrink-0 border-amber-400/30 text-amber-200 hover:bg-amber-400/10 hover:text-amber-100"
+            className="shrink-0 border-gold/30 text-gold hover:bg-gold/10 hover:text-gold-light"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Actualiser
@@ -450,7 +450,7 @@ export default function WeeklyContributionsOverview({
           {/* Table */}
           {loading ? (
             <div className="flex justify-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-amber-300" />
+              <Loader2 className="h-6 w-6 animate-spin text-gold" />
             </div>
           ) : filtered.length === 0 ? (
             <p className="py-8 text-center text-muted-foreground">
@@ -517,7 +517,7 @@ export default function WeeklyContributionsOverview({
                 {filtered.map((c) => (
                   <div
                     key={c.id}
-                    className="rounded-xl border border-amber-400/20 bg-background/40 p-4"
+                    className="rounded-xl border border-gold/20 bg-background/40 p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">

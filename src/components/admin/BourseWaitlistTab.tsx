@@ -328,7 +328,7 @@ export default function BourseWaitlistTab({
             onClick={handleExport}
             disabled={filtered.length === 0}
             size="sm"
-            className="border border-yellow-300 bg-yellow-500 font-semibold text-black hover:bg-yellow-400 disabled:opacity-50"
+            className="border border-gold/60 bg-gold font-semibold text-black hover:bg-gold-light disabled:opacity-50"
           >
             <Download className="mr-2 h-4 w-4" />
             Exporter CSV
@@ -372,33 +372,33 @@ export default function BourseWaitlistTab({
       </div>
 
       {/* Recherche + filtres */}
-      <Card className="border border-yellow-500/20 bg-black/40">
+      <Card className="border border-gold/20 bg-black/40">
         <CardContent className="flex flex-col gap-4 p-4 lg:flex-row lg:items-end">
           <div className="flex-1">
-            <label className="mb-1.5 block text-xs font-medium text-yellow-400">
+            <label className="mb-1.5 block text-xs font-medium text-gold">
               Recherche
             </label>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-yellow-400/70" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gold/70" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Nom, téléphone, email, ville…"
-                className="border-yellow-500/30 bg-black/60 pl-9 text-white placeholder:text-slate-500 focus-visible:ring-yellow-500/40"
+                className="border-gold/30 bg-black/60 pl-9 text-white placeholder:text-slate-500 focus-visible:ring-gold/40"
               />
             </div>
           </div>
 
           <div className="flex flex-wrap items-end gap-3">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-yellow-400">
+              <label className="mb-1.5 block text-xs font-medium text-gold">
                 Statut
               </label>
               <Select
                 value={statusFilter}
                 onValueChange={(v) => setStatusFilter(v as WaitlistStatus | "all")}
               >
-                <SelectTrigger className="h-10 w-[150px] border-yellow-500/30 bg-black/60 text-sm text-white">
+                <SelectTrigger className="h-10 w-[150px] border-gold/30 bg-black/60 text-sm text-white">
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
                 <SelectContent>
@@ -413,14 +413,14 @@ export default function BourseWaitlistTab({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-yellow-400">
+              <label className="mb-1.5 block text-xs font-medium text-gold">
                 Formule
               </label>
               <Select
                 value={planFilter}
                 onValueChange={(v) => setPlanFilter(v as WaitlistPlan | "all")}
               >
-                <SelectTrigger className="h-10 w-[170px] border-yellow-500/30 bg-black/60 text-sm text-white">
+                <SelectTrigger className="h-10 w-[170px] border-gold/30 bg-black/60 text-sm text-white">
                   <SelectValue placeholder="Formule" />
                 </SelectTrigger>
                 <SelectContent>
@@ -439,7 +439,7 @@ export default function BourseWaitlistTab({
               disabled={!hasActiveFilters}
               size="sm"
               variant="outline"
-              className="h-10 border-yellow-500/30 bg-black/60 text-slate-200 hover:bg-yellow-500/10 hover:text-white disabled:opacity-40"
+              className="h-10 border-gold/30 bg-black/60 text-slate-200 hover:bg-gold/10 hover:text-white disabled:opacity-40"
             >
               <RotateCcw className="mr-2 h-4 w-4" />
               Réinitialiser
@@ -449,10 +449,10 @@ export default function BourseWaitlistTab({
       </Card>
 
       {/* Liste */}
-      <Card className="border border-yellow-500/20 bg-black/40">
+      <Card className="border border-gold/20 bg-black/40">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base text-white">Demandes récentes</CardTitle>
-          <span className="rounded-full border border-yellow-500/30 bg-black/60 px-2.5 py-1 text-xs font-medium text-yellow-400">
+          <span className="rounded-full border border-gold/30 bg-black/60 px-2.5 py-1 text-xs font-medium text-gold">
             {filtered.length} / {entries.length} résultat
             {entries.length > 1 ? "s" : ""}
           </span>
@@ -482,7 +482,7 @@ export default function BourseWaitlistTab({
               <div className="hidden overflow-x-auto lg:block">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-yellow-500/25 text-left text-yellow-300">
+                    <tr className="border-b border-gold/25 text-left text-gold">
                       <th className="py-2 pr-4 font-semibold">Nom</th>
                       <th className="py-2 pr-4 font-semibold">Contact</th>
                       <th className="py-2 pr-4 font-semibold">Ville</th>
@@ -496,7 +496,7 @@ export default function BourseWaitlistTab({
                     {filtered.map((entry) => (
                       <tr
                         key={entry.id}
-                        className="border-b border-yellow-500/15 align-top text-slate-300 transition-colors hover:bg-yellow-500/10"
+                        className="border-b border-gold/15 align-top text-slate-300 transition-colors hover:bg-gold/10"
                       >
                         <td className="py-3 pr-4">
                           <div className="font-semibold text-white">
@@ -547,7 +547,7 @@ export default function BourseWaitlistTab({
                 {filtered.map((entry) => (
                   <div
                     key={entry.id}
-                    className="rounded-xl border border-yellow-500/25 bg-black/50 p-4"
+                    className="rounded-xl border border-gold/25 bg-black/50 p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">

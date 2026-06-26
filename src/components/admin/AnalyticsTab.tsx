@@ -58,14 +58,14 @@ interface KpiConfig {
 const formatCount = (value: number): string =>
   new Intl.NumberFormat("fr-FR").format(value);
 
-/** Badge discret signalant qu'une donnée n'est pas encore collectée. */
-const PendingBadge = () => (
+/** Badge discret signalant une donnée non disponible (par défaut « Bientôt »). */
+const PendingBadge = ({ label = "Bientôt" }: { label?: string }) => (
   <Badge
     variant="outline"
     className="gap-1 border-gold/25 bg-gold/5 text-[10px] font-medium uppercase tracking-wide text-gold/70"
   >
     <Lock className="h-3 w-3" />
-    Bientôt
+    {label}
   </Badge>
 );
 
@@ -116,6 +116,8 @@ const BreakdownCard = ({
   breakdown,
   emptyHint,
   caption,
+  emptyTitle = "Données non encore collectées",
+  pendingLabel,
 }: {
   title: string;
   icon: typeof Globe;
@@ -123,6 +125,10 @@ const BreakdownCard = ({
   emptyHint: string;
   /** Légende courte sous le titre (sens de la donnée). */
   caption?: string;
+  /** Titre de l'état vide (par défaut « Données non encore collectées »). */
+  emptyTitle?: string;
+  /** Libellé de la pastille d'état vide (par défaut « Bientôt »). */
+  pendingLabel?: string;
 }) => {
   const isPending = breakdown.status === "pending" || breakdown.rows.length === 0;
   const max = Math.max(1, ...breakdown.rows.map((r) => r.value));
@@ -139,14 +145,14 @@ const BreakdownCard = ({
             )}
           </div>
         </div>
-        {isPending && <PendingBadge />}
+        {isPending && <PendingBadge label={pendingLabel} />}
       </CardHeader>
       <CardContent>
         {isPending ? (
           <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
             <Activity className="h-8 w-8 text-muted-foreground/30" />
             <p className="text-sm font-medium text-muted-foreground">
-              Données non encore collectées
+              {emptyTitle}
             </p>
             <p className="max-w-xs text-xs text-muted-foreground/70">{emptyHint}</p>
           </div>
@@ -356,7 +362,9 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
           icon={Globe}
           breakdown={summary.countries}
           caption="Géographie des visiteurs"
-          emptyHint="À venir — sans collecte d'IP."
+          emptyTitle="Non collecté pour respecter la vie privée"
+          pendingLabel="Vie privée"
+          emptyHint="Aucune adresse IP n'est collectée — la géographie n'est pas suivie."
         />
         <BreakdownCard
           title="Sources / Réseaux sociaux"
