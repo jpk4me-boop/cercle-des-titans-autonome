@@ -55,6 +55,8 @@ interface KpiConfig {
   /** Formatte la valeur réelle (par défaut : nombre localisé fr). */
   format?: (value: number) => string;
   tone?: KpiTone;
+  /** Carte « temps réel » (présence) : affiche un indicateur live. */
+  live?: boolean;
 }
 
 const formatCount = (value: number): string =>
@@ -102,8 +104,19 @@ const KpiCard = ({ config }: { config: KpiConfig }) => {
             <div className={`text-2xl font-bold ${valueColor}`}>
               {format(metric.value as number)}
             </div>
-            {metric.hint && (
-              <p className="text-xs text-muted-foreground">{metric.hint}</p>
+            {config.live ? (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="relative flex h-2 w-2" aria-hidden="true">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                <span className="text-xs font-medium text-emerald-400">Live</span>
+                <span className="text-xs text-muted-foreground">· Fenêtre 5 min</span>
+              </div>
+            ) : (
+              metric.hint && (
+                <p className="text-xs text-muted-foreground">{metric.hint}</p>
+              )
             )}
           </div>
         )}
@@ -225,8 +238,8 @@ export default function AnalyticsTab({ readOnly = false }: AnalyticsTabProps) {
   const audienceKpis: KpiConfig[] = [
     { key: "members", title: "Membres", icon: Users, metric: summary.members, tone: "gold" },
     { key: "newMembers", title: "Nouveaux membres", icon: UserCheck, metric: summary.newMembersThisMonth },
-    { key: "onlineMembers", title: "Membres en ligne", icon: Wifi, metric: summary.onlineMembers },
-    { key: "onlineVisitors", title: "Visiteurs en ligne", icon: Activity, metric: summary.onlineVisitors },
+    { key: "onlineMembers", title: "Membres en ligne", icon: Wifi, metric: summary.onlineMembers, live: true },
+    { key: "onlineVisitors", title: "Visiteurs en ligne", icon: Activity, metric: summary.onlineVisitors, live: true },
     { key: "visitorsToday", title: "Visiteurs aujourd'hui", icon: Clock, metric: summary.visitorsToday },
     { key: "visitors7d", title: "Visiteurs 7 jours", icon: CalendarDays, metric: summary.visitors7d },
     { key: "visitors", title: "Visiteurs (30 j)", icon: Globe, metric: summary.visitors },
