@@ -10,7 +10,11 @@ export default defineConfig(({ command, mode }) => ({
     host: "::",
     port: 8080,
   },
-  base: "./", // Relative paths for static hosting
+  // Base absolu obligatoire : avec "./", index.html servi en fallback SPA sur une
+  // route profonde (/profile/edit, /blog/:slug, ...) résout ./assets/... vers
+  // /profile/assets/... → le serveur renvoie index.html à la place du JS → page
+  // blanche au refresh. Le site est hébergé à la racine du domaine.
+  base: "/",
   build: {
     outDir: "dist",
     assetsDir: "assets",
