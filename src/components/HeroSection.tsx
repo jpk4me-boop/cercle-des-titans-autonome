@@ -39,9 +39,9 @@ const HeroSection = () => {
           </picture>
         </div>
         {/* Layer 1: global tint — a bit darker on mobile for readability, very light on desktop */}
-        <div className="absolute inset-0 bg-black/30 sm:bg-black/15 md:bg-black/10" />
+        <div className="absolute inset-0 bg-black/45 sm:bg-black/15 md:bg-black/10" />
         {/* Layer 2: fade behind the text. Full-width & strong on mobile, limited width on desktop. */}
-        <div className="absolute inset-y-0 left-0 w-full sm:w-[72%] md:w-[55%] lg:w-[48%] bg-gradient-to-r from-black/80 via-black/45 to-transparent md:from-black/75 md:via-black/40" />
+        <div className="absolute inset-y-0 left-0 w-full sm:w-[72%] md:w-[55%] lg:w-[48%] bg-gradient-to-r from-black/85 via-black/55 to-transparent sm:from-black/80 sm:via-black/45 md:from-black/75 md:via-black/40" />
         {/* Layer 3: top band so the Navbar stays legible without darkening the whole image */}
         <div className="absolute inset-x-0 top-0 h-28 sm:h-32 md:h-40 bg-gradient-to-b from-black/70 via-black/25 to-transparent" />
         {/* Layer 4: very subtle warm gold halo */}
@@ -78,15 +78,15 @@ const HeroSection = () => {
       />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-5 sm:px-6 pt-24 sm:pt-28 pb-20 sm:pb-16">
+      <div className="relative z-10 container mx-auto px-5 sm:px-6 pt-20 sm:pt-28 pb-[calc(env(safe-area-inset-bottom)+4.5rem)] sm:pb-16">
         <div className="max-w-xl md:max-w-2xl [text-shadow:0_2px_14px_rgba(0,0,0,0.55)]">
           {/* Badge with bounce animation */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold/10 border border-gold/20 mb-6 sm:mb-8 opacity-0 animate-fade-in-up hover:bg-gold/15 hover:scale-105 transition-all duration-300 cursor-default">
-            <Sparkles className="w-4 h-4 text-gold animate-pulse" />
-            <span className="text-sm font-medium text-gold">Circle of Titans</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-gold/10 border border-gold/20 mb-4 sm:mb-8 opacity-0 animate-fade-in-up hover:bg-gold/15 hover:scale-105 transition-all duration-300 cursor-default">
+            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gold animate-pulse" />
+            <span className="text-xs sm:text-sm font-medium text-gold">Circle of Titans</span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] mb-6 sm:mb-8 [text-shadow:0_3px_20px_rgba(0,0,0,0.65)]">
+          <h1 className="font-display text-[1.85rem] leading-[1.15] sm:text-5xl md:text-6xl lg:text-7xl font-bold sm:leading-[1.1] mb-4 sm:mb-8 [text-shadow:0_3px_20px_rgba(0,0,0,0.65)]">
             <span 
               className="text-foreground inline-block opacity-0 animate-fade-in-up"
               style={{ animationDelay: "0.1s" }}
@@ -110,14 +110,14 @@ const HeroSection = () => {
           </h1>
 
           <p
-            className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-8 sm:mb-10 leading-relaxed max-w-xl opacity-0 animate-fade-in-up"
+            className="text-[0.9375rem] sm:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-10 leading-relaxed max-w-xl opacity-0 animate-fade-in-up"
             style={{ animationDelay: "0.4s" }}
           >
             {t('hero.subtitle')}
           </p>
 
           <div
-            className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-10 sm:mb-12 opacity-0 animate-fade-in-up"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 mb-7 sm:mb-12 opacity-0 animate-fade-in-up"
             style={{ animationDelay: "0.5s" }}
           >
             {features.map((feature, index) => (
@@ -126,16 +126,16 @@ const HeroSection = () => {
                 className="flex items-center gap-3 group cursor-default"
                 style={{ animationDelay: `${0.5 + index * 0.1}s` }}
               >
-                <div className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center group-hover:bg-gold/40 group-hover:scale-110 transition-all duration-300">
-                  <Check className="w-3.5 h-3.5 text-gold" />
+                <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gold/20 flex items-center justify-center shrink-0 group-hover:bg-gold/40 group-hover:scale-110 transition-all duration-300">
+                  <Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gold" />
                 </div>
-                <span className="text-sm sm:text-base font-medium text-foreground/90 group-hover:text-gold transition-colors duration-300">{feature}</span>
+                <span className="text-[0.8125rem] sm:text-base font-medium text-foreground/90 group-hover:text-gold transition-colors duration-300">{feature}</span>
               </div>
             ))}
           </div>
 
           <div 
-            className="flex flex-col sm:flex-row gap-4 opacity-0 animate-fade-in-up" 
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 opacity-0 animate-fade-in-up"
             style={{ animationDelay: "0.7s" }}
           >
             <MagneticButton strength={0.2} className="w-full sm:w-auto">

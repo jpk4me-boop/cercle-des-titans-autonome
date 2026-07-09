@@ -23,6 +23,29 @@ const AVATAR_MAX_SIZE = 2 * 1024 * 1024; // 2 Mo
 const AVATAR_MAX_INPUT_SIZE = 20 * 1024 * 1024; // 20 Mo
 const AVATAR_ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
+const PHONE_ERROR_MESSAGE =
+  'Numéro invalide. Utilisez un format local ou international africain, ex. +225 07 00 00 00 00.';
+
+// Normalise un numéro saisi librement : trim, espaces multiples réduits,
+// préfixe international 00xxx converti en +xxx, le + initial est conservé.
+const normalizePhone = (raw: string): string => {
+  let value = raw.trim().replace(/\s+/g, ' ');
+  if (/^00\d/.test(value.replace(/[\s.\-()]/g, ''))) {
+    // Retire le "00" de tête (en tolérant espaces/séparateurs) et le remplace par "+".
+    value = '+' + value.replace(/[\s.\-()]/g, '').slice(2);
+  }
+  return value;
+};
+
+// Validation volontairement large pour couvrir les formats locaux et
+// internationaux africains (+225, +237, +221, 00225, 07 00 00 00 00, ...) :
+// un + optionnel suivi de 8 à 20 chiffres (espaces, points, tirets et
+// parenthèses tolérés comme séparateurs).
+const isValidPhone = (raw: string): boolean => {
+  const compact = raw.trim().replace(/[\s.\-()]/g, '');
+  return /^\+?\d{8,20}$/.test(compact);
+};
+
 interface Profile {
   first_name: string | null;
   last_name: string | null;
@@ -241,6 +264,11 @@ const ProfileEdit = () => {
       next.email = 'Adresse email invalide.';
     }
 
+    const phone = String(profile.phone ?? '').trim();
+    if (phone && !isValidPhone(phone)) {
+      next.phone = PHONE_ERROR_MESSAGE;
+    }
+
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -261,17 +289,19 @@ const ProfileEdit = () => {
 
     setSaving(true);
     try {
+      // Trim des champs texte + normalisation du téléphone avant sauvegarde.
+      const normalizedPhone = normalizePhone(profile.phone || '');
       const { error } = await supabase
         .from('profiles')
         .update({
-          first_name: profile.first_name || null,
-          last_name: profile.last_name || null,
-          email: profile.email || null,
-          phone: profile.phone || null,
-          address: profile.address || null,
-          city: profile.city || null,
+          first_name: profile.first_name?.trim() || null,
+          last_name: profile.last_name?.trim() || null,
+          email: profile.email?.trim() || null,
+          phone: normalizedPhone || null,
+          address: profile.address?.trim() || null,
+          city: profile.city?.trim() || null,
           birth_date: profile.birth_date || null,
-          profession: profile.profession || null,
+          profession: profile.profession?.trim() || null,
           avatar_url: profile.avatar_url || null,
           email_notifications: profile.email_notifications,
           reminder_notifications: profile.reminder_notifications,
@@ -452,12 +482,13 @@ const ProfileEdit = () => {
                     type="tel"
                     value={profile.phone || ''}
                     onChange={(e) => handleChange('phone', e.target.value)}
-                    placeholder="+33 6 12 34 56 78"
+                    placeholder="+225 07 00 00 00 00"
                     required
                     aria-required
                     aria-invalid={Boolean(errors.phone)}
                   />
                   {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+                  <p className="text-xs text-muted-foreground">Exemple : +225 07 00 00 00 00</p>
                 </div>
 
                 <div className="space-y-2">
