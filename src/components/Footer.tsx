@@ -80,7 +80,7 @@ export default function Footer() {
               ))}
             </div>
             <div className="space-y-2">
-              <Link to="/about" className="block text-muted-foreground hover:text-gold text-sm">{t('footer.legalMentions')}</Link>
+              <Link to="/mentions-legales" className="block text-muted-foreground hover:text-gold text-sm">{t('footer.legalMentions')}</Link>
               <Link to="/privacy-policy" className="block text-muted-foreground hover:text-gold text-sm">{t('footer.privacyPolicy')}</Link>
               <Link to="/terms-of-use" className="block text-muted-foreground hover:text-gold text-sm">{t('footer.terms')}</Link>
             </div>
