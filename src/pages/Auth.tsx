@@ -10,6 +10,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Loader2, Crown, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { z } from 'zod';
 import { signInWithGoogle, signInWithGitHub } from '@/lib/oauthUtils';
+import LegalConsentField from '@/components/auth/LegalConsentField';
+import { buildSignupConsentMetadata, storePendingOAuthConsent } from '@/lib/legalDocuments';
+
+// Message affiché quand l'inscription est tentée sans consentement (Phase J4).
+const LEGAL_CONSENT_ERROR =
+  "Vous devez accepter les Conditions générales d'utilisation et la Politique de confidentialité pour créer votre compte.";
 
 // Stores ONLY the email address (never the password). The password is left to
 // the browser's native password manager via standard autocomplete attributes.
@@ -41,6 +47,9 @@ const Auth = () => {
   const [emailTouched, setEmailTouched] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  // Consentement CGU/confidentialité (mode inscription uniquement). Jamais
+  // précoché, jamais persisté : réinitialisé à chaque changement de mode.
+  const [acceptsLegal, setAcceptsLegal] = useState(false);
 
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
@@ -82,8 +91,14 @@ const Auth = () => {
     if (isLogin) {
       return email.length > 0 && password.length >= 6;
     }
-    return emailValidation.valid && passwordValidation.valid && firstName.trim() && lastName.trim();
-  }, [email, password, emailValidation.valid, passwordValidation.valid, firstName, lastName, isLogin]);
+    return emailValidation.valid && passwordValidation.valid && firstName.trim() && lastName.trim() && acceptsLegal;
+  }, [email, password, emailValidation.valid, passwordValidation.valid, firstName, lastName, isLogin, acceptsLegal]);
+
+  // Bascule connexion ↔ inscription : le consentement repart toujours décoché.
+  const switchMode = (login: boolean) => {
+    setIsLogin(login);
+    setAcceptsLegal(false);
+  };
 
   useEffect(() => {
     if (!loading && user) {
@@ -103,6 +118,20 @@ const Auth = () => {
   }, []);
 
   const handleGoogleSignIn = async () => {
+    // En mode inscription, l'acceptation est requise AVANT la redirection
+    // OAuth ; le consentement est mis en attente (sessionStorage) puis
+    // enregistré côté serveur au retour, dans AuthCallback.
+    if (!isLogin) {
+      if (!acceptsLegal) {
+        toast({
+          variant: "destructive",
+          title: "Consentement requis",
+          description: LEGAL_CONSENT_ERROR,
+        });
+        return;
+      }
+      storePendingOAuthConsent('google');
+    }
     setIsGoogleLoading(true);
     try {
       const result = await signInWithGoogle();
@@ -127,6 +156,17 @@ const Auth = () => {
   };
 
   const handleGitHubSignIn = async () => {
+    if (!isLogin) {
+      if (!acceptsLegal) {
+        toast({
+          variant: "destructive",
+          title: "Consentement requis",
+          description: LEGAL_CONSENT_ERROR,
+        });
+        return;
+      }
+      storePendingOAuthConsent('github');
+    }
     setIsGitHubLoading(true);
     try {
       const result = await signInWithGitHub();
@@ -180,7 +220,21 @@ const Auth = () => {
           navigate('/dashboard');
         }
       } else {
-        const { error } = await signUp(email, password, { first_name: firstName, last_name: lastName });
+        // Validation obligatoire à la soumission (le bouton désactivé ne
+        // suffit pas) : aucun appel signUp sans consentement explicite.
+        if (!acceptsLegal) {
+          toast({
+            variant: "destructive",
+            title: "Consentement requis",
+            description: LEGAL_CONSENT_ERROR,
+          });
+          return;
+        }
+        const { error } = await signUp(email, password, {
+          first_name: firstName,
+          last_name: lastName,
+          ...buildSignupConsentMetadata(),
+        });
         if (error) {
           toast({
             variant: "destructive",
@@ -434,6 +488,10 @@ const Auth = () => {
               )}
             </div>
 
+            {!isLogin && (
+              <LegalConsentField checked={acceptsLegal} onCheckedChange={setAcceptsLegal} />
+            )}
+
             {isLogin && (
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -470,7 +528,7 @@ const Auth = () => {
             {isLogin ? (
               <button
                 type="button"
-                onClick={() => setIsLogin(false)}
+                onClick={() => switchMode(false)}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 Pas encore membre ? S'inscrire
@@ -478,7 +536,7 @@ const Auth = () => {
             ) : (
               <button
                 type="button"
-                onClick={() => setIsLogin(true)}
+                onClick={() => switchMode(true)}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 Déjà membre ? Se connecter

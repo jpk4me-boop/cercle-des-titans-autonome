@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { clearPendingOAuthConsent } from '@/lib/legalDocuments';
 
 // OAuth error code mappings for user-friendly messages
 const OAUTH_ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
@@ -58,6 +59,11 @@ const AuthCallback = () => {
         const errorDescription = searchParams.get('error_description');
         
         if (errorCode) {
+          // Phase J4 : annulation/échec confirmé du flux OAuth. Le marqueur
+          // temporaire de consentement ne doit pas survivre pour être
+          // rapproché d'une autre session.
+          clearPendingOAuthConsent();
+
           const errorInfo = OAUTH_ERROR_MESSAGES[errorCode] || {
             title: "Erreur d'authentification",
             description: errorDescription || `Erreur: ${errorCode}`
@@ -92,7 +98,10 @@ const AuthCallback = () => {
         }
 
         if (session) {
-          // Successful authentication - redirect to dashboard
+          // Phase J4 : le consentement n'est PAS résolu ici. La navigation
+          // aboutit sur les routes privées protégées par LegalConsentGuard,
+          // qui vérifie la preuve en base et affiche, si nécessaire, l'étape
+          // d'acceptation obligatoire liée au compte connecté.
           navigate('/dashboard', { replace: true });
         } else {
           // No session and no error - try to exchange the code

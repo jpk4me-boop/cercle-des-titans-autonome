@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react";
 import ChatAgent from "@/components/ChatAgent";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import RoleGuard from "./components/RoleGuard";
+import LegalConsentGuard from "@/components/auth/LegalConsentGuard";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -90,52 +91,58 @@ const App = () => (
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
 
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/messages" element={<Messages />} />
-                    <Route path="/profile/edit" element={<ProfileEdit />} />
-
                     <Route path="/categorie/:categoryName" element={<CategoryDetail />} />
                     <Route path="/categories/comparatif" element={<CategoriesComparison />} />
                     <Route path="/financement/fonds-de-financement" element={<FondsFinancement />} />
                     <Route path="/bourse-rentree" element={<BourseRentree />} />
                     <Route path="/verify-receipt" element={<VerifyReceipt />} />
-                    <Route path="/historique-cotisations" element={<ContributionHistory />} />
 
-                    <Route
-                      path="/admin"
-                      element={
-                        <RoleGuard allowedRoles={["admin", "super_admin"]}>
-                          <AdminDashboard />
-                        </RoleGuard>
-                      }
-                    />
+                    {/* Routes privées : garde de consentement CGU/confidentialité
+                        (Phase J4). La garde est transparente pour les visiteurs et
+                        les comptes antérieurs au cutoff ; elle bloque les nouveaux
+                        comptes tant que la preuve n'est pas confirmée en base. */}
+                    <Route element={<LegalConsentGuard />}>
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/messages" element={<Messages />} />
+                      <Route path="/profile/edit" element={<ProfileEdit />} />
+                      <Route path="/historique-cotisations" element={<ContributionHistory />} />
 
-                    <Route
-                      path="/super-admin"
-                      element={
-                        <RoleGuard allowedRoles={["super_admin"]}>
-                          <AdminDashboard />
-                        </RoleGuard>
-                      }
-                    />
+                      <Route
+                        path="/admin"
+                        element={
+                          <RoleGuard allowedRoles={["admin", "super_admin"]}>
+                            <AdminDashboard />
+                          </RoleGuard>
+                        }
+                      />
 
-                    <Route
-                      path="/members"
-                      element={
-                        <RoleGuard allowedRoles={["admin", "super_admin"]}>
-                          <MemberDirectory />
-                        </RoleGuard>
-                      }
-                    />
+                      <Route
+                        path="/super-admin"
+                        element={
+                          <RoleGuard allowedRoles={["super_admin"]}>
+                            <AdminDashboard />
+                          </RoleGuard>
+                        }
+                      />
 
-                    <Route
-                      path="/members/:id"
-                      element={
-                        <RoleGuard allowedRoles={["admin", "super_admin"]}>
-                          <MemberProfile />
-                        </RoleGuard>
-                      }
-                    />
+                      <Route
+                        path="/members"
+                        element={
+                          <RoleGuard allowedRoles={["admin", "super_admin"]}>
+                            <MemberDirectory />
+                          </RoleGuard>
+                        }
+                      />
+
+                      <Route
+                        path="/members/:id"
+                        element={
+                          <RoleGuard allowedRoles={["admin", "super_admin"]}>
+                            <MemberProfile />
+                          </RoleGuard>
+                        }
+                      />
+                    </Route>
 
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
