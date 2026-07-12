@@ -117,12 +117,17 @@ export const getPendingOAuthConsent = (): PendingOAuthConsentState => {
 // --- RPC typées localement -----------------------------------------------------
 // Les fonctions user_legal_consents ne sont pas encore dans les types Supabase
 // générés ; on les type localement, sans `any`.
+//
+// IMPORTANT : `rpc` est une MÉTHODE du client Supabase. Elle doit toujours être
+// appelée sur l'objet (`client.rpc(...)`) — jamais extraite dans une variable
+// (`const rpc = supabase.rpc; rpc(...)`) : l'appel détaché perd `this` et lève
+// un TypeError avant tout appel réseau (incident production du 12/07/2026).
 
-type StatusRpc = (
+type GetLegalConsentStatusRpc = (
   fn: "get_current_legal_consent_status",
 ) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
 
-type RecordRpc = (
+type RecordLegalConsentRpc = (
   fn: "record_legal_consent",
   args: { _terms_version: string; _privacy_policy_version: string },
 ) => PromiseLike<{ error: { message: string } | null }>;
@@ -139,8 +144,8 @@ export type LegalConsentStatus = "legacy" | "granted" | "missing" | "error";
  */
 export const fetchCurrentLegalConsentStatus = async (): Promise<LegalConsentStatus> => {
   try {
-    const rpc = supabase.rpc as unknown as StatusRpc;
-    const { data, error } = await rpc("get_current_legal_consent_status");
+    const client = supabase as unknown as { rpc: GetLegalConsentStatusRpc };
+    const { data, error } = await client.rpc("get_current_legal_consent_status");
     if (error) return "error";
     if (data === "legacy" || data === "granted" || data === "missing") {
       return data;
@@ -162,8 +167,8 @@ export type RecordConsentResult = { success: true } | { success: false; error: s
  */
 export const recordCurrentLegalConsent = async (): Promise<RecordConsentResult> => {
   try {
-    const rpc = supabase.rpc as unknown as RecordRpc;
-    const { error } = await rpc("record_legal_consent", {
+    const client = supabase as unknown as { rpc: RecordLegalConsentRpc };
+    const { error } = await client.rpc("record_legal_consent", {
       _terms_version: CGU_VERSION,
       _privacy_policy_version: PRIVACY_POLICY_VERSION,
     });
