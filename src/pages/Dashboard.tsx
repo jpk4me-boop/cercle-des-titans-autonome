@@ -13,6 +13,13 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { toast } from 'sonner';
 import {
   User,
@@ -28,11 +35,17 @@ import {
   MessageSquare,
   Users,
   Camera,
-  X
+  X,
+  Layers
 } from 'lucide-react';
 import MemberTontinePanel from '@/components/member/MemberTontinePanel';
-import { fetchMemberContributions } from '@/services/tontineService';
-import type { TontineContribution } from '@/types/tontine';
+import {
+  fetchActiveCategories,
+  fetchActiveCycle,
+  fetchMemberCategories,
+  fetchMemberCycleContributions,
+} from '@/services/tontineService';
+import type { TontineCategory, TontineContribution, TontineCycle } from '@/types/tontine';
 
 interface Profile {
   first_name: string | null;
@@ -45,6 +58,12 @@ interface Profile {
   recommended_category: string | null;
   avatar_url: string | null;
 }
+
+// Mémorise la catégorie affichée dans les indicateurs. La clé est liée au
+// membre ET au cycle : chaque couple (membre, cycle) a sa propre mémoire, et
+// la valeur n'est restaurée que si l'adhésion à la catégorie est encore active.
+const statsCategoryStorageKey = (userId: string, cycleId: string | null) =>
+  `cercle_des_titans_dashboard_stats_category:${userId}:${cycleId ?? 'no-cycle'}`;
 
 const categoryInfo: Record<string, { name: string; color: string; amount: string }> = {
   bronze: { name: 'Bronze', color: 'text-amber-700', amount: '5 000 FCFA/sem.' },
@@ -59,7 +78,12 @@ const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [contributions, setContributions] = useState<TontineContribution[]>([]);
+  // Indicateurs : contributions du membre pour le cycle courant (toutes
+  // catégories confondues côté données, filtrées par catégorie à l'affichage).
+  const [cycleContributions, setCycleContributions] = useState<TontineContribution[]>([]);
+  const [statsCategories, setStatsCategories] = useState<TontineCategory[]>([]);
+  const [statsCategoryId, setStatsCategoryId] = useState<string | null>(null);
+  const [activeCycle, setActiveCycle] = useState<TontineCycle | null>(null);
   const [loadingData, setLoadingData] = useState(true);
   const [isEditingCategory, setIsEditingCategory] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -89,10 +113,43 @@ const Dashboard = () => {
           setProfile(profileData);
         }
 
-        // Fetch contributions from the tontine module
-        // (source of truth: tontine_contributions, not the legacy table)
-        const contributionsData = await fetchMemberContributions(user.id);
-        setContributions(contributionsData);
+        // Données des indicateurs (source de vérité : tontine_contributions).
+        // Les statistiques ne portent QUE sur un cycle status='active' — jamais
+        // planned/draft (contrairement à MemberTontinePanel qui garde son
+        // fallback vers le prochain cycle programmé).
+        const [memberCats, activeCats, cycle] = await Promise.all([
+          fetchMemberCategories(user.id),
+          fetchActiveCategories(),
+          fetchActiveCycle(),
+        ]);
+
+        // Seules les adhésions actives du membre vers une catégorie encore
+        // active sont proposées dans le sélecteur (déjà triées par montant).
+        const eligibleCategories = activeCats.filter((cat) =>
+          memberCats.some((m) => m.category_id === cat.id)
+        );
+        setStatsCategories(eligibleCategories);
+        setActiveCycle(cycle);
+
+        const contributionsData = cycle
+          ? await fetchMemberCycleContributions(user.id, cycle.id)
+          : [];
+        setCycleContributions(contributionsData);
+
+        // Restaure la catégorie mémorisée pour ce membre et ce cycle,
+        // uniquement si elle figure encore dans les adhésions actives.
+        let restoredCategoryId: string | null = null;
+        try {
+          const saved = localStorage.getItem(
+            statsCategoryStorageKey(user.id, cycle?.id ?? null)
+          );
+          if (saved && eligibleCategories.some((c) => c.id === saved)) {
+            restoredCategoryId = saved;
+          }
+        } catch {
+          // Stockage inaccessible : on retombe sur la première catégorie éligible.
+        }
+        setStatsCategoryId(restoredCategoryId ?? eligibleCategories[0]?.id ?? null);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -138,6 +195,19 @@ const Dashboard = () => {
     setIsEditingCategory(true);
   };
 
+  // Changement de catégorie affichée : recalcul purement local (les
+  // contributions du cycle sont déjà chargées) + mémorisation liée au
+  // membre et au cycle courant.
+  const handleStatsCategoryChange = (categoryId: string) => {
+    setStatsCategoryId(categoryId);
+    if (user) {
+      localStorage.setItem(
+        statsCategoryStorageKey(user.id, activeCycle?.id ?? null),
+        categoryId
+      );
+    }
+  };
+
   if (loading || loadingData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -146,11 +216,27 @@ const Dashboard = () => {
     );
   }
 
-  const paidContributions = contributions.filter(c => c.status === 'paid');
-  const upcomingContributions = contributions.filter(c =>
-    ['pending', 'partial', 'overdue'].includes(c.status)
+  // Indicateurs strictement mono-catégorie : chaque contribution affichée est
+  // filtrée par user_id + cycle_id (requête) puis category_id (ici). Aucune
+  // catégorie sélectionnée => listes vides => indicateurs à zéro.
+  const statsContributions = statsCategoryId
+    ? cycleContributions.filter(c => c.category_id === statsCategoryId)
+    : [];
+  const paidContributions = statsContributions.filter(c => c.status === 'paid');
+  // « À venir » = échéances encore payables (pending/partial) ET datées
+  // d'aujourd'hui ou plus tard. due_date est un DATE 'YYYY-MM-DD' : la
+  // comparaison de chaînes sur le jour local équivaut à
+  // new Date(due_date) >= aujourd'hui, sans le décalage minuit-UTC du parsing.
+  const now = new Date();
+  const todayIso = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+  const upcomingContributions = statsContributions.filter(
+    c => (c.status === 'pending' || c.status === 'partial') && c.due_date >= todayIso
   );
-  const totalPaid = contributions.reduce((sum, c) => sum + Number(c.paid_amount), 0);
+  const totalPaid = statsContributions.reduce((sum, c) => sum + Number(c.paid_amount), 0);
 
   // Affiche la bannière uniquement si le profil est chargé, sans photo, et non masquée.
   const showAvatarBanner = profile !== null && !profile.avatar_url && !isAvatarBannerDismissed;
@@ -225,6 +311,53 @@ const Dashboard = () => {
           <p className="text-muted-foreground">
             Voici un aperçu de votre activité dans la tontine
           </p>
+        </div>
+
+        {/* Sélecteur de catégorie des indicateurs (mono-catégorie, cycle courant) */}
+        <div className="mb-6 rounded-xl border border-gold/30 bg-card p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold/10">
+                <Layers className="h-5 w-5 text-gold" />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Catégorie affichée
+                </p>
+                <p className="text-sm text-foreground">
+                  {activeCycle ? `Cycle : ${activeCycle.name}` : 'Aucun cycle actif'}
+                </p>
+              </div>
+            </div>
+            {statsCategories.length === 0 ? (
+              <p className="text-sm text-muted-foreground sm:text-right">
+                Aucune catégorie active
+              </p>
+            ) : (
+              <Select
+                value={statsCategoryId ?? undefined}
+                onValueChange={handleStatsCategoryChange}
+                disabled={statsCategories.length === 1}
+              >
+                <SelectTrigger
+                  aria-label="Catégorie affichée"
+                  className="w-full sm:w-72 border-gold/40 bg-background/60 focus:ring-gold/40"
+                >
+                  <SelectValue placeholder="Choisir une catégorie" />
+                </SelectTrigger>
+                <SelectContent className="bg-card border border-border">
+                  {statsCategories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                      {' — '}
+                      {Number(cat.weekly_amount ?? cat.daily_amount).toLocaleString('fr-FR')}{' '}
+                      {cat.currency}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
 
         {/* Stats Cards */}

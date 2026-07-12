@@ -185,21 +185,40 @@ const Navbar = () => {
             </Link>
           )}
           {!loading && (
-            <Link
-              to={user ? "/dashboard" : "/auth"}
-              onClick={() => void trackEvent("click", { label: user ? "navbar_member_area" : "navbar_login" })}
-            >
-              <Button variant="default" size="sm">
-                {user ? (
-                  <>
-                    <User className="w-4 h-4 mr-2" />
-                    {t('nav.memberArea')}
-                  </>
-                ) : (
-                  t('nav.join')
-                )}
-              </Button>
-            </Link>
+            user ? (
+              <Link
+                to="/dashboard"
+                onClick={() => void trackEvent("click", { label: "navbar_member_area" })}
+              >
+                <Button variant="default" size="sm">
+                  <User className="w-4 h-4 mr-2" />
+                  {t('nav.memberArea')}
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/auth"
+                  onClick={() => void trackEvent("click", { label: "navbar_login" })}
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-foreground/90 hover:text-gold hover:bg-gold/10"
+                  >
+                    {t('nav.login')}
+                  </Button>
+                </Link>
+                <Link
+                  to="/auth?mode=signup"
+                  onClick={() => void trackEvent("click", { label: "navbar_signup" })}
+                >
+                  <Button variant="default" size="sm">
+                    {t('nav.signup')}
+                  </Button>
+                </Link>
+              </>
+            )
           )}
         </div>
 
@@ -391,25 +410,51 @@ const Navbar = () => {
               </Button>
             </Link>
           )}
-          <Link
-            to={user ? "/dashboard" : "/auth"}
-            onClick={() => {
-              closeMenu();
-              void trackEvent("click", { label: user ? "navbar_member_area" : "navbar_login" });
-            }}
-            className="block w-full"
-          >
-            <Button variant="default" className="min-h-[48px] w-full rounded-xl">
-              {user ? (
-                <>
-                  <User className="w-4 h-4 mr-2" />
-                  {t('nav.memberArea')}
-                </>
-              ) : (
-                t('nav.join')
-              )}
-            </Button>
-          </Link>
+          {user ? (
+            <Link
+              to="/dashboard"
+              onClick={() => {
+                closeMenu();
+                void trackEvent("click", { label: "navbar_member_area" });
+              }}
+              className="block w-full"
+            >
+              <Button variant="default" className="min-h-[48px] w-full rounded-xl">
+                <User className="w-4 h-4 mr-2" />
+                {t('nav.memberArea')}
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link
+                to="/auth?mode=signup"
+                onClick={() => {
+                  closeMenu();
+                  void trackEvent("click", { label: "navbar_signup" });
+                }}
+                className="block w-full"
+              >
+                <Button variant="default" className="min-h-[48px] w-full rounded-xl">
+                  {t('nav.signup')}
+                </Button>
+              </Link>
+              <Link
+                to="/auth"
+                onClick={() => {
+                  closeMenu();
+                  void trackEvent("click", { label: "navbar_login" });
+                }}
+                className="block w-full"
+              >
+                <Button
+                  variant="outline"
+                  className="min-h-[48px] w-full rounded-xl border-gold/50 text-gold hover:bg-gold/10"
+                >
+                  {t('nav.login')}
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

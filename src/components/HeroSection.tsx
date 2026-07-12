@@ -140,7 +140,7 @@ const HeroSection = () => {
           >
             <MagneticButton strength={0.2} className="w-full sm:w-auto">
               <Button size="lg" className="w-full sm:w-auto text-base font-semibold group relative overflow-hidden shadow-lg shadow-gold/20 hover:shadow-gold/40 transition-shadow" asChild>
-                <Link to="/#contact" onClick={() => void trackEvent("click", { label: "hero_primary_cta" })}>
+                <Link to="/auth?mode=signup" onClick={() => void trackEvent("click", { label: "hero_primary_cta" })}>
                   <span className="relative z-10 flex items-center">
                     {t('hero.cta')}
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />

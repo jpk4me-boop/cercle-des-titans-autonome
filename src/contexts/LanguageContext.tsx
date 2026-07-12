@@ -21,6 +21,8 @@ const translations = {
   'nav.howItWorks': { fr: 'Comment ça marche', en: 'How It Works' },
   'nav.testimonials': { fr: 'Témoignages', en: 'Testimonials' },
   'nav.join': { fr: 'Rejoindre', en: 'Join Now' },
+  'nav.signup': { fr: 'S\'inscrire', en: 'Sign Up' },
+  'nav.login': { fr: 'Se connecter', en: 'Log In' },
   'nav.memberArea': { fr: 'Espace membre', en: 'Member Area' },
   'nav.admin': { fr: 'Admin', en: 'Admin' },
   'nav.menu': { fr: 'Menu', en: 'Menu' },
@@ -37,7 +39,7 @@ const translations = {
   'hero.feature2': { fr: 'Fonds d\'appui communautaire', en: 'Community Support Fund' },
   'hero.feature3': { fr: 'Réussite collective', en: 'Collective Success' },
   'hero.feature4': { fr: 'Discipline & entraide', en: 'Discipline & Support' },
-  'hero.cta': { fr: 'Rejoindre le Cercle', en: 'Join the Circle' },
+  'hero.cta': { fr: 'S\'inscrire', en: 'Sign Up' },
   'hero.ctaSecondary': { fr: 'Voir comment ça marche', en: 'See How It Works' },
 
   // About Section

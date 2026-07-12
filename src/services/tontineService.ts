@@ -116,6 +116,25 @@ export const fetchMemberContributions = async (
   return (data || []) as TontineContribution[];
 };
 
+// Contributions d'un membre pour un cycle donné (indicateurs du dashboard).
+// Toutes les lignes user+cycle sont chargées en une seule requête puis filtrées
+// par category_id côté client : le changement de catégorie recalcule les
+// indicateurs sans nouvelle requête réseau.
+export const fetchMemberCycleContributions = async (
+  userId: string,
+  cycleId: string
+): Promise<TontineContribution[]> => {
+  const { data, error } = await supabase
+    .from("tontine_contributions" as any)
+    .select("*")
+    .eq("user_id", userId)
+    .eq("cycle_id", cycleId)
+    .order("due_date", { ascending: true });
+
+  if (error) throw error;
+  return (data || []) as TontineContribution[];
+};
+
 export const fetchAllContributions = async (filters?: {
   userId?: string;
   categoryId?: string;
